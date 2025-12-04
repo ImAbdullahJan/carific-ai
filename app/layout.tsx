@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Carific.ai - AI-Powered Career & Personal Development",
+  title: "Carific.ai - AI-Powered Career Development",
   description:
-    "Solve your career and personal development challenges with AI-powered insights and personalized guidance.",
+    "Land your next role with AI-powered resume editing, interview coaching, and career path planning.",
 };
 
 export default function RootLayout({
