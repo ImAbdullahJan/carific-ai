@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { siteConfig, navLinks } from "@/config/landing";
 
 export function Header() {
@@ -26,6 +27,7 @@ export function Header() {
         <Button variant="outline" size="sm" asChild>
           <a href={siteConfig.githubUrl}>View on GitHub</a>
         </Button>
+        <ThemeToggle />
       </nav>
     </header>
   );
