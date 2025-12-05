@@ -1,7 +1,7 @@
-import { Resend } from "resend";
+import { render } from "@react-email/components";
 import EmailVerification from "@/lib/emails/auth/email-verification";
+import { resend } from "@/lib/resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM_EMAIL = `Carific AI <${process.env.EMAIL_FROM}>`;
 
 export async function sendVerificationEmail(
@@ -9,14 +9,15 @@ export async function sendVerificationEmail(
   email: string,
   verificationUrl: string
 ) {
+  const emailHtml = await render(
+    <EmailVerification verificationUrl={verificationUrl} userName={userName} />
+  );
+
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: [email],
     subject: "Verify your email - Carific AI",
-    react: EmailVerification({
-      verificationUrl,
-      userName,
-    }),
+    html: emailHtml,
   });
 
   if (error) {
