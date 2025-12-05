@@ -1,6 +1,13 @@
 import { Resend } from "resend";
 import EmailVerification from "@/lib/emails/auth/email-verification";
 
+if (!process.env.RESEND_API_KEY) {
+  throw new Error("RESEND_API_KEY environment variable is required");
+}
+if (!process.env.EMAIL_FROM) {
+  throw new Error("EMAIL_FROM environment variable is required");
+}
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM_EMAIL = `Carific AI <${process.env.EMAIL_FROM}>`;
 
