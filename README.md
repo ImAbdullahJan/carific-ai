@@ -2,6 +2,8 @@
 
 AI-powered career development platform. Land your next role with resume editing, interview coaching, and career path planning.
 
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/ImAbdullahJan/carific-ai?utm_source=oss&utm_medium=github&utm_campaign=ImAbdullahJan%2Fcarific-ai&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+
 ## Tech Stack
 
 - **Framework**: [Next.js 16](https://nextjs.org) (App Router)
