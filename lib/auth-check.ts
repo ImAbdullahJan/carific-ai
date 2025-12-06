@@ -1,8 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-
-const MAIN_DASHBOARD_REDIRECT_URL = "/dashboard";
+import { ROUTES } from "@/lib/constants";
 
 export async function checkAuth(disableCookieCache = false) {
   return auth.api.getSession({
@@ -14,7 +13,7 @@ export async function checkAuth(disableCookieCache = false) {
 }
 
 export async function checkAuthAndRedirect({
-  redirectUrl = MAIN_DASHBOARD_REDIRECT_URL,
+  redirectUrl = ROUTES.DASHBOARD,
   disableCookieCache = false,
 }: {
   redirectUrl?: string;

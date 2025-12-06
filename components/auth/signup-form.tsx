@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { useAppForm } from "@/hooks/form";
 import { authClient } from "@/lib/auth-client";
+import { ROUTES } from "@/lib/constants";
 import { signUpSchema } from "@/lib/validations/auth";
 import { FieldGroup } from "@/components/ui/field";
 
@@ -32,7 +33,7 @@ export function SignUpForm() {
             toast.success(
               "Account created. Please check your email to verify."
             );
-            router.push("/signin");
+            router.push(ROUTES.SIGN_IN);
           },
           onError: (ctx) => {
             toast.error(ctx.error.message);

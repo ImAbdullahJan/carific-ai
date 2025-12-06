@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { useAppForm } from "@/hooks/form";
 import { authClient } from "@/lib/auth-client";
+import { ROUTES } from "@/lib/constants";
 import { signInSchema } from "@/lib/validations/auth";
 import { FieldGroup } from "@/components/ui/field";
 
@@ -29,7 +30,7 @@ export function SignInForm() {
         {
           onSuccess: () => {
             toast.success("Signed in successfully");
-            router.push("/dashboard");
+            router.push(ROUTES.DASHBOARD);
           },
           onError: (ctx) => {
             if (ctx.error.status === 403) {
