@@ -1,20 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { useAppForm } from "@/hooks/form";
 import { authClient } from "@/lib/auth-client";
 import { signInSchema } from "@/lib/validations/auth";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { AuthCard } from "@/components/auth/auth-card";
 import { FieldGroup } from "@/components/ui/field";
 
 export default function SignInPage() {
@@ -53,60 +45,54 @@ export default function SignInPage() {
   });
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Welcome back</CardTitle>
-        <CardDescription>Sign in to your account to continue</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            form.handleSubmit();
-          }}
-        >
-          <FieldGroup>
-            <form.AppField name="email">
-              {(field) => (
-                <field.TextField
-                  label="Email"
-                  type="email"
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                />
-              )}
-            </form.AppField>
-            <form.AppField name="password">
-              {(field) => (
-                <field.TextField
-                  label="Password"
-                  type="password"
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                />
-              )}
-            </form.AppField>
-            <form.AppField name="rememberMe">
-              {(field) => <field.CheckboxField label="Remember me" />}
-            </form.AppField>
-          </FieldGroup>
-          <form.AppForm>
-            <form.SubmitButton
-              label="Sign in"
-              loadingLabel="Signing in..."
-              className="w-full mt-6"
-            />
-          </form.AppForm>
-        </form>
-      </CardContent>
-      <CardFooter className="flex flex-col">
-        <p className="text-sm text-muted-foreground text-center">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-primary hover:underline">
-            Sign up
-          </Link>
-        </p>
-      </CardFooter>
-    </Card>
+    <AuthCard
+      title="Welcome back"
+      description="Sign in to your account to continue"
+      footer={{
+        text: "Don't have an account?",
+        linkText: "Sign up",
+        linkHref: "/signup",
+      }}
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+      >
+        <FieldGroup>
+          <form.AppField name="email">
+            {(field) => (
+              <field.TextField
+                label="Email"
+                type="email"
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
+            )}
+          </form.AppField>
+          <form.AppField name="password">
+            {(field) => (
+              <field.TextField
+                label="Password"
+                type="password"
+                placeholder="••••••••"
+                autoComplete="current-password"
+              />
+            )}
+          </form.AppField>
+          <form.AppField name="rememberMe">
+            {(field) => <field.CheckboxField label="Remember me" />}
+          </form.AppField>
+        </FieldGroup>
+        <form.AppForm>
+          <form.SubmitButton
+            label="Sign in"
+            loadingLabel="Signing in..."
+            className="w-full mt-6"
+          />
+        </form.AppForm>
+      </form>
+    </AuthCard>
   );
 }

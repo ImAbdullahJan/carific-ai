@@ -1,0 +1,50 @@
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+interface AuthCardProps {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+  footer?: {
+    text: string;
+    linkText: string;
+    linkHref: string;
+  };
+}
+
+export function AuthCard({
+  title,
+  description,
+  children,
+  footer,
+}: AuthCardProps) {
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl">{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+      {footer && (
+        <CardFooter className="flex flex-col">
+          <p className="text-sm text-muted-foreground text-center">
+            {footer.text}{" "}
+            <Link
+              href={footer.linkHref}
+              className="text-primary hover:underline"
+            >
+              {footer.linkText}
+            </Link>
+          </p>
+        </CardFooter>
+      )}
+    </Card>
+  );
+}
