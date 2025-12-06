@@ -9,7 +9,11 @@ export default function AuthLayout({
   return (
     <div className="min-h-screen flex flex-col">
       <header className="p-6">
-        <Link href="/" className="flex items-center gap-3 w-fit">
+        <Link
+          href="/"
+          className="flex items-center gap-3 w-fit"
+          aria-label="Go to homepage"
+        >
           <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">
             {siteConfig.logo}
           </div>
