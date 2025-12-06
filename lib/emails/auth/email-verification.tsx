@@ -9,7 +9,9 @@ import {
   Link,
   Preview,
   Section,
+  Tailwind,
   Text,
+  pixelBasedPreset,
 } from "@react-email/components";
 
 interface EmailVerificationProps {
@@ -25,112 +27,69 @@ export default function EmailVerification({
     <Html>
       <Head />
       <Preview>Verify your email address for Carific.ai</Preview>
-      <Body style={main}>
-        <Container style={container}>
-          <Heading style={heading}>Verify your email</Heading>
+      <Tailwind
+        config={{
+          presets: [pixelBasedPreset],
+          theme: {
+            extend: {
+              colors: {
+                brand: "#171717",
+              },
+            },
+          },
+        }}
+      >
+        <Body className="bg-[#f6f9fc] font-sans">
+          <Container className="mx-auto max-w-[560px] rounded-lg bg-white px-5 py-10">
+            <Heading className="m-0 mb-6 text-center text-2xl font-semibold text-[#1a1a1a]">
+              Verify your email
+            </Heading>
 
-          <Text style={paragraph}>{userName ? `Hi ${userName},` : "Hi,"}</Text>
+            <Text className="m-0 mb-4 text-base leading-relaxed text-[#484848]">
+              {userName ? `Hi ${userName},` : "Hi,"}
+            </Text>
 
-          <Text style={paragraph}>
-            Thanks for signing up for Carific.ai. Please verify your email
-            address by clicking the button below.
-          </Text>
+            <Text className="m-0 mb-4 text-base leading-relaxed text-[#484848]">
+              Thanks for signing up for Carific.ai. Please verify your email
+              address by clicking the button below.
+            </Text>
 
-          <Section style={buttonContainer}>
-            <Button style={button} href={verificationUrl}>
-              Verify Email
-            </Button>
-          </Section>
+            <Section className="my-8 text-center">
+              <Button
+                href={verificationUrl}
+                className="inline-block rounded-md bg-brand px-6 py-3 text-base font-semibold text-white no-underline"
+              >
+                Verify Email
+              </Button>
+            </Section>
 
-          <Text style={paragraph}>
-            Or copy and paste this URL into your browser:
-          </Text>
+            <Text className="m-0 mb-4 text-base leading-relaxed text-[#484848]">
+              Or copy and paste this URL into your browser:
+            </Text>
 
-          <Text style={link}>{verificationUrl}</Text>
+            <Text className="break-all text-sm text-[#6b7280]">
+              {verificationUrl}
+            </Text>
 
-          <Hr style={hr} />
+            <Hr className="my-8 border-[#e5e7eb]" />
 
-          <Text style={footer}>
-            If you didn&apos;t create an account with Carific.ai, you can safely
-            ignore this email.
-          </Text>
+            <Text className="m-0 mb-2 text-xs text-[#9ca3af]">
+              If you didn&apos;t create an account with Carific.ai, you can
+              safely ignore this email.
+            </Text>
 
-          <Text style={footer}>
-            <Link href="https://carific.ai" style={footerLink}>
-              Carific.ai
-            </Link>{" "}
-            - Career growth, powered by AI
-          </Text>
-        </Container>
-      </Body>
+            <Text className="m-0 mb-2 text-xs text-[#9ca3af]">
+              <Link
+                href="https://carific.ai"
+                className="text-[#6b7280] underline"
+              >
+                Carific.ai
+              </Link>{" "}
+              - Career growth, powered by AI
+            </Text>
+          </Container>
+        </Body>
+      </Tailwind>
     </Html>
   );
 }
-
-const main = {
-  backgroundColor: "#f6f9fc",
-  fontFamily:
-    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, sans-serif',
-};
-
-const container = {
-  backgroundColor: "#ffffff",
-  margin: "0 auto",
-  padding: "40px 20px",
-  maxWidth: "560px",
-  borderRadius: "8px",
-};
-
-const heading = {
-  fontSize: "24px",
-  fontWeight: "600",
-  color: "#1a1a1a",
-  textAlign: "center" as const,
-  margin: "0 0 24px",
-};
-
-const paragraph = {
-  fontSize: "16px",
-  lineHeight: "26px",
-  color: "#484848",
-  margin: "0 0 16px",
-};
-
-const buttonContainer = {
-  textAlign: "center" as const,
-  margin: "32px 0",
-};
-
-const button = {
-  backgroundColor: "#171717",
-  borderRadius: "6px",
-  color: "#fff",
-  fontSize: "16px",
-  fontWeight: "600",
-  textDecoration: "none",
-  textAlign: "center" as const,
-  display: "inline-block",
-  padding: "12px 24px",
-};
-
-const link = {
-  fontSize: "14px",
-  color: "#6b7280",
-  wordBreak: "break-all" as const,
-};
-
-const hr = {
-  borderColor: "#e5e7eb",
-  margin: "32px 0",
-};
-
-const footer = {
-  fontSize: "12px",
-  color: "#9ca3af",
-  margin: "0 0 8px",
-};
-
-const footerLink = {
-  color: "#6b7280",
-  textDecoration: "underline",
-};
