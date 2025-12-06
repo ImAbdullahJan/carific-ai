@@ -22,19 +22,24 @@ export default function SignUpPage() {
       onSubmit: signUpSchema,
     },
     onSubmit: async ({ value }) => {
-      const { error } = await authClient.signUp.email({
-        name: value.name,
-        email: value.email,
-        password: value.password,
-      });
-
-      if (error) {
-        toast.error(error.message || "Failed to create account");
-        return;
-      }
-
-      toast.success("Account created! Please check your email to verify.");
-      router.push("/signin");
+      await authClient.signUp.email(
+        {
+          name: value.name,
+          email: value.email,
+          password: value.password,
+        },
+        {
+          onSuccess: () => {
+            toast.success(
+              "Account created. Please check your email to verify."
+            );
+            router.push("/signin");
+          },
+          onError: (ctx) => {
+            toast.error(ctx.error.message);
+          },
+        }
+      );
     },
   });
 

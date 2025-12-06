@@ -16,8 +16,13 @@ export default function DashboardPage() {
   }, [isPending, session, router]);
 
   const handleLogout = async () => {
-    await authClient.signOut();
-    router.push("/");
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/signin");
+        },
+      },
+    });
   };
 
   if (isPending || !session) {
