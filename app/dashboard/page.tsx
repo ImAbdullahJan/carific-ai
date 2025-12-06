@@ -2,8 +2,10 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { ROUTES } from "@/lib/constants";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -11,13 +13,21 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!isPending && !session) {
-      router.push("/signin");
+      router.push(ROUTES.SIGN_IN);
     }
   }, [isPending, session, router]);
 
   const handleLogout = async () => {
-    await authClient.signOut();
-    router.push("/");
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push(ROUTES.SIGN_IN);
+        },
+        onError: (ctx) => {
+          toast.error(ctx.error.message);
+        },
+      },
+    });
   };
 
   if (isPending || !session) {
