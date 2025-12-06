@@ -30,10 +30,7 @@ export function SignUpForm() {
         },
         {
           onSuccess: () => {
-            toast.success(
-              "Account created. Please check your email to verify."
-            );
-            router.push(ROUTES.SIGN_IN);
+            router.push(ROUTES.WELCOME);
           },
           onError: (ctx) => {
             toast.error(ctx.error.message);
