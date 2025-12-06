@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 
+import { useAppForm } from "@/hooks/form";
 import { authClient } from "@/lib/auth-client";
 import { signInSchema } from "@/lib/validations/auth";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -16,18 +15,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { FieldGroup } from "@/components/ui/field";
 
 export default function SignInPage() {
   const router = useRouter();
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       email: "",
       password: "",
@@ -59,81 +52,43 @@ export default function SignInPage() {
       </CardHeader>
       <CardContent>
         <form
-          id="signin-form"
           onSubmit={(e) => {
             e.preventDefault();
             form.handleSubmit();
           }}
         >
           <FieldGroup>
-            <form.Field name="email">
-              {(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
-                return (
-                  <Field data-invalid={isInvalid}>
-                    <FieldLabel htmlFor={field.name}>Email</FieldLabel>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="email"
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      aria-invalid={isInvalid}
-                      placeholder="you@example.com"
-                      autoComplete="email"
-                    />
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                );
-              }}
-            </form.Field>
-            <form.Field name="password">
-              {(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
-                return (
-                  <Field data-invalid={isInvalid}>
-                    <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="password"
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      aria-invalid={isInvalid}
-                      placeholder="••••••••"
-                      autoComplete="current-password"
-                    />
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                );
-              }}
-            </form.Field>
+            <form.AppField name="email">
+              {(field) => (
+                <field.TextField
+                  label="Email"
+                  type="email"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                />
+              )}
+            </form.AppField>
+            <form.AppField name="password">
+              {(field) => (
+                <field.TextField
+                  label="Password"
+                  type="password"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                />
+              )}
+            </form.AppField>
           </FieldGroup>
+          <form.AppForm>
+            <form.SubmitButton
+              label="Sign in"
+              loadingLabel="Signing in..."
+              className="w-full mt-6"
+            />
+          </form.AppForm>
         </form>
       </CardContent>
-      <CardFooter className="flex flex-col gap-4">
-        <form.Subscribe
-          selector={(state) => [state.canSubmit, state.isSubmitting]}
-        >
-          {([canSubmit, isSubmitting]) => (
-            <Button
-              type="submit"
-              form="signin-form"
-              className="w-full"
-              disabled={!canSubmit || isSubmitting}
-            >
-              {isSubmitting ? "Signing in..." : "Sign in"}
-            </Button>
-          )}
-        </form.Subscribe>
+      <CardFooter className="flex flex-col">
         <p className="text-sm text-muted-foreground text-center">
           Don&apos;t have an account?{" "}
           <Link href="/signup" className="text-primary hover:underline">
