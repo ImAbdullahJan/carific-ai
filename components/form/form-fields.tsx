@@ -32,7 +32,9 @@ export function TextField({
         onChange={(e) => field.handleChange(e.target.value)}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        aria-invalid={field.state.meta.errors.length > 0}
+        aria-invalid={
+          field.state.meta.errors.length > 0 && field.state.meta.isTouched
+        }
       />
     </FormBase>
   );
@@ -57,7 +59,9 @@ export function CheckboxField({ label, description }: CheckboxFieldProps) {
         checked={field.state.value}
         onCheckedChange={(checked) => field.handleChange(checked === true)}
         onBlur={field.handleBlur}
-        aria-invalid={field.state.meta.errors.length > 0}
+        aria-invalid={
+          field.state.meta.errors.length > 0 && field.state.meta.isTouched
+        }
       />
     </FormBase>
   );

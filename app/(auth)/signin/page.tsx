@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { useAppForm } from "@/hooks/form";
@@ -17,6 +18,7 @@ import {
 import { FieldGroup } from "@/components/ui/field";
 
 export default function SignInPage() {
+  const router = useRouter();
   const form = useAppForm({
     defaultValues: {
       email: "",
@@ -27,19 +29,26 @@ export default function SignInPage() {
       onSubmit: signInSchema,
     },
     onSubmit: async ({ value }) => {
-      const { error } = await authClient.signIn.email({
-        email: value.email,
-        password: value.password,
-        rememberMe: value.rememberMe,
-        callbackURL: "/dashboard",
-      });
-
-      if (error) {
-        toast.error(error.message || "Failed to sign in");
-        return;
-      }
-
-      toast.success("Signed in successfully");
+      return await authClient.signIn.email(
+        {
+          email: value.email,
+          password: value.password,
+          rememberMe: value.rememberMe,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Signed in successfully");
+            router.push("/dashboard");
+          },
+          onError: (ctx) => {
+            if (ctx.error.status === 403) {
+              toast("Please verify your email address");
+            } else {
+              toast.error(ctx.error.message);
+            }
+          },
+        }
+      );
     },
   });
 
