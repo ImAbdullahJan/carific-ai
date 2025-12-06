@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 
@@ -20,6 +21,9 @@ export default function DashboardPage() {
       fetchOptions: {
         onSuccess: () => {
           router.push("/signin");
+        },
+        onError: (ctx) => {
+          toast.error(ctx.error.message);
         },
       },
     });
