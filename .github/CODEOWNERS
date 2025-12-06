@@ -1,0 +1,13 @@
+# Default owners for everything in the repo
+* @ImAbdullahJan
+
+# Frontend components
+/components/ @ImAbdullahJan
+/app/ @ImAbdullahJan
+
+# Configuration
+/config/ @ImAbdullahJan
+
+# Database and auth
+/prisma/ @ImAbdullahJan
+/lib/auth*.ts @ImAbdullahJan

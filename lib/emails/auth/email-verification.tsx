@@ -40,7 +40,7 @@ export default function EmailVerification({
         }}
       >
         <Body className="bg-[#f6f9fc] font-sans">
-          <Container className="mx-auto max-w-[560px] rounded-lg bg-white px-5 py-10">
+          <Container className="mx-auto max-w-[560px] bg-white px-5 py-10">
             <Heading className="m-0 mb-6 text-center text-2xl font-semibold text-[#1a1a1a]">
               Verify your email
             </Heading>
@@ -57,7 +57,8 @@ export default function EmailVerification({
             <Section className="my-8 text-center">
               <Button
                 href={verificationUrl}
-                className="inline-block rounded-md bg-brand px-6 py-3 text-base font-semibold text-white no-underline"
+                className="inline-block bg-brand px-6 py-3 text-base font-semibold text-white"
+                style={{ textDecoration: "none" }}
               >
                 Verify Email
               </Button>
@@ -67,9 +68,7 @@ export default function EmailVerification({
               Or copy and paste this URL into your browser:
             </Text>
 
-            <Text className="break-all text-sm text-[#6b7280]">
-              {verificationUrl}
-            </Text>
+            <Text className="text-sm text-[#6b7280]">{verificationUrl}</Text>
 
             <Hr className="my-8 border-[#e5e7eb]" />
 
@@ -81,7 +80,7 @@ export default function EmailVerification({
             <Text className="m-0 mb-2 text-xs text-[#9ca3af]">
               <Link
                 href="https://carific.ai"
-                className="text-[#6b7280] underline"
+                style={{ color: "#6b7280", textDecoration: "underline" }}
               >
                 Carific.ai
               </Link>{" "}
