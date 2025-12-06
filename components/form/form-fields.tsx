@@ -1,6 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useFieldContext } from "@/hooks/form-context";
 import { FormBase, FormControlProps } from "./form-base";
 
@@ -31,6 +32,31 @@ export function TextField({
         onChange={(e) => field.handleChange(e.target.value)}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        aria-invalid={field.state.meta.errors.length > 0}
+      />
+    </FormBase>
+  );
+}
+
+// CheckboxField Component
+type CheckboxFieldProps = FormControlProps;
+
+export function CheckboxField({ label, description }: CheckboxFieldProps) {
+  const field = useFieldContext<boolean>();
+
+  return (
+    <FormBase
+      label={label}
+      description={description}
+      orientation="horizontal"
+      controlFirst
+    >
+      <Checkbox
+        id={field.name}
+        name={field.name}
+        checked={field.state.value}
+        onCheckedChange={(checked) => field.handleChange(checked === true)}
+        onBlur={field.handleBlur}
         aria-invalid={field.state.meta.errors.length > 0}
       />
     </FormBase>

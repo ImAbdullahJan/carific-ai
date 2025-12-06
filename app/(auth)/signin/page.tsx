@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { useAppForm } from "@/hooks/form";
@@ -18,12 +17,11 @@ import {
 import { FieldGroup } from "@/components/ui/field";
 
 export default function SignInPage() {
-  const router = useRouter();
-
   const form = useAppForm({
     defaultValues: {
       email: "",
       password: "",
+      rememberMe: false,
     },
     validators: {
       onSubmit: signInSchema,
@@ -32,6 +30,8 @@ export default function SignInPage() {
       const { error } = await authClient.signIn.email({
         email: value.email,
         password: value.password,
+        rememberMe: value.rememberMe,
+        callbackURL: "/dashboard",
       });
 
       if (error) {
@@ -40,7 +40,6 @@ export default function SignInPage() {
       }
 
       toast.success("Signed in successfully");
-      router.push("/dashboard");
     },
   });
 
@@ -77,6 +76,9 @@ export default function SignInPage() {
                   autoComplete="current-password"
                 />
               )}
+            </form.AppField>
+            <form.AppField name="rememberMe">
+              {(field) => <field.CheckboxField label="Remember me" />}
             </form.AppField>
           </FieldGroup>
           <form.AppForm>
