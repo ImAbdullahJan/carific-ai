@@ -21,6 +21,7 @@ export function ResumeUpload({ value, onChange, disabled }: ResumeUploadProps) {
   const [error, setError] = useState<string | null>(null);
 
   const processFile = async (file: File) => {
+    if (disabled || isProcessing) return;
     setError(null);
     setIsProcessing(true);
 
@@ -62,7 +63,7 @@ export function ResumeUpload({ value, onChange, disabled }: ResumeUploadProps) {
     e.preventDefault();
     setIsDragging(false);
 
-    if (disabled) return;
+    if (disabled || isProcessing) return;
 
     const file = e.dataTransfer.files[0];
     if (file) {
@@ -72,7 +73,7 @@ export function ResumeUpload({ value, onChange, disabled }: ResumeUploadProps) {
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    if (!disabled) {
+    if (!disabled && !isProcessing) {
       setIsDragging(true);
     }
   };
@@ -84,7 +85,7 @@ export function ResumeUpload({ value, onChange, disabled }: ResumeUploadProps) {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (file && !disabled && !isProcessing) {
       processFile(file);
     }
   };
@@ -102,7 +103,7 @@ export function ResumeUpload({ value, onChange, disabled }: ResumeUploadProps) {
         className={cn(
           "border-2 border-dashed transition-colors cursor-pointer",
           isDragging && "border-primary bg-primary/5",
-          disabled && "opacity-50 cursor-not-allowed",
+          (disabled || isProcessing) && "opacity-50 cursor-not-allowed",
           error && "border-destructive"
         )}
         onDrop={handleDrop}
@@ -149,7 +150,7 @@ export function ResumeUpload({ value, onChange, disabled }: ResumeUploadProps) {
                 accept=".pdf,.txt,.md,application/pdf,text/plain"
                 className="absolute inset-0 opacity-0 cursor-pointer"
                 onChange={handleFileSelect}
-                disabled={disabled}
+                disabled={disabled || isProcessing}
               />
             </>
           )}
