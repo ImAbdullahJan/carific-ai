@@ -17,6 +17,10 @@ export interface PDFExtractResult {
   pageCount: number;
 }
 
+// Limits to prevent browser tab from freezing
+const MAX_PAGES = 50;
+const MAX_TEXT_LENGTH = 100_000;
+
 /**
  * Merges text content items into a single string, preserving line breaks
  */
@@ -40,22 +44,39 @@ export const extractTextFromPDF = async (
     const pdfDoc = await getDocument({ data: arrayBuffer }).promise;
     const pageCount = pdfDoc.numPages;
 
-    let allText = "";
+    if (pageCount > MAX_PAGES) {
+      throw new Error(
+        `PDF has ${pageCount} pages. Maximum allowed is ${MAX_PAGES} pages.`
+      );
+    }
+
+    const pageTexts: string[] = [];
+    let totalLength = 0;
 
     for (let i = 1; i <= pageCount; i++) {
       const page = await pdfDoc.getPage(i);
       const content = await page.getTextContent();
-      const pageText = mergeTextContent(content);
+      const pageText = mergeTextContent(content).trim();
 
-      allText += pageText + "\n\n";
+      totalLength += pageText.length;
+      if (totalLength > MAX_TEXT_LENGTH) {
+        throw new Error(
+          `PDF content exceeds maximum allowed length. Please use a shorter resume.`
+        );
+      }
+
+      pageTexts.push(pageText);
     }
 
     return {
-      text: allText.trim(),
+      text: pageTexts.join("\n\n"),
       pageCount,
     };
   } catch (error) {
     console.error("Error parsing PDF:", error);
+    if (error instanceof Error && error.message.includes("PDF")) {
+      throw error;
+    }
     throw new Error(
       "Failed to parse PDF. Please try a different file or paste your resume text directly."
     );
