@@ -109,7 +109,7 @@ export function ResumeUpload({ value, onChange, disabled }: ResumeUploadProps) {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
       >
-        <CardContent className="flex flex-col items-center justify-center py-8">
+        <CardContent className="relative flex flex-col items-center justify-center py-8">
           {isProcessing ? (
             <>
               <Loader2 className="h-10 w-10 text-muted-foreground animate-spin mb-3" />
@@ -168,7 +168,7 @@ export function ResumeUpload({ value, onChange, disabled }: ResumeUploadProps) {
           value={value}
           onChange={(e) => {
             onChange(e.target.value);
-            if (e.target.value && !fileName) {
+            if (e.target.value && fileName) {
               setFileName(null);
             }
           }}

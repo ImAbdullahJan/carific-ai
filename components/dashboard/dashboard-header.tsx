@@ -22,7 +22,8 @@ export function DashboardHeader({ userName, userEmail }: DashboardHeaderProps) {
           router.push(ROUTES.SIGN_IN);
         },
         onError: (ctx) => {
-          toast.error(ctx.error.message);
+          toast.error("Failed to sign out. Please try again.");
+          console.error("Sign out error:", ctx.error);
         },
       },
     });
