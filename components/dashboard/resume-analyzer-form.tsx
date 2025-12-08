@@ -14,6 +14,7 @@ import {
 import { ResumeUpload } from "@/components/resume-upload";
 import { JobDescriptionInput } from "@/components/job-description-input";
 import { AnalysisResults } from "@/components/analysis-results";
+import { ResumeAnalysisSchema } from "@/lib/validations/resume-analysis";
 
 export function ResumeAnalyzerForm() {
   // Form state
@@ -26,12 +27,13 @@ export function ResumeAnalyzerForm() {
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const analyzeResume = async () => {
-    if (!resumeText.trim()) {
-      toast.error("Please upload or paste your resume");
-      return;
-    }
-    if (!jobDescription.trim()) {
-      toast.error("Please enter a job description");
+    const validation = ResumeAnalysisSchema.safeParse({
+      resumeText,
+      jobDescription,
+    });
+
+    if (!validation.success) {
+      toast.error(validation.error.issues[0].message);
       return;
     }
 
@@ -78,7 +80,9 @@ export function ResumeAnalyzerForm() {
     }
   };
 
-  const canAnalyze = resumeText.trim() && jobDescription.trim() && !isAnalyzing;
+  const canAnalyze =
+    ResumeAnalysisSchema.safeParse({ resumeText, jobDescription }).success &&
+    !isAnalyzing;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
