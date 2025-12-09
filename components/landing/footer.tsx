@@ -1,4 +1,5 @@
-import { siteConfig, footerContent } from "@/config/landing";
+import { Github, Twitter, Linkedin } from "lucide-react";
+import { siteConfig, footerContent, socialLinks } from "@/config/landing";
 
 export function Footer() {
   return (
@@ -10,16 +11,47 @@ export function Footer() {
             {footerContent.tagline}
           </div>
         </div>
-        <div className="flex gap-4 items-center">
-          {footerContent.links.map((link) => (
+        <div className="flex gap-6 items-center">
+          <div className="flex gap-4 items-center">
             <a
-              key={link.label}
-              className="text-sm hover:underline"
-              href={link.href}
+              href={socialLinks.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="GitHub"
             >
-              {link.label}
+              <Github className="h-5 w-5" />
             </a>
-          ))}
+            <a
+              href={socialLinks.twitter}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Twitter/X"
+            >
+              <Twitter className="h-5 w-5" />
+            </a>
+            <a
+              href={socialLinks.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="LinkedIn"
+            >
+              <Linkedin className="h-5 w-5" />
+            </a>
+          </div>
+          <div className="flex gap-4 items-center">
+            {footerContent.links.map((link) => (
+              <a
+                key={link.label}
+                className="text-sm hover:underline"
+                href={link.href}
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
         </div>
       </div>
 

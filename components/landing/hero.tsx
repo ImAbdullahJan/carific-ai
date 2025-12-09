@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,12 +23,16 @@ export function Hero() {
 
         <div className="mt-6 flex gap-4">
           <Button size="lg" asChild>
-            <a href={heroContent.primaryCta.href}>
+            <Link href={heroContent.primaryCta.href}>
               {heroContent.primaryCta.label}
-            </a>
+            </Link>
           </Button>
           <Button variant="outline" size="lg" asChild>
-            <a href={heroContent.secondaryCta.href}>
+            <a
+              href={heroContent.secondaryCta.href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {heroContent.secondaryCta.label}
             </a>
           </Button>
