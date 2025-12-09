@@ -4,7 +4,13 @@ export const siteConfig = {
   description:
     "Carific.ai is a collection of focused AI agents - resume editor, interview coach, daily practice micro-tasks, and career path generator - built to help you make measurable progress. Open-source, privacy-first, and designed to ship fast.",
   logo: "C",
-  githubUrl: "https://github.com/",
+  githubUrl: "https://github.com/ImAbdullahJan/carific.ai",
+};
+
+export const socialLinks = {
+  github: "https://github.com/ImAbdullahJan/carific.ai",
+  twitter: "https://x.com/Mr_AbdullahJan",
+  linkedin: "https://linkedin.com/in/imabdullahjan",
 };
 
 export const navLinks = [
@@ -18,8 +24,11 @@ export const heroContent = {
   title: "Level up your career and land your dream job",
   description:
     "Carific.ai is a collection of focused AI agents - resume editor, interview coach, and career path generator - built to help you land your next role. Open-source, privacy-first, and designed to ship fast.",
-  primaryCta: { label: "Get started - it's free", href: "#signup" },
-  secondaryCta: { label: "Try a demo", href: "#demo" },
+  primaryCta: { label: "Get started - it's free", href: "/signin" },
+  secondaryCta: {
+    label: "View on GitHub",
+    href: "https://github.com/ImAbdullahJan/carific.ai",
+  },
   badge: "Open source • MIT License • Weekly public builds",
   stats: [
     { value: "100+", label: "Resumes processed" },
@@ -121,7 +130,7 @@ export const contributeContent = {
   buttons: [
     {
       label: "View repo",
-      href: "https://github.com/",
+      href: "https://github.com/ImAbdullahJan/carific.ai",
       variant: "default" as const,
     },
     { label: "Contributing guide", href: "#", variant: "outline" as const },
@@ -141,6 +150,5 @@ export const footerContent = {
   links: [
     { label: "Privacy", href: "#" },
     { label: "Terms", href: "#" },
-    { label: "GitHub", href: "https://github.com/" },
   ],
 };

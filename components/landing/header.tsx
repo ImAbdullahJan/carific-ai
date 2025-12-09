@@ -26,9 +26,6 @@ export function Header() {
           </a>
         ))}
         <Button variant="outline" size="sm" asChild>
-          <a href={siteConfig.githubUrl}>View on GitHub</a>
-        </Button>
-        <Button variant="ghost" size="sm" asChild>
           <Link href="/signin">Sign In</Link>
         </Button>
         <Button size="sm" asChild>
