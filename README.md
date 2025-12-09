@@ -6,12 +6,20 @@ AI-powered career development platform. Land your next role with resume editing,
 
 ## Tech Stack
 
-- **Framework**: [Next.js 16](https://nextjs.org) (App Router)
-- **Database**: PostgreSQL with [Prisma](https://prisma.io) ORM
-- **Authentication**: [Better Auth](https://better-auth.com)
-- **UI Components**: [shadcn/ui](https://ui.shadcn.com)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com)
-- **Language**: TypeScript
+| Category            | Technology                                                            | Version |
+| ------------------- | --------------------------------------------------------------------- | ------- |
+| **Framework**       | [Next.js](https://nextjs.org) (App Router)                            | 16      |
+| **Runtime**         | [React](https://react.dev)                                            | 19      |
+| **Database**        | PostgreSQL with [Prisma](https://prisma.io) ORM                       | 7       |
+| **Authentication**  | [Better Auth](https://better-auth.com)                                | 1.4     |
+| **Forms**           | [TanStack Form](https://tanstack.com/form)                            | 1.27    |
+| **AI**              | [Vercel AI SDK](https://sdk.vercel.ai)                                | 5       |
+| **Email Templates** | [React Email](https://react.email)                                    | 5       |
+| **Email Delivery**  | [Resend](https://resend.com)                                          | 6.5     |
+| **Validation**      | [Zod](https://zod.dev)                                                | 4       |
+| **UI Components**   | [shadcn/ui](https://ui.shadcn.com) + [Radix UI](https://radix-ui.com) | -       |
+| **Styling**         | [Tailwind CSS](https://tailwindcss.com)                               | 4       |
+| **Language**        | TypeScript                                                            | 5       |
 
 ## Getting Started
 
@@ -26,10 +34,17 @@ Create a `.env` file in the root directory:
 
 ```env
 DATABASE_URL="postgresql://..."
+
 GITHUB_CLIENT_ID="..."
 GITHUB_CLIENT_SECRET="..."
+
 BETTER_AUTH_SECRET="..."
 BETTER_AUTH_URL="..."
+
+RESEND_API_KEY="..."
+EMAIL_FROM="..."
+
+AI_GATEWAY_API_KEY="..."
 ```
 
 ### Installation
