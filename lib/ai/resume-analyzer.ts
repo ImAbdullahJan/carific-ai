@@ -16,7 +16,7 @@ All important terms from the job posting not found in the resume.
 - whereToAdd: Specific section or role, e.g., "Skills section" or "Your role at Acme Corp"
 
 ### Bullet Fixes
-Find all weak bullet points from the resume and suggest rewrites.
+Find all weak bullet points from the resume and suggest rewrites. If all bullets are strong, return an empty array.
 - location: e.g., "Experience → Acme Corp → 2nd bullet"
 - original: Exact text from the resume (must match verbatim)
 - improved: Rewritten with action verb, metrics, and relevance to job
@@ -30,8 +30,9 @@ Rules:
 - DO NOT use these overused words: Spearheaded, Leveraged, Synergy, Utilize, Facilitated, Orchestrated, Pioneered, Revolutionized, Streamlined, Championed
 - Use plain, professional verbs: Led, Built, Created, Reduced, Increased, Managed, Designed, Developed, Improved, Launched
 
-### Priority Actions (exactly 3)
-Specific next steps. Examples:
+### Priority Actions (1-3 items)
+Only include actions that are genuinely impactful. Don't pad with generic advice.
+Examples:
 - Good: "Add Docker to Skills - listed as required"
 - Bad: "Quantify your achievements"
 

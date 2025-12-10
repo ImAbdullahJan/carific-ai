@@ -74,13 +74,13 @@ export const ResumeAnalysisOutputSchema = z.object({
 
   bulletFixes: z
     .array(BulletFixSchema)
-    .min(1)
     .describe("All weak bullet points that need improvement"),
 
   priorityActions: z
     .array(z.string())
-    .length(3)
-    .describe("The 3 most impactful changes to make, in order of priority"),
+    .min(1)
+    .max(3)
+    .describe("Top 1-3 most impactful changes to make, in order of priority"),
 
   sectionFeedback: z
     .array(SectionFeedbackSchema)
