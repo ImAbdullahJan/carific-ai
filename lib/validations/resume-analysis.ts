@@ -25,3 +25,58 @@ export const ResumeAnalysisSchema = z.object({
 });
 
 export type ResumeAnalysisInput = z.infer<typeof ResumeAnalysisSchema>;
+
+// === Structured Output Schema ===
+
+export const MissingKeywordSchema = z.object({
+  keyword: z.string().describe("The missing keyword or skill"),
+  importance: z.enum(["Critical", "Important", "Nice to Have"]),
+  whereToAdd: z
+    .string()
+    .describe(
+      "Specific location in resume where this should be added, e.g. 'Skills section' or 'Experience at Company X'"
+    ),
+});
+
+export const BulletFixSchema = z.object({
+  location: z
+    .string()
+    .describe(
+      "Where this bullet is in the resume, e.g. 'Experience → Acme Corp → 2nd bullet'"
+    ),
+  original: z.string().describe("The exact text from the user's resume"),
+  improved: z
+    .string()
+    .describe("The suggested replacement with metrics and strong verbs"),
+  reason: z
+    .string()
+    .describe("Why this improvement helps - reference the job requirements"),
+  impact: z.enum(["High", "Medium"]),
+});
+
+export const ResumeAnalysisOutputSchema = z.object({
+  score: z.number().min(0).max(100),
+  scoreLabel: z.enum(["Poor", "Fair", "Good", "Strong", "Excellent"]),
+  scoreSummary: z.string().describe("One sentence explaining the score"),
+
+  missingKeywords: z
+    .array(MissingKeywordSchema)
+    .min(1)
+    .describe(
+      "All missing keywords from job description, prioritized by importance"
+    ),
+
+  bulletFixes: z
+    .array(BulletFixSchema)
+    .min(1)
+    .describe("All weak bullet points that need improvement"),
+
+  priorityActions: z
+    .array(z.string())
+    .length(3)
+    .describe("The 3 most impactful changes to make, in order of priority"),
+});
+
+export type ResumeAnalysisOutput = z.infer<typeof ResumeAnalysisOutputSchema>;
+export type MissingKeyword = z.infer<typeof MissingKeywordSchema>;
+export type BulletFix = z.infer<typeof BulletFixSchema>;
