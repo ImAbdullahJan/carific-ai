@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Pencil,
   Copy,
@@ -22,15 +22,27 @@ interface BulletFixesProps {
 
 export function BulletFixes({ fixes }: BulletFixesProps) {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   if (!fixes || fixes.length === 0) return null;
 
   const copyToClipboard = async (text: string, index: number) => {
+    if (!navigator.clipboard?.writeText) {
+      toast.error("Copy not supported in this browser");
+      return;
+    }
     try {
       await navigator.clipboard.writeText(text);
       setCopiedIndex(index);
       toast.success("Copied! Paste it into your resume.");
-      setTimeout(() => setCopiedIndex(null), 2000);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCopiedIndex(null), 2000);
     } catch {
       toast.error("Failed to copy");
     }
