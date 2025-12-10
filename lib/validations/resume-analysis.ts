@@ -30,6 +30,7 @@ export type ResumeAnalysisInput = z.infer<typeof ResumeAnalysisSchema>;
 
 export const MissingKeywordSchema = z.object({
   keyword: z.string().describe("The missing keyword or skill"),
+  category: z.enum(["Hard Skill", "Soft Skill", "Domain"]),
   importance: z.enum(["Critical", "Important", "Nice to Have"]),
   whereToAdd: z
     .string()

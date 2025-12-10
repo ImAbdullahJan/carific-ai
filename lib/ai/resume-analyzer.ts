@@ -15,6 +15,10 @@ const RESUME_ANALYSIS_SYSTEM_PROMPT = `You are a resume reviewer. Analyze the re
 ### Missing Keywords
 All important terms from the job posting not found in the resume.
 - keyword: Exact term from job posting
+- category: Classify each keyword:
+  * "Hard Skill": Learnable, measurable abilities - tools, languages, frameworks, methodologies, technical skills (e.g., Docker, Python, Excel, Accounting, Data Analysis)
+  * "Soft Skill": Interpersonal abilities (e.g., Leadership, Communication, Collaboration, Problem-solving)
+  * "Domain": Industry knowledge, certifications, specific experience (e.g., HIPAA, Series 7, Supply Chain)
 - importance: "Critical" (required), "Important" (preferred), "Nice to Have" (bonus)
 - whereToAdd: Specific section or role, e.g., "Skills section" or "Your role at Acme Corp"
 
