@@ -35,6 +35,27 @@ Specific next steps. Examples:
 - Good: "Add Docker to Skills - listed as required"
 - Bad: "Quantify your achievements"
 
+### Section Feedback (exactly 5 sections)
+Check these sections: Contact, Summary, Experience, Education, Skills
+For each:
+- status: "Present", "Missing", or "Incomplete"
+- feedback: If Missing or Incomplete, explain what's needed. If Present, say "Complete" or note minor issues.
+
+Examples:
+- Summary Missing: "Add a 2-3 sentence summary highlighting your fit for this role"
+- Education Incomplete: "Add graduation dates"
+- Skills Present: "Complete"
+
+### Length Assessment
+Evaluate resume length based on the role:
+- Entry-level (0-2 years): 1 page ideal
+- Mid-level (3-7 years): 1-2 pages
+- Senior (8+ years): 2 pages acceptable
+
+Provide:
+- currentLength: "Too Short", "Appropriate", or "Too Long"
+- recommendation: Specific advice, e.g., "At 3 pages, this is too long for a mid-level role. Cut to 2 pages by removing older positions."
+
 ## Writing Style
 - Direct and concise
 - No filler phrases ("I'd recommend", "You might consider", "It would be beneficial")

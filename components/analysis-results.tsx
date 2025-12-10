@@ -9,6 +9,8 @@ import {
   MissingKeywords,
   BulletFixes,
   PriorityActions,
+  SectionFeedbackList,
+  LengthAssessment,
 } from "@/components/analysis";
 import type { ResumeAnalysisOutput } from "@/lib/validations/resume-analysis";
 
@@ -99,6 +101,12 @@ export function AnalysisResults({
 
         {/* Missing Keywords - What to add */}
         <MissingKeywords keywords={analysis?.missingKeywords} />
+
+        {/* Section Completeness - Only shows if issues exist */}
+        <SectionFeedbackList sections={analysis?.sectionFeedback} />
+
+        {/* Length Assessment - Only shows if not appropriate */}
+        <LengthAssessment assessment={analysis?.lengthAssessment} />
 
         {/* Score Card - De-emphasized, at the bottom */}
         <ScoreCard

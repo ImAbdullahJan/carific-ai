@@ -38,6 +38,12 @@ export const MissingKeywordSchema = z.object({
     ),
 });
 
+export const SectionFeedbackSchema = z.object({
+  section: z.enum(["Contact", "Summary", "Experience", "Education", "Skills"]),
+  status: z.enum(["Present", "Missing", "Incomplete"]),
+  feedback: z.string().describe("Specific feedback if missing or incomplete"),
+});
+
 export const BulletFixSchema = z.object({
   location: z
     .string()
@@ -75,8 +81,21 @@ export const ResumeAnalysisOutputSchema = z.object({
     .array(z.string())
     .length(3)
     .describe("The 3 most impactful changes to make, in order of priority"),
+
+  sectionFeedback: z
+    .array(SectionFeedbackSchema)
+    .length(5)
+    .describe("Feedback on standard resume sections"),
+
+  lengthAssessment: z.object({
+    currentLength: z.enum(["Too Short", "Appropriate", "Too Long"]),
+    recommendation: z
+      .string()
+      .describe("Specific recommendation based on role level"),
+  }),
 });
 
 export type ResumeAnalysisOutput = z.infer<typeof ResumeAnalysisOutputSchema>;
 export type MissingKeyword = z.infer<typeof MissingKeywordSchema>;
 export type BulletFix = z.infer<typeof BulletFixSchema>;
+export type SectionFeedback = z.infer<typeof SectionFeedbackSchema>;

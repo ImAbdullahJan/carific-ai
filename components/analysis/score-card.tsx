@@ -49,7 +49,7 @@ export function ScoreCard({ score, label, summary }: ScoreCardProps) {
 
   return (
     <Card>
-      <CardContent className="pt-6">
+      <CardContent>
         <div className="flex items-center gap-6">
           {/* Circular Progress */}
           <div className="relative w-28 h-28 shrink-0">
