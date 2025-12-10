@@ -1,1 +1,1 @@
-export { analyzeResume, type ResumeAnalysisInput } from "./resume-analyzer";
+export { analyzeResume } from "./resume-analyzer";

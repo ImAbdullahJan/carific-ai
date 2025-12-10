@@ -1,5 +1,8 @@
 import { generateObject } from "ai";
-import { ResumeAnalysisOutputSchema } from "@/lib/validations/resume-analysis";
+import {
+  ResumeAnalysisOutputSchema,
+  type ResumeAnalysisInput,
+} from "@/lib/validations/resume-analysis";
 
 const RESUME_ANALYSIS_SYSTEM_PROMPT = `You are a resume reviewer. Analyze the resume against the job description.
 
@@ -65,11 +68,6 @@ Provide:
 
 const MODEL = "google/gemini-2.5-flash-lite";
 
-export interface ResumeAnalysisInput {
-  resumeText: string;
-  jobDescription: string;
-}
-
 /**
  * Analyzes a resume against a job description using AI
  * Returns a structured object response
@@ -78,17 +76,19 @@ export async function analyzeResume({
   resumeText,
   jobDescription,
 }: ResumeAnalysisInput) {
-  const { object } = await generateObject({
-    model: MODEL,
-    schema: ResumeAnalysisOutputSchema,
-    system: RESUME_ANALYSIS_SYSTEM_PROMPT,
-    prompt: `Analyze this resume against the job description.
+  const prompt = `Analyze this resume against the job description.
 
 RESUME:
 ${resumeText}
 
 JOB DESCRIPTION:
-${jobDescription}`,
+${jobDescription}`;
+
+  const { object } = await generateObject({
+    model: MODEL,
+    schema: ResumeAnalysisOutputSchema,
+    system: RESUME_ANALYSIS_SYSTEM_PROMPT,
+    prompt,
   });
 
   return object;
