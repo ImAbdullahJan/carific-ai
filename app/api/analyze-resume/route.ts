@@ -19,8 +19,8 @@ export async function POST(req: Request) {
     }
 
     const { resumeText, jobDescription } = validation.data;
-    const result = analyzeResume({ resumeText, jobDescription });
-    return result.toTextStreamResponse();
+    const result = await analyzeResume({ resumeText, jobDescription });
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Resume analysis error:", error);
     return NextResponse.json(

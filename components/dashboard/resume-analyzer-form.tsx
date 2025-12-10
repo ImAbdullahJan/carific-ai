@@ -14,7 +14,10 @@ import {
 import { ResumeUpload } from "@/components/resume-upload";
 import { JobDescriptionInput } from "@/components/job-description-input";
 import { AnalysisResults } from "@/components/analysis-results";
-import { ResumeAnalysisSchema } from "@/lib/validations/resume-analysis";
+import {
+  ResumeAnalysisSchema,
+  type ResumeAnalysisOutput,
+} from "@/lib/validations/resume-analysis";
 
 export function ResumeAnalyzerForm() {
   // Form state
@@ -22,7 +25,8 @@ export function ResumeAnalyzerForm() {
   const [jobDescription, setJobDescription] = useState("");
 
   // Analysis state
-  const [analysisResult, setAnalysisResult] = useState("");
+  const [analysisResult, setAnalysisResult] =
+    useState<Partial<ResumeAnalysisOutput> | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
@@ -39,7 +43,7 @@ export function ResumeAnalyzerForm() {
 
     setIsAnalyzing(true);
     setAnalysisError(null);
-    setAnalysisResult("");
+    setAnalysisResult(null);
 
     try {
       const response = await fetch("/api/analyze-resume", {
@@ -48,27 +52,12 @@ export function ResumeAnalyzerForm() {
         body: JSON.stringify({ resumeText, jobDescription }),
       });
 
+      const data = await response.json();
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to analyze resume");
+        throw new Error(data.error || "Failed to analyze resume");
       }
 
-      // Handle streaming response
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
-      if (!reader) {
-        throw new Error("No response stream available");
-      }
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        setAnalysisResult((prev) => prev + chunk);
-      }
-
+      setAnalysisResult(data);
       toast.success("Analysis complete!");
     } catch (error) {
       const message =
@@ -139,7 +128,7 @@ export function ResumeAnalyzerForm() {
       {/* Right Column - Results */}
       <div className="lg:sticky lg:top-24 lg:self-start">
         <AnalysisResults
-          content={analysisResult}
+          analysis={analysisResult}
           isLoading={isAnalyzing}
           error={analysisError}
           onRetry={analyzeResume}
