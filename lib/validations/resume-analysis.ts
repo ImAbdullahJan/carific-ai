@@ -22,6 +22,7 @@ export const ResumeAnalysisSchema = z.object({
     .max(JOB_DESCRIPTION_MAX_LENGTH, {
       error: `Job description exceeds maximum length of ${JOB_DESCRIPTION_MAX_LENGTH.toLocaleString()} characters`,
     }),
+  pageCount: z.number().int().min(1).max(50).optional(),
 });
 
 export type ResumeAnalysisInput = z.infer<typeof ResumeAnalysisSchema>;

@@ -10,7 +10,7 @@ import { extractTextFromPDF } from "@/lib/pdf-parser";
 
 interface ResumeUploadProps {
   value: string;
-  onChange: (text: string) => void;
+  onChange: (text: string, pageCount?: number) => void;
   disabled?: boolean;
 }
 
@@ -27,10 +27,12 @@ export function ResumeUpload({ value, onChange, disabled }: ResumeUploadProps) {
 
     try {
       let text = "";
+      let pageCount: number | undefined;
 
       if (file.type === "application/pdf") {
         const result = await extractTextFromPDF(file);
         text = result.text;
+        pageCount = result.pageCount;
       } else if (
         file.type === "text/plain" ||
         file.name.endsWith(".txt") ||
@@ -50,7 +52,7 @@ export function ResumeUpload({ value, onChange, disabled }: ResumeUploadProps) {
       }
 
       setFileName(file.name);
-      onChange(text);
+      onChange(text, pageCount);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to process file");
       setFileName(null);
@@ -91,7 +93,7 @@ export function ResumeUpload({ value, onChange, disabled }: ResumeUploadProps) {
   };
 
   const handleClear = () => {
-    onChange("");
+    onChange("", undefined);
     setFileName(null);
     setError(null);
   };
@@ -168,7 +170,7 @@ export function ResumeUpload({ value, onChange, disabled }: ResumeUploadProps) {
           placeholder="Paste your resume content here..."
           value={value}
           onChange={(e) => {
-            onChange(e.target.value);
+            onChange(e.target.value, undefined);
             if (e.target.value && fileName) {
               setFileName(null);
             }

@@ -93,27 +93,21 @@ export function AnalysisResults({
           )}
         </div>
 
-        {/* Priority Actions - What to do first */}
-        <PriorityActions actions={analysis?.priorityActions} />
-
-        {/* Bullet Fixes - The core value: specific before/after improvements */}
-        <BulletFixes fixes={analysis?.bulletFixes} />
-
-        {/* Missing Keywords - What to add */}
-        <MissingKeywords keywords={analysis?.missingKeywords} />
-
-        {/* Section Completeness - Only shows if issues exist */}
-        <SectionFeedbackList sections={analysis?.sectionFeedback} />
-
-        {/* Length Assessment - Only shows if not appropriate */}
-        <LengthAssessment assessment={analysis?.lengthAssessment} />
-
-        {/* Score Card - De-emphasized, at the bottom */}
         <ScoreCard
           score={analysis?.score}
           label={analysis?.scoreLabel}
           summary={analysis?.scoreSummary}
         />
+
+        <PriorityActions actions={analysis?.priorityActions} />
+
+        <SectionFeedbackList sections={analysis?.sectionFeedback} />
+
+        <LengthAssessment assessment={analysis?.lengthAssessment} />
+
+        <BulletFixes fixes={analysis?.bulletFixes} />
+
+        <MissingKeywords keywords={analysis?.missingKeywords} />
       </div>
     </ScrollArea>
   );

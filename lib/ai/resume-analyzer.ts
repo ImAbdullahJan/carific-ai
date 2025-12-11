@@ -55,14 +55,16 @@ Examples:
 - Skills Present: "Complete"
 
 ### Length Assessment
-Evaluate resume length based on the role:
+The resume page count will be provided in the prompt (if uploaded as PDF). Use this actual page count for assessment.
+
+Guidelines by experience level:
 - Entry-level (0-2 years): 1 page ideal
 - Mid-level (3-7 years): 1-2 pages
 - Senior (8+ years): 2 pages acceptable
 
 Provide:
 - currentLength: "Too Short", "Appropriate", or "Too Long"
-- recommendation: Specific advice, e.g., "At 3 pages, this is too long for a mid-level role. Cut to 2 pages by removing older positions."
+- recommendation: Specific advice using the actual page count, e.g., "At 3 pages, this is too long for a mid-level role. Cut to 2 pages by removing older positions."
 
 ## Writing Style
 - Direct and concise
@@ -79,12 +81,17 @@ const MODEL = "google/gemini-2.5-flash-lite";
 export async function analyzeResume({
   resumeText,
   jobDescription,
+  pageCount,
 }: ResumeAnalysisInput) {
+  const pageCountInfo = pageCount
+    ? `\nRESUME PAGE COUNT: ${pageCount} page${pageCount > 1 ? "s" : ""}`
+    : "";
+
   const prompt = `Analyze this resume against the job description.
 
 RESUME:
 ${resumeText}
-
+${pageCountInfo}
 JOB DESCRIPTION:
 ${jobDescription}`;
 
