@@ -31,7 +31,7 @@ export function DashboardHeader({ userName, userEmail }: DashboardHeaderProps) {
 
   return (
     <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="container mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="rounded-lg bg-primary/10 p-2">
             <Sparkles className="h-5 w-5 text-primary" />

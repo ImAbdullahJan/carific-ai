@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -8,7 +8,6 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 
 interface JobDescriptionInputProps {
@@ -24,11 +23,7 @@ export function JobDescriptionInput({
 }: JobDescriptionInputProps) {
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-2">
-          <Briefcase className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">Job Description</CardTitle>
-        </div>
+      <CardHeader>
         <CardDescription>
           Paste the job description you&apos;re applying for
         </CardDescription>
@@ -39,7 +34,7 @@ export function JobDescriptionInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
-          className="min-h-[250px] text-sm"
+          className="min-h-[300px] text-sm"
         />
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">

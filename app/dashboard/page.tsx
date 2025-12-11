@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader userName={user.name} userEmail={user.email} />
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="container mx-auto p-4">
         <ResumeAnalyzerForm />
       </main>
     </div>
