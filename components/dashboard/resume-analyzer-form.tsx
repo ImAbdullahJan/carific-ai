@@ -72,8 +72,9 @@ export function ResumeAnalyzerForm() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Left Column - Inputs */}
-      <div className="flex flex-col gap-4">
-        <Tabs defaultValue="resume" className="w-full flex flex-col gap-4">
+      <div className="grid grid-rows-[auto_1fr_auto] gap-4 h-[calc(100vh-150px)]">
+        <Tabs defaultValue="resume" className="w-full contents">
+          {/* Tabs header - row 1 (auto) */}
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="resume" className="gap-2">
               <FileText className="h-4 w-4" />
@@ -91,7 +92,8 @@ export function ResumeAnalyzerForm() {
             </TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="h-[calc(100vh-250px)] min-h-[400px]">
+          {/* Scrollable content - row 2 (1fr) */}
+          <ScrollArea className="h-full min-h-[400px]">
             <TabsContent value="resume" className="mt-0">
               <ResumeUpload
                 value={resumeText}
@@ -113,7 +115,7 @@ export function ResumeAnalyzerForm() {
           </ScrollArea>
         </Tabs>
 
-        {/* Analyze Button - Outside scroll */}
+        {/* Analyze Button - row 3 (auto) */}
         <Button
           size="lg"
           className="w-full"
