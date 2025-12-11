@@ -82,33 +82,36 @@ export function AnalysisResults({
   }
 
   return (
-    <ScrollArea className="h-[calc(100vh-200px)] min-h-[500px]">
-      <div className="space-y-4 pr-4">
-        {/* Header with loading indicator */}
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">Your Action Plan</h2>
-          {isLoading && (
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground ml-auto" />
-          )}
-        </div>
-
-        <ScoreCard
-          score={analysis?.score}
-          label={analysis?.scoreLabel}
-          summary={analysis?.scoreSummary}
-        />
-
-        <PriorityActions actions={analysis?.priorityActions} />
-
-        <SectionFeedbackList sections={analysis?.sectionFeedback} />
-
-        <LengthAssessment assessment={analysis?.lengthAssessment} />
-
-        <BulletFixes fixes={analysis?.bulletFixes} />
-
-        <MissingKeywords keywords={analysis?.missingKeywords} />
+    <div className="grid grid-rows-[auto_1fr] gap-4 h-[calc(100vh-150px)]">
+      {/* Header - fixed at top */}
+      <div className="flex items-center gap-2">
+        <Sparkles className="h-5 w-5 text-primary" />
+        <h2 className="text-lg font-semibold">Your Action Plan</h2>
+        {isLoading && (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground ml-auto" />
+        )}
       </div>
-    </ScrollArea>
+
+      {/* Scrollable content */}
+      <ScrollArea className="h-full min-h-[400px]">
+        <div className="space-y-4 pr-4">
+          <ScoreCard
+            score={analysis?.score}
+            label={analysis?.scoreLabel}
+            summary={analysis?.scoreSummary}
+          />
+
+          <PriorityActions actions={analysis?.priorityActions} />
+
+          <SectionFeedbackList sections={analysis?.sectionFeedback} />
+
+          <LengthAssessment assessment={analysis?.lengthAssessment} />
+
+          <BulletFixes fixes={analysis?.bulletFixes} />
+
+          <MissingKeywords keywords={analysis?.missingKeywords} />
+        </div>
+      </ScrollArea>
+    </div>
   );
 }

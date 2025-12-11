@@ -2,15 +2,10 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Sparkles, FileText } from "lucide-react";
+import { Sparkles, FileText, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResumeUpload } from "@/components/resume-upload";
 import { JobDescriptionInput } from "@/components/job-description-input";
 import { AnalysisResults } from "@/components/analysis-results";
@@ -75,40 +70,64 @@ export function ResumeAnalyzerForm() {
     !isAnalyzing;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Left Column - Inputs */}
-      <div className="space-y-6">
-        {/* Resume Upload Section */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg">Your Resume</CardTitle>
-            </div>
-            <CardDescription>
-              Upload a PDF or paste your resume text
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResumeUpload
-              value={resumeText}
-              onChange={(text, pages) => {
-                setResumeText(text);
-                setPageCount(pages);
-              }}
-              disabled={isAnalyzing}
-            />
-          </CardContent>
-        </Card>
+      <div className="grid grid-rows-[auto_1fr_auto] gap-4 h-[calc(100vh-150px)]">
+        <Tabs defaultValue="resume" className="w-full contents">
+          {/* Tabs header - row 1 (auto) */}
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="resume" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Resume
+              {resumeText && (
+                <>
+                  <span
+                    className="ml-1 h-2 w-2 rounded-full bg-green-500"
+                    aria-hidden="true"
+                  />
+                  <span className="sr-only">Resume uploaded</span>
+                </>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="job" className="gap-2">
+              <Briefcase className="h-4 w-4" />
+              Job Description
+              {jobDescription && (
+                <>
+                  <span
+                    className="ml-1 h-2 w-2 rounded-full bg-green-500"
+                    aria-hidden="true"
+                  />
+                  <span className="sr-only">Job description provided</span>
+                </>
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Job Description Section */}
-        <JobDescriptionInput
-          value={jobDescription}
-          onChange={setJobDescription}
-          disabled={isAnalyzing}
-        />
+          {/* Scrollable content - row 2 (1fr) */}
+          <ScrollArea className="h-full min-h-[400px]">
+            <TabsContent value="resume" className="mt-0">
+              <ResumeUpload
+                value={resumeText}
+                onChange={(text, pages) => {
+                  setResumeText(text);
+                  setPageCount(pages);
+                }}
+                disabled={isAnalyzing}
+              />
+            </TabsContent>
 
-        {/* Analyze Button */}
+            <TabsContent value="job" className="mt-0">
+              <JobDescriptionInput
+                value={jobDescription}
+                onChange={setJobDescription}
+                disabled={isAnalyzing}
+              />
+            </TabsContent>
+          </ScrollArea>
+        </Tabs>
+
+        {/* Analyze Button - row 3 (auto) */}
         <Button
           size="lg"
           className="w-full"
