@@ -80,14 +80,26 @@ export function ResumeAnalyzerForm() {
               <FileText className="h-4 w-4" />
               Resume
               {resumeText && (
-                <span className="ml-1 h-2 w-2 rounded-full bg-green-500" />
+                <>
+                  <span
+                    className="ml-1 h-2 w-2 rounded-full bg-green-500"
+                    aria-hidden="true"
+                  />
+                  <span className="sr-only">Resume uploaded</span>
+                </>
               )}
             </TabsTrigger>
             <TabsTrigger value="job" className="gap-2">
               <Briefcase className="h-4 w-4" />
               Job Description
               {jobDescription && (
-                <span className="ml-1 h-2 w-2 rounded-full bg-green-500" />
+                <>
+                  <span
+                    className="ml-1 h-2 w-2 rounded-full bg-green-500"
+                    aria-hidden="true"
+                  />
+                  <span className="sr-only">Job description provided</span>
+                </>
               )}
             </TabsTrigger>
           </TabsList>
