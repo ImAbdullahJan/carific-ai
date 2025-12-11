@@ -18,8 +18,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: firstIssue.message }, { status: 400 });
     }
 
-    const { resumeText, jobDescription } = validation.data;
-    const result = await analyzeResume({ resumeText, jobDescription });
+    const { resumeText, jobDescription, pageCount } = validation.data;
+    const result = await analyzeResume({
+      resumeText,
+      jobDescription,
+      pageCount,
+    });
     return NextResponse.json(result);
   } catch (error) {
     console.error("Resume analysis error:", error);

@@ -23,6 +23,7 @@ export function ResumeAnalyzerForm() {
   // Form state
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
+  const [pageCount, setPageCount] = useState<number | undefined>(undefined);
 
   // Analysis state
   const [analysisResult, setAnalysisResult] =
@@ -49,7 +50,7 @@ export function ResumeAnalyzerForm() {
       const response = await fetch("/api/analyze-resume", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resumeText, jobDescription }),
+        body: JSON.stringify({ resumeText, jobDescription, pageCount }),
       });
 
       const data = await response.json();
@@ -91,7 +92,10 @@ export function ResumeAnalyzerForm() {
           <CardContent>
             <ResumeUpload
               value={resumeText}
-              onChange={setResumeText}
+              onChange={(text, pages) => {
+                setResumeText(text);
+                setPageCount(pages);
+              }}
               disabled={isAnalyzing}
             />
           </CardContent>

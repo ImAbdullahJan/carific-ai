@@ -15,6 +15,10 @@ const RESUME_ANALYSIS_SYSTEM_PROMPT = `You are a resume reviewer. Analyze the re
 ### Missing Keywords
 All important terms from the job posting not found in the resume.
 - keyword: Exact term from job posting
+- category: Classify each keyword:
+  * "Hard Skill": Learnable, measurable abilities - tools, languages, frameworks, methodologies, technical skills (e.g., Docker, Python, Excel, Accounting, Data Analysis)
+  * "Soft Skill": Interpersonal abilities (e.g., Leadership, Communication, Collaboration, Problem-solving)
+  * "Domain": Industry knowledge, certifications, specific experience (e.g., HIPAA, Series 7, Supply Chain)
 - importance: "Critical" (required), "Important" (preferred), "Nice to Have" (bonus)
 - whereToAdd: Specific section or role, e.g., "Skills section" or "Your role at Acme Corp"
 
@@ -51,14 +55,16 @@ Examples:
 - Skills Present: "Complete"
 
 ### Length Assessment
-Evaluate resume length based on the role:
+The resume page count will be provided in the prompt (if uploaded as PDF). Use this actual page count for assessment.
+
+Guidelines by experience level:
 - Entry-level (0-2 years): 1 page ideal
 - Mid-level (3-7 years): 1-2 pages
 - Senior (8+ years): 2 pages acceptable
 
 Provide:
 - currentLength: "Too Short", "Appropriate", or "Too Long"
-- recommendation: Specific advice, e.g., "At 3 pages, this is too long for a mid-level role. Cut to 2 pages by removing older positions."
+- recommendation: Specific advice using the actual page count, e.g., "At 3 pages, this is too long for a mid-level role. Cut to 2 pages by removing older positions."
 
 ## Writing Style
 - Direct and concise
@@ -75,12 +81,17 @@ const MODEL = "google/gemini-2.5-flash-lite";
 export async function analyzeResume({
   resumeText,
   jobDescription,
+  pageCount,
 }: ResumeAnalysisInput) {
+  const pageCountInfo = pageCount
+    ? `\nRESUME PAGE COUNT: ${pageCount} page${pageCount > 1 ? "s" : ""}`
+    : "";
+
   const prompt = `Analyze this resume against the job description.
 
 RESUME:
 ${resumeText}
-
+${pageCountInfo}
 JOB DESCRIPTION:
 ${jobDescription}`;
 
