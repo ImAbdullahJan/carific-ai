@@ -14,15 +14,16 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String       @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean      @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   sessions      Session[]
   accounts      Account[]
+  userProfile   UserProfile?
 
   @@unique([email])
   @@map("user")
@@ -74,4 +75,266 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+// --------------------------------------------------------
+// RESUME GENERATOR MODELS
+// --------------------------------------------------------
+
+enum ResumeStatus {
+  DRAFT
+  FINISHED
+  ARCHIVED
+}
+
+model UserProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Contact & Personal Info
+  displayName String? // Name to appear on resume
+  headline    String? // e.g. "Senior Full Stack Engineer"
+  email       String? // Contact email (might differ from account email)
+  phone       String?
+  website     String?
+  location    String?
+  bio         String? // Short summary/objective
+
+  // Optional Personal Details (region-specific)
+  dateOfBirth   DateTime?
+  gender        String? // e.g., "Male", "Female", "Non-binary", "Prefer not to say"
+  nationality   String?
+  maritalStatus String? // Some regions require this
+  visaStatus    String? // Important for job applications
+
+  // Interests
+  hobbies String[] // e.g., ["Photography", "Hiking", "Chess"]
+
+  // Relations
+  socialLinks          SocialLink[]
+  workExperiences      WorkExperience[]
+  volunteerExperiences VolunteerExperience[]
+  educations           Education[]
+  projects             Project[]
+  skills               UserSkill[]
+  certifications       Certification[]
+  languages            Language[]
+  achievements         Achievement[]
+
+  // The generated resumes
+  resumes Resume[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_profile")
+}
+
+model SocialLink {
+  id        String      @id @default(cuid())
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  platform String // e.g., "linkedin", "github", "twitter", "dribbble", "custom"
+  url      String
+  label    String? // Display name (e.g., "My Portfolio", "Tech Blog")
+  icon     String? // Icon identifier for custom platforms
+  order    Int     @default(0) // For custom sorting
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([profileId, platform]) // One link per platform per profile
+  @@index([profileId])
+  @@index([platform]) // For querying by platform
+  @@map("social_link")
+}
+
+model WorkExperience {
+  id        String      @id @default(cuid())
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  company   String
+  position  String
+  location  String?
+  startDate DateTime
+  endDate   DateTime? // Null = Present
+  current   Boolean   @default(false)
+
+  bullets String[] // Each bullet = one achievement (source of truth)
+  order   Int      @default(0) // For custom sorting
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@map("work_experience")
+}
+
+model Education {
+  id        String      @id @default(cuid())
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  school       String
+  degree       String
+  fieldOfStudy String?
+  location     String?
+  startDate    DateTime?
+  endDate      DateTime?
+  current      Boolean   @default(false)
+
+  highlights String[] // Activities, honors, GPA, etc.
+  order      Int      @default(0) // For custom sorting
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@map("education")
+}
+
+model Project {
+  id        String      @id @default(cuid())
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  url         String?
+  startDate   DateTime?
+  endDate     DateTime?
+
+  highlights String[] // Key achievements
+  order      Int      @default(0) // For custom sorting
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@map("project")
+}
+
+model UserSkill {
+  id        String      @id @default(cuid())
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  name     String
+  category String? // e.g., "Soft", "Hard"
+  level    String? // e.g., "Beginner", "Intermediate", "Advanced", "Expert"
+  order    Int     @default(0) // For custom sorting
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([profileId, name]) // Prevent duplicate skills
+  @@index([profileId])
+  @@map("user_skill")
+}
+
+model Certification {
+  id        String      @id @default(cuid())
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  name          String
+  issuer        String? // e.g., "AWS", "Google", "Coursera"
+  issueDate     DateTime?
+  expiryDate    DateTime? // Null = No expiry
+  credentialId  String? // Certificate ID/Number
+  credentialUrl String? // Verification URL
+  order         Int       @default(0) // For custom sorting
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@map("certification")
+}
+
+model Language {
+  id        String      @id @default(cuid())
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  name        String // e.g., "English", "Spanish"
+  proficiency String? // e.g., "Native", "Fluent", "Conversational", "Basic"
+  order       Int     @default(0) // For custom sorting
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@map("language")
+}
+
+model VolunteerExperience {
+  id        String      @id @default(cuid())
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  organization String
+  role         String
+  location     String?
+  startDate    DateTime?
+  endDate      DateTime?
+  current      Boolean   @default(false)
+  bullets      String[] // Consistent with WorkExperience
+  order        Int       @default(0) // For custom sorting
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@map("volunteer_experience")
+}
+
+model Achievement {
+  id        String      @id @default(cuid())
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  title       String // e.g., "Employee of the Year", "Hackathon Winner"
+  issuer      String? // e.g., "Google", "IEEE", "University"
+  date        DateTime?
+  description String? // Brief description of the achievement
+  order       Int       @default(0) // For custom sorting
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@map("achievement")
+}
+
+model Resume {
+  id        String      @id @default(cuid())
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  title  String // e.g. "Frontend Developer - Google"
+  status ResumeStatus @default(DRAFT)
+
+  // Context for AI Tailoring
+  targetJobTitle       String?
+  targetJobDescription String?
+  matchScore           Int? // 0-100 score
+
+  // Visual Customization
+  templateId String  @default("modern")
+  hexColor   String? // Accent color
+
+  // The Snapshot (JSON)
+  // This stores the final resolved content for this specific resume.
+  // Changes here DO NOT reflect back to the UserProfile.
+  content Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@map("resume")
 }
