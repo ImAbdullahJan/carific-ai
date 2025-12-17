@@ -159,7 +159,7 @@ model WorkExperience {
   company   String
   position  String
   location  String?
-  startDate DateTime
+  startDate DateTime? // Null if date not available from resume
   endDate   DateTime? // Null = Present
   current   Boolean   @default(false)
 

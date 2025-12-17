@@ -217,7 +217,7 @@ function mapWorkExperiences(
     company: exp.company,
     position: exp.position,
     location: exp.location,
-    startDate: parseExtractedDate(exp.startDate) ?? new Date(),
+    startDate: parseExtractedDate(exp.startDate),
     endDate: parseExtractedDate(exp.endDate ?? null),
     current: exp.current,
     bullets: exp.bullets,
