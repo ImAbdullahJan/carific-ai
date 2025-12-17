@@ -7,6 +7,7 @@ import { Download, Loader2, FileText, Upload } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
 import { ResumeTemplate } from "./resume-template";
 import type { getFullProfile } from "@/lib/db/profile";
 
@@ -51,8 +52,10 @@ export function ResumeViewer({ profile }: ResumeViewerProps) {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      toast.success("Resume downloaded successfully");
     } catch (error) {
       console.error("Failed to generate PDF:", error);
+      toast.error("Failed to generate PDF. Please try again.");
     } finally {
       setIsDownloading(false);
     }

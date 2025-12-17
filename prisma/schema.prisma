@@ -145,7 +145,6 @@ model SocialLink {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([profileId, platform]) // One link per platform per profile
   @@index([profileId])
   @@index([platform]) // For querying by platform
   @@map("social_link")
