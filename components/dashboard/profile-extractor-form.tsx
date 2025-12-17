@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import {
   Sparkles,
@@ -14,6 +15,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,26 +36,36 @@ function ExtractedProfileView({ data, saved }: ExtractedProfileViewProps) {
       <div className="space-y-6 pr-4">
         {/* Status Banner */}
         <div
-          className={`flex items-center gap-2 p-3 rounded-lg ${
+          className={`flex items-center justify-between gap-2 p-3 rounded-lg ${
             saved
               ? "bg-green-500/10 text-green-600"
               : "bg-yellow-500/10 text-yellow-600"
           }`}
         >
-          {saved ? (
-            <>
-              <CheckCircle2 className="h-5 w-5" />
-              <span className="text-sm font-medium">
-                Profile saved successfully
-              </span>
-            </>
-          ) : (
-            <>
-              <AlertCircle className="h-5 w-5" />
-              <span className="text-sm font-medium">
-                Extracted but not saved
-              </span>
-            </>
+          <div className="flex items-center gap-2">
+            {saved ? (
+              <>
+                <CheckCircle2 className="h-5 w-5" />
+                <span className="text-sm font-medium">
+                  Profile saved successfully
+                </span>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="h-5 w-5" />
+                <span className="text-sm font-medium">
+                  Extracted but not saved
+                </span>
+              </>
+            )}
+          </div>
+          {saved && (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/dashboard/profile/view">
+                <Eye className="h-4 w-4 mr-1" />
+                View Full Profile
+              </Link>
+            </Button>
           )}
         </div>
 
