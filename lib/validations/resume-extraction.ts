@@ -11,9 +11,13 @@ export const SocialLinkExtractionSchema = z.object({
   platform: z
     .string()
     .describe(
-      'Platform identifier: "linkedin", "github", "twitter", "dribbble", "behance", "medium", "stackoverflow", or "custom"'
+      'Platform identifier in lowercase: "linkedin", "github", "twitter", "dribbble", "behance", "medium", "stackoverflow", or "custom"'
     ),
-  url: z.string().describe("Full URL to the social profile"),
+  url: z
+    .string()
+    .describe(
+      "COMPLETE clickable URL starting with https:// (e.g., https://linkedin.com/in/johndoe). If only username is provided, construct the full URL based on the platform."
+    ),
   label: z
     .string()
     .nullable()
