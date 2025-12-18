@@ -338,3 +338,198 @@ export async function getFullProfile(userId: string) {
     },
   });
 }
+
+/**
+ * Updates a user's profile with form data
+ */
+export async function updateProfile(
+  userId: string,
+  data: import("@/lib/validations/profile-update").ProfileUpdate
+): Promise<SaveProfileResponse> {
+  try {
+    const profile = await prisma.$transaction(async (tx) => {
+      // Get or create profile
+      let existingProfile = await tx.userProfile.findUnique({
+        where: { userId },
+        select: { id: true },
+      });
+
+      if (!existingProfile) {
+        existingProfile = await tx.userProfile.create({
+          data: {
+            userId,
+            displayName: data.displayName,
+          },
+          select: { id: true },
+        });
+      }
+
+      const profileId = existingProfile.id;
+
+      // Delete all related data first (clean slate for arrays)
+      await Promise.all([
+        tx.socialLink.deleteMany({ where: { profileId } }),
+        tx.workExperience.deleteMany({ where: { profileId } }),
+        tx.volunteerExperience.deleteMany({ where: { profileId } }),
+        tx.education.deleteMany({ where: { profileId } }),
+        tx.project.deleteMany({ where: { profileId } }),
+        tx.userSkill.deleteMany({ where: { profileId } }),
+        tx.certification.deleteMany({ where: { profileId } }),
+        tx.language.deleteMany({ where: { profileId } }),
+        tx.achievement.deleteMany({ where: { profileId } }),
+      ]);
+
+      // Update main profile
+      const updatedProfile = await tx.userProfile.update({
+        where: { id: profileId },
+        data: {
+          displayName: data.displayName,
+          headline: data.headline || null,
+          email: data.email || null,
+          phone: data.phone || null,
+          website: data.website || null,
+          location: data.location || null,
+          bio: data.bio || null,
+          dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+          gender: data.gender || null,
+          nationality: data.nationality || null,
+          maritalStatus: data.maritalStatus || null,
+          visaStatus: data.visaStatus || null,
+          hobbies: data.hobbies || [],
+        },
+      });
+
+      // Create all related entities
+      await Promise.all([
+        data.socialLinks.length > 0 &&
+          tx.socialLink.createMany({
+            data: data.socialLinks.map((link, index) => ({
+              profileId,
+              platform: link.platform,
+              url: link.url,
+              label: link.label || null,
+              order: index,
+            })),
+          }),
+
+        data.workExperiences.length > 0 &&
+          tx.workExperience.createMany({
+            data: data.workExperiences.map((exp, index) => ({
+              profileId,
+              company: exp.company,
+              position: exp.position,
+              location: exp.location || null,
+              startDate: exp.startDate ? new Date(exp.startDate) : null,
+              endDate: exp.endDate ? new Date(exp.endDate) : null,
+              current: exp.current,
+              bullets: exp.bullets,
+              order: index,
+            })),
+          }),
+
+        data.volunteerExperiences.length > 0 &&
+          tx.volunteerExperience.createMany({
+            data: data.volunteerExperiences.map((exp, index) => ({
+              profileId,
+              organization: exp.organization,
+              role: exp.role,
+              location: exp.location || null,
+              startDate: exp.startDate ? new Date(exp.startDate) : null,
+              endDate: exp.endDate ? new Date(exp.endDate) : null,
+              current: exp.current,
+              bullets: exp.bullets,
+              order: index,
+            })),
+          }),
+
+        data.educations.length > 0 &&
+          tx.education.createMany({
+            data: data.educations.map((edu, index) => ({
+              profileId,
+              school: edu.school,
+              degree: edu.degree,
+              fieldOfStudy: edu.fieldOfStudy || null,
+              location: edu.location || null,
+              startDate: edu.startDate ? new Date(edu.startDate) : null,
+              endDate: edu.endDate ? new Date(edu.endDate) : null,
+              current: edu.current,
+              highlights: edu.highlights,
+              order: index,
+            })),
+          }),
+
+        data.projects.length > 0 &&
+          tx.project.createMany({
+            data: data.projects.map((project, index) => ({
+              profileId,
+              name: project.name,
+              description: project.description || null,
+              url: project.url || null,
+              startDate: project.startDate ? new Date(project.startDate) : null,
+              endDate: project.endDate ? new Date(project.endDate) : null,
+              highlights: project.highlights,
+              order: index,
+            })),
+          }),
+
+        data.skills.length > 0 &&
+          tx.userSkill.createMany({
+            data: data.skills.map((skill, index) => ({
+              profileId,
+              name: skill.name,
+              category: skill.category || null,
+              level: skill.level || null,
+              order: index,
+            })),
+          }),
+
+        data.certifications.length > 0 &&
+          tx.certification.createMany({
+            data: data.certifications.map((cert, index) => ({
+              profileId,
+              name: cert.name,
+              issuer: cert.issuer || null,
+              issueDate: cert.issueDate ? new Date(cert.issueDate) : null,
+              expiryDate: cert.expiryDate ? new Date(cert.expiryDate) : null,
+              credentialId: cert.credentialId || null,
+              credentialUrl: cert.credentialUrl || null,
+              order: index,
+            })),
+          }),
+
+        data.languages.length > 0 &&
+          tx.language.createMany({
+            data: data.languages.map((lang, index) => ({
+              profileId,
+              name: lang.name,
+              proficiency: lang.proficiency || null,
+              order: index,
+            })),
+          }),
+
+        data.achievements.length > 0 &&
+          tx.achievement.createMany({
+            data: data.achievements.map((achievement, index) => ({
+              profileId,
+              title: achievement.title,
+              issuer: achievement.issuer || null,
+              date: achievement.date ? new Date(achievement.date) : null,
+              description: achievement.description || null,
+              order: index,
+            })),
+          }),
+      ]);
+
+      return updatedProfile;
+    });
+
+    return { success: true, profileId: profile.id };
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to update profile",
+    };
+  }
+}

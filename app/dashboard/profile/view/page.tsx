@@ -3,7 +3,7 @@ import { checkAuth } from "@/lib/auth-check";
 import { ROUTES } from "@/lib/constants";
 import { getFullProfile } from "@/lib/db/profile";
 import { DashboardHeader } from "@/components/dashboard";
-import { ResumeViewer, EmptyProfileState } from "@/components/pdf";
+import { ProfileEditor, EmptyProfileState } from "@/components/profile-editor";
 
 export default async function ProfileViewPage() {
   const session = await checkAuth();
@@ -18,7 +18,7 @@ export default async function ProfileViewPage() {
     <div className="min-h-screen bg-background">
       <DashboardHeader userName={user.name} userEmail={user.email} />
       <main className="container mx-auto p-4">
-        {profile ? <ResumeViewer profile={profile} /> : <EmptyProfileState />}
+        {profile ? <ProfileEditor profile={profile} /> : <EmptyProfileState />}
       </main>
     </div>
   );
