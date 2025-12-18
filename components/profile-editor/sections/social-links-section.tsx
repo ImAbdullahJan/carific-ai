@@ -1,0 +1,105 @@
+"use client";
+
+import { Plus, Trash2 } from "lucide-react";
+import { withForm } from "@/hooks/form";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FieldGroup } from "@/components/ui/field";
+import {
+  type ProfileFormValues,
+  createEmptySocialLink,
+} from "@/lib/validations/profile-update";
+
+const PLATFORMS = [
+  { value: "linkedin", label: "LinkedIn" },
+  { value: "github", label: "GitHub" },
+  { value: "twitter", label: "Twitter/X" },
+  { value: "dribbble", label: "Dribbble" },
+  { value: "behance", label: "Behance" },
+  { value: "medium", label: "Medium" },
+  { value: "stackoverflow", label: "Stack Overflow" },
+  { value: "custom", label: "Custom" },
+];
+
+export const SocialLinksSection = withForm({
+  defaultValues: {} as ProfileFormValues,
+  render: function Render({ form }) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-md font-medium">Social Links</h3>
+          <form.Field name="socialLinks" mode="array">
+            {(field) => (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => field.pushValue(createEmptySocialLink())}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Link
+              </Button>
+            )}
+          </form.Field>
+        </div>
+
+        <form.Field name="socialLinks" mode="array">
+          {(field) => (
+            <div className="space-y-3">
+              {field.state.value.map((socialLink, index) => (
+                <Card key={socialLink.id}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium">
+                        Link {index + 1}
+                      </CardTitle>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => field.removeValue(index)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <FieldGroup>
+                      <div className="grid grid-cols-3 gap-4">
+                        <form.AppField name={`socialLinks[${index}].platform`}>
+                          {(subField) => (
+                            <subField.SelectField
+                              label="Platform"
+                              options={PLATFORMS}
+                              placeholder="Select platform"
+                            />
+                          )}
+                        </form.AppField>
+                        <form.AppField name={`socialLinks[${index}].url`}>
+                          {(subField) => (
+                            <subField.TextField
+                              label="URL"
+                              placeholder="https://linkedin.com/in/johndoe"
+                            />
+                          )}
+                        </form.AppField>
+                        <form.AppField name={`socialLinks[${index}].label`}>
+                          {(subField) => (
+                            <subField.TextField
+                              label="Label (optional)"
+                              placeholder="My LinkedIn"
+                            />
+                          )}
+                        </form.AppField>
+                      </div>
+                    </FieldGroup>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </form.Field>
+      </div>
+    );
+  },
+});

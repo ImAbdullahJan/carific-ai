@@ -3,11 +3,10 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { pdf } from "@react-pdf/renderer";
-import { Download, Loader2, FileText, Upload } from "lucide-react";
-import Link from "next/link";
+import { Download, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "sonner";
 import { ResumeTemplate } from "./resume-template";
 import type { getFullProfile } from "@/lib/db/profile";
 
@@ -32,16 +31,25 @@ const PDFViewerClient = dynamic(
 
 type FullProfile = NonNullable<Awaited<ReturnType<typeof getFullProfile>>>;
 
-interface ResumeViewerProps {
+interface PDFPreviewProps {
   profile: FullProfile;
+  title?: string;
+  showDownload?: boolean;
+  height?: string;
+  refreshKey?: number;
 }
 
-export function ResumeViewer({ profile }: ResumeViewerProps) {
+export function PDFPreview({
+  profile,
+  title = "Resume Preview",
+  showDownload = true,
+  height = "calc(100vh - 220px)",
+  refreshKey = 0,
+}: PDFPreviewProps) {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownload = async () => {
     setIsDownloading(true);
-
     try {
       const blob = await pdf(<ResumeTemplate profile={profile} />).toBlob();
       const url = URL.createObjectURL(blob);
@@ -62,25 +70,16 @@ export function ResumeViewer({ profile }: ResumeViewerProps) {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Header with actions */}
+    <div className="flex flex-col gap-4 h-full">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">
-            {profile.displayName}&apos;s Resume
-          </h1>
-          <p className="text-muted-foreground">
-            Preview and download your generated resume
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/profile">
-              <Upload className="h-4 w-4 mr-2" />
-              Update Profile
-            </Link>
-          </Button>
-          <Button onClick={handleDownload} disabled={isDownloading}>
+        <h2 className="text-lg font-semibold">{title}</h2>
+        {showDownload && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownload}
+            disabled={isDownloading}
+          >
             {isDownloading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -93,38 +92,13 @@ export function ResumeViewer({ profile }: ResumeViewerProps) {
               </>
             )}
           </Button>
-        </div>
+        )}
       </div>
-
-      {/* PDF Viewer - dynamically loaded to avoid SSR issues */}
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          <PDFViewerClient profile={profile} />
+      <Card className="flex-1 overflow-hidden">
+        <CardContent className="p-0" style={{ height }}>
+          <PDFViewerClient key={refreshKey} profile={profile} />
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-export function EmptyProfileState() {
-  return (
-    <Card className="max-w-md mx-auto mt-12">
-      <CardContent className="pt-6 text-center space-y-4">
-        <FileText className="h-16 w-16 text-muted-foreground mx-auto" />
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold">No Profile Found</h2>
-          <p className="text-muted-foreground">
-            You haven&apos;t created a profile yet. Upload your resume to get
-            started.
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/dashboard/profile">
-            <Upload className="h-4 w-4 mr-2" />
-            Upload Resume
-          </Link>
-        </Button>
-      </CardContent>
-    </Card>
   );
 }
