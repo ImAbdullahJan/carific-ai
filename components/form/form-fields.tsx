@@ -177,7 +177,11 @@ interface DateFieldProps extends FormControlProps {
   placeholder?: string;
 }
 
-export function DateField({ label, description }: DateFieldProps) {
+export function DateField({
+  label,
+  description,
+  placeholder = "Pick a date",
+}: DateFieldProps) {
   const field = useFieldContext<string>();
   const isInvalid =
     field.state.meta.errors.length > 0 && field.state.meta.isTouched;
@@ -211,7 +215,7 @@ export function DateField({ label, description }: DateFieldProps) {
             aria-invalid={isInvalid}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {isValidDate ? format(dateValue, "PPP") : "Pick a date"}
+            {isValidDate ? format(dateValue, "PPP") : placeholder}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
