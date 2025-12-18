@@ -18,7 +18,7 @@ const PDFViewerClient = dynamic(
     loading: () => (
       <div
         className="flex items-center justify-center bg-muted"
-        style={{ height: "calc(100vh - 220px)" }}
+        style={{ height: "calc(100vh - 180px)" }}
       >
         <div className="text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
@@ -42,7 +42,7 @@ export function PDFPreview({
   profile,
   title = "Resume Preview",
   showDownload = true,
-  height = "calc(100vh - 220px)",
+  height = "calc(100vh - 180px)",
 }: PDFPreviewProps) {
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -92,7 +92,7 @@ export function PDFPreview({
           </Button>
         )}
       </div>
-      <Card className="flex-1 overflow-hidden">
+      <Card className="flex-1 overflow-hidden py-1">
         <CardContent className="p-0" style={{ height }}>
           <PDFViewerClient profile={profile} />
         </CardContent>

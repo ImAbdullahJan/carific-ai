@@ -18,7 +18,7 @@ export function PDFViewerClient({ profile }: PDFViewerClientProps) {
       key={profileKey}
       style={{
         width: "100%",
-        height: "calc(100vh - 200px)",
+        height: "calc(100vh - 180px)",
         border: "none",
       }}
       showToolbar={false}
