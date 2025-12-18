@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Sparkles, LogOut } from "lucide-react";
+import { Sparkles, LogOut, FileText } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { ROUTES } from "@/lib/constants";
@@ -44,6 +45,12 @@ export function DashboardHeader({ userName, userEmail }: DashboardHeaderProps) {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href={ROUTES.PROFILE}>
+              <FileText className="h-4 w-4 mr-2" />
+              Resume Generator
+            </Link>
+          </Button>
           <p className="text-sm text-muted-foreground hidden sm:block">
             {userName || userEmail}
           </p>
