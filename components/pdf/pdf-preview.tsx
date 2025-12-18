@@ -18,7 +18,7 @@ const PDFViewerClient = dynamic(
     loading: () => (
       <div
         className="flex items-center justify-center bg-muted"
-        style={{ height: "calc(100vh - 200px)" }}
+        style={{ height: "calc(100vh - 220px)" }}
       >
         <div className="text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
@@ -36,7 +36,6 @@ interface PDFPreviewProps {
   title?: string;
   showDownload?: boolean;
   height?: string;
-  refreshKey?: number;
 }
 
 export function PDFPreview({
@@ -44,7 +43,6 @@ export function PDFPreview({
   title = "Resume Preview",
   showDownload = true,
   height = "calc(100vh - 220px)",
-  refreshKey = 0,
 }: PDFPreviewProps) {
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -96,7 +94,7 @@ export function PDFPreview({
       </div>
       <Card className="flex-1 overflow-hidden">
         <CardContent className="p-0" style={{ height }}>
-          <PDFViewerClient key={refreshKey} profile={profile} />
+          <PDFViewerClient profile={profile} />
         </CardContent>
       </Card>
     </div>

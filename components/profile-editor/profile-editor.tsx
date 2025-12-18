@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useAppForm } from "@/hooks/form";
@@ -125,7 +125,7 @@ function profileToFormValues(profile: FullProfile) {
 }
 
 export function ProfileEditor({ profile }: ProfileEditorProps) {
-  const [previewKey, setPreviewKey] = useState(0);
+  const router = useRouter();
 
   const form = useAppForm({
     defaultValues: profileToFormValues(profile),
@@ -144,8 +144,8 @@ export function ProfileEditor({ profile }: ProfileEditorProps) {
         }
 
         toast.success("Profile updated successfully");
-        // Refresh preview
-        setPreviewKey((prev) => prev + 1);
+        // Refresh server data to update preview with fresh profile
+        router.refresh();
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to update profile"
@@ -158,11 +158,7 @@ export function ProfileEditor({ profile }: ProfileEditorProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-120px)]">
       {/* Left Side - PDF Preview */}
-      <PDFPreview
-        profile={profile}
-        refreshKey={previewKey}
-        height="calc(100vh - 180px)"
-      />
+      <PDFPreview profile={profile} height="calc(100vh - 180px)" />
 
       {/* Right Side - Edit Form */}
       <div className="flex flex-col gap-4">

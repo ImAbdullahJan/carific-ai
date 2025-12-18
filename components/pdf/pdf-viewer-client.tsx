@@ -11,8 +11,11 @@ interface PDFViewerClientProps {
 }
 
 export function PDFViewerClient({ profile }: PDFViewerClientProps) {
+  const profileKey = profile.updatedAt.toISOString();
+
   return (
     <PDFViewer
+      key={profileKey}
       style={{
         width: "100%",
         height: "calc(100vh - 200px)",
@@ -20,7 +23,7 @@ export function PDFViewerClient({ profile }: PDFViewerClientProps) {
       }}
       showToolbar={false}
     >
-      <ResumeTemplate profile={profile} />
+      <ResumeTemplate key={profileKey} profile={profile} />
     </PDFViewer>
   );
 }

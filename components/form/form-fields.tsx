@@ -147,7 +147,10 @@ export function SelectField({
     <FormBase label={label} description={description}>
       <Select
         value={field.state.value ?? ""}
-        onValueChange={(value) => field.handleChange(value)}
+        onValueChange={(value) => {
+          field.handleChange(value);
+          field.handleBlur();
+        }}
       >
         <SelectTrigger
           id={field.name}
@@ -183,6 +186,7 @@ export function DateField({ label, description }: DateFieldProps) {
   const dateValue = field.state.value
     ? parse(field.state.value, "yyyy-MM-dd", new Date())
     : undefined;
+  const isValidDate = dateValue && !isNaN(dateValue.getTime());
 
   // Handle date selection from Calendar
   const handleSelect = (date: Date | undefined) => {
@@ -207,7 +211,7 @@ export function DateField({ label, description }: DateFieldProps) {
             aria-invalid={isInvalid}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {field.state.value ? format(dateValue!, "PPP") : "Pick a date"}
+            {isValidDate ? format(dateValue, "PPP") : "Pick a date"}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
