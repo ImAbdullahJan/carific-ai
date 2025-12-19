@@ -21,7 +21,7 @@ import { AchievementsSection } from "./sections/achievements-section";
 import { SocialLinksSection } from "./sections/social-links-section";
 import {
   profileToFormValues,
-  mergeFormValuesWithProfile,
+  formToResume,
 } from "@/lib/profile-transformation";
 
 type FullProfile = NonNullable<Awaited<ReturnType<typeof getFullProfile>>>;
@@ -69,10 +69,10 @@ export function ProfileEditor({ profile }: ProfileEditorProps) {
       {/* Left Side - PDF Preview */}
       <form.Subscribe selector={(state) => [state.values]}>
         {([values]) => {
-          const liveProfile = mergeFormValuesWithProfile(profile, values);
+          const resumeData = formToResume(values);
 
           return (
-            <PDFPreview profile={liveProfile} height="calc(100vh - 180px)" />
+            <PDFPreview profile={resumeData} height="calc(100vh - 180px)" />
           );
         }}
       </form.Subscribe>

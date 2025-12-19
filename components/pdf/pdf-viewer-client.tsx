@@ -4,20 +4,18 @@ import { PDFViewer } from "@react-pdf/renderer";
 import { useMemo } from "react";
 import { useDebounce } from "use-debounce";
 import { ResumeTemplate } from "./resume-template";
-import type { getFullProfile } from "@/lib/db/profile";
-
-type FullProfile = NonNullable<Awaited<ReturnType<typeof getFullProfile>>>;
+import type { ResumeData } from "@/lib/types/resume";
 
 interface PDFViewerClientProps {
-  profile: FullProfile;
+  data: ResumeData;
 }
 
-export function PDFViewerClient({ profile }: PDFViewerClientProps) {
+export function PDFViewerClient({ data }: PDFViewerClientProps) {
   // Distinct the preview update from the typing
-  const [debouncedProfile] = useDebounce(profile, 500);
+  const [debouncedProfile] = useDebounce(data, 500);
 
   const document = useMemo(
-    () => <ResumeTemplate profile={debouncedProfile} />,
+    () => <ResumeTemplate data={debouncedProfile} />,
     [debouncedProfile]
   );
 

@@ -1,12 +1,10 @@
 "use client";
 
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
-import type { getFullProfile } from "@/lib/db/profile";
-
-type FullProfile = NonNullable<Awaited<ReturnType<typeof getFullProfile>>>;
+import type { ResumeData } from "@/lib/types/resume";
 
 interface ResumeTemplateProps {
-  profile: FullProfile;
+  data: ResumeData;
 }
 
 // ATS-Compliant Design Principles:
@@ -229,7 +227,7 @@ function formatDateRange(
 
 // Group skills by category for better ATS parsing
 function groupSkillsByCategory(
-  skills: FullProfile["skills"]
+  skills: ResumeData["skills"]
 ): Record<string, string[]> {
   const grouped: Record<string, string[]> = {};
   skills.forEach((skill) => {
@@ -242,31 +240,31 @@ function groupSkillsByCategory(
   return grouped;
 }
 
-export function ResumeTemplate({ profile }: ResumeTemplateProps) {
-  const groupedSkills = groupSkillsByCategory(profile.skills);
+export function ResumeTemplate({ data }: ResumeTemplateProps) {
+  const groupedSkills = groupSkillsByCategory(data.skills);
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Header - Name and Contact Info */}
         <View style={styles.header}>
-          <Text style={styles.name}>{profile.displayName}</Text>
-          {profile.headline && (
-            <Text style={styles.headline}>{profile.headline}</Text>
+          <Text style={styles.name}>{data.displayName}</Text>
+          {data.headline && (
+            <Text style={styles.headline}>{data.headline}</Text>
           )}
           <Text style={styles.contactInfo}>
             {[
-              profile.email,
-              profile.phone,
-              profile.location,
-              profile.website?.replace(/^https?:\/\//, ""),
+              data.email,
+              data.phone,
+              data.location,
+              data.website?.replace(/^https?:\/\//, ""),
             ]
               .filter(Boolean)
               .join(" | ")}
           </Text>
-          {profile.socialLinks.length > 0 && (
+          {data.socialLinks.length > 0 && (
             <Text style={styles.contactInfo}>
-              {profile.socialLinks
+              {data.socialLinks
                 .map((link) => link.url.replace(/^https?:\/\//, ""))
                 .join(" | ")}
             </Text>
@@ -274,19 +272,19 @@ export function ResumeTemplate({ profile }: ResumeTemplateProps) {
         </View>
 
         {/* Professional Summary */}
-        {profile.bio && (
+        {data.bio && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Professional Summary</Text>
-            <Text style={styles.summary}>{profile.bio}</Text>
+            <Text style={styles.summary}>{data.bio}</Text>
           </View>
         )}
 
         {/* Work Experience */}
-        {profile.workExperiences.length > 0 && (
+        {data.workExperiences.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Professional Experience</Text>
-            {profile.workExperiences.map((exp) => (
-              <View key={exp.id} style={styles.experienceItem}>
+            {data.workExperiences.map((exp, index) => (
+              <View key={index} style={styles.experienceItem}>
                 <View style={styles.experienceHeader}>
                   <View style={styles.experienceTitleRow}>
                     <Text style={styles.experienceTitle}>{exp.position}</Text>
@@ -319,11 +317,11 @@ export function ResumeTemplate({ profile }: ResumeTemplateProps) {
         )}
 
         {/* Education */}
-        {profile.educations.length > 0 && (
+        {data.educations.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Education</Text>
-            {profile.educations.map((edu) => (
-              <View key={edu.id} style={styles.educationItem}>
+            {data.educations.map((edu, index) => (
+              <View key={index} style={styles.experienceItem}>
                 <View style={styles.experienceTitleRow}>
                   <Text style={styles.educationDegree}>
                     {edu.degree}
@@ -350,7 +348,7 @@ export function ResumeTemplate({ profile }: ResumeTemplateProps) {
         )}
 
         {/* Skills - Grouped by category, comma-separated for ATS */}
-        {profile.skills.length > 0 && (
+        {data.skills.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Skills</Text>
             {Object.entries(groupedSkills).map(([category, skills]) => (
@@ -365,11 +363,11 @@ export function ResumeTemplate({ profile }: ResumeTemplateProps) {
         )}
 
         {/* Projects */}
-        {profile.projects.length > 0 && (
+        {data.projects.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Projects</Text>
-            {profile.projects.map((project) => (
-              <View key={project.id} style={styles.projectItem}>
+            {data.projects.map((project, index) => (
+              <View key={index} style={styles.experienceItem}>
                 <View style={styles.experienceTitleRow}>
                   <Text style={styles.projectName}>{project.name}</Text>
                   {(project.startDate || project.endDate) && (
@@ -408,11 +406,11 @@ export function ResumeTemplate({ profile }: ResumeTemplateProps) {
         )}
 
         {/* Certifications */}
-        {profile.certifications.length > 0 && (
+        {data.certifications.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Certifications</Text>
-            {profile.certifications.map((cert) => (
-              <View key={cert.id} style={styles.certItem}>
+            {data.certifications.map((cert, index) => (
+              <View key={index} style={styles.certItem}>
                 <Text style={styles.certName}>
                   {cert.name}
                   {cert.issuer && ` - ${cert.issuer}`}
@@ -435,11 +433,11 @@ export function ResumeTemplate({ profile }: ResumeTemplateProps) {
         )}
 
         {/* Languages */}
-        {profile.languages.length > 0 && (
+        {data.languages.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Languages</Text>
             <Text style={styles.inlineList}>
-              {profile.languages
+              {data.languages
                 .map(
                   (lang) =>
                     `${lang.name}${lang.proficiency ? ` (${lang.proficiency})` : ""}`
@@ -450,11 +448,11 @@ export function ResumeTemplate({ profile }: ResumeTemplateProps) {
         )}
 
         {/* Achievements */}
-        {profile.achievements.length > 0 && (
+        {data.achievements.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Awards & Achievements</Text>
-            {profile.achievements.map((achievement) => (
-              <View key={achievement.id} style={styles.certItem}>
+            {data.achievements.map((achievement, index) => (
+              <View key={index} style={styles.experienceItem}>
                 <Text style={styles.certName}>
                   {achievement.title}
                   {achievement.issuer && ` - ${achievement.issuer}`}
@@ -471,11 +469,11 @@ export function ResumeTemplate({ profile }: ResumeTemplateProps) {
         )}
 
         {/* Volunteer Experience */}
-        {profile.volunteerExperiences.length > 0 && (
+        {data.volunteerExperiences.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Volunteer Experience</Text>
-            {profile.volunteerExperiences.map((exp) => (
-              <View key={exp.id} style={styles.experienceItem}>
+            {data.volunteerExperiences.map((exp, index) => (
+              <View key={index} style={styles.experienceItem}>
                 <View style={styles.experienceHeader}>
                   <View style={styles.experienceTitleRow}>
                     <Text style={styles.experienceTitle}>{exp.role}</Text>

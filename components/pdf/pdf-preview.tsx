@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResumeTemplate } from "./resume-template";
-import type { getFullProfile } from "@/lib/db/profile";
+import type { ResumeData } from "@/lib/types/resume";
 
 // Dynamically import PDFViewer with SSR disabled
 const PDFViewerClient = dynamic(
@@ -16,23 +16,20 @@ const PDFViewerClient = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div
-        className="flex items-center justify-center bg-muted"
-        style={{ height: "calc(100vh - 180px)" }}
-      >
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
-          <p className="text-muted-foreground">Loading PDF viewer...</p>
+      <div className="w-full h-full flex items-center justify-center bg-muted/30 animate-pulse rounded-lg border-2 border-dashed border-muted-foreground/20">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground font-medium">
+            Initializing PDF Engine...
+          </p>
         </div>
       </div>
     ),
   }
 );
 
-type FullProfile = NonNullable<Awaited<ReturnType<typeof getFullProfile>>>;
-
 interface PDFPreviewProps {
-  profile: FullProfile;
+  profile: ResumeData;
   title?: string;
   showDownload?: boolean;
   height?: string;
@@ -49,7 +46,7 @@ export function PDFPreview({
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      const blob = await pdf(<ResumeTemplate profile={profile} />).toBlob();
+      const blob = await pdf(<ResumeTemplate data={profile} />).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -94,7 +91,7 @@ export function PDFPreview({
       </div>
       <Card className="flex-1 overflow-hidden py-1">
         <CardContent className="p-0" style={{ height }}>
-          <PDFViewerClient profile={profile} />
+          <PDFViewerClient data={profile} />
         </CardContent>
       </Card>
     </div>
