@@ -19,6 +19,10 @@ import { CertificationsSection } from "./sections/certifications-section";
 import { LanguagesSection } from "./sections/languages-section";
 import { AchievementsSection } from "./sections/achievements-section";
 import { SocialLinksSection } from "./sections/social-links-section";
+import {
+  profileToFormValues,
+  mergeFormValuesWithProfile,
+} from "@/lib/profile-transformation";
 
 type FullProfile = NonNullable<Awaited<ReturnType<typeof getFullProfile>>>;
 
@@ -26,103 +30,8 @@ interface ProfileEditorProps {
   profile: FullProfile;
 }
 
-// Helper to format date for form input
-function formatDateForInput(date: Date | null): string {
-  if (!date) return "";
-  return new Date(date).toISOString().split("T")[0];
-}
-
 // Transform profile data to form values
-function profileToFormValues(profile: FullProfile) {
-  return {
-    displayName: profile.displayName || "",
-    headline: profile.headline || "",
-    email: profile.email || "",
-    phone: profile.phone || "",
-    website: profile.website || "",
-    location: profile.location || "",
-    bio: profile.bio || "",
-    dateOfBirth: formatDateForInput(profile.dateOfBirth),
-    gender: profile.gender || "",
-    nationality: profile.nationality || "",
-    maritalStatus: profile.maritalStatus || "",
-    visaStatus: profile.visaStatus || "",
-    hobbies: profile.hobbies || [],
-    socialLinks: profile.socialLinks.map((link) => ({
-      id: link.id,
-      platform: link.platform,
-      url: link.url,
-      label: link.label || "",
-    })),
-    workExperiences: profile.workExperiences.map((exp) => ({
-      id: exp.id,
-      company: exp.company,
-      position: exp.position,
-      location: exp.location || "",
-      startDate: formatDateForInput(exp.startDate),
-      endDate: formatDateForInput(exp.endDate),
-      current: exp.current,
-      bullets: exp.bullets,
-    })),
-    volunteerExperiences: profile.volunteerExperiences.map((exp) => ({
-      id: exp.id,
-      organization: exp.organization,
-      role: exp.role,
-      location: exp.location || "",
-      startDate: formatDateForInput(exp.startDate),
-      endDate: formatDateForInput(exp.endDate),
-      current: exp.current,
-      bullets: exp.bullets,
-    })),
-    educations: profile.educations.map((edu) => ({
-      id: edu.id,
-      school: edu.school,
-      degree: edu.degree,
-      fieldOfStudy: edu.fieldOfStudy || "",
-      location: edu.location || "",
-      startDate: formatDateForInput(edu.startDate),
-      endDate: formatDateForInput(edu.endDate),
-      current: edu.current,
-      highlights: edu.highlights,
-    })),
-    projects: profile.projects.map((project) => ({
-      id: project.id,
-      name: project.name,
-      description: project.description || "",
-      url: project.url || "",
-      startDate: formatDateForInput(project.startDate),
-      endDate: formatDateForInput(project.endDate),
-      highlights: project.highlights,
-    })),
-    skills: profile.skills.map((skill) => ({
-      id: skill.id,
-      name: skill.name,
-      category: skill.category || "",
-      level: skill.level || "",
-    })),
-    certifications: profile.certifications.map((cert) => ({
-      id: cert.id,
-      name: cert.name,
-      issuer: cert.issuer || "",
-      issueDate: formatDateForInput(cert.issueDate),
-      expiryDate: formatDateForInput(cert.expiryDate),
-      credentialId: cert.credentialId || "",
-      credentialUrl: cert.credentialUrl || "",
-    })),
-    languages: profile.languages.map((lang) => ({
-      id: lang.id,
-      name: lang.name,
-      proficiency: lang.proficiency || "",
-    })),
-    achievements: profile.achievements.map((achievement) => ({
-      id: achievement.id,
-      title: achievement.title,
-      issuer: achievement.issuer || "",
-      date: formatDateForInput(achievement.date),
-      description: achievement.description || "",
-    })),
-  };
-}
+// (Imports handled above)
 
 export function ProfileEditor({ profile }: ProfileEditorProps) {
   const router = useRouter();
@@ -158,7 +67,15 @@ export function ProfileEditor({ profile }: ProfileEditorProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-120px)]">
       {/* Left Side - PDF Preview */}
-      <PDFPreview profile={profile} height="calc(100vh - 180px)" />
+      <form.Subscribe selector={(state) => [state.values]}>
+        {([values]) => {
+          const liveProfile = mergeFormValuesWithProfile(profile, values);
+
+          return (
+            <PDFPreview profile={liveProfile} height="calc(100vh - 180px)" />
+          );
+        }}
+      </form.Subscribe>
 
       {/* Right Side - Edit Form */}
       <div className="flex flex-col gap-4">

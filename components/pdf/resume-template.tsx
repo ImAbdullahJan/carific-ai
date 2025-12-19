@@ -206,10 +206,12 @@ const styles = StyleSheet.create({
 
 function formatDate(date: Date | null): string {
   if (!date) return "";
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "";
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     year: "numeric",
-  }).format(new Date(date));
+  }).format(d);
 }
 
 function formatDateRange(
