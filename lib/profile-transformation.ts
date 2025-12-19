@@ -9,7 +9,7 @@ type FullProfile = NonNullable<Awaited<ReturnType<typeof getFullProfile>>>;
  */
 export function formatDateForInput(date: Date | null): string {
   if (!date) return "";
-  return new Date(date).toISOString().split("T")[0];
+  return date.toISOString().split("T")[0];
 }
 
 /**

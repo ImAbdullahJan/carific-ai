@@ -11,18 +11,19 @@ interface PDFViewerClientProps {
 }
 
 export function PDFViewerClient({ data }: PDFViewerClientProps) {
-  // Distinct the preview update from the typing
-  const [debouncedProfile] = useDebounce(data, 500);
+  const [debouncedData] = useDebounce(data, 500);
 
   const document = useMemo(
-    () => <ResumeTemplate data={debouncedProfile} />,
-    [debouncedProfile]
+    () => <ResumeTemplate data={debouncedData} />,
+    [debouncedData]
   );
 
-  // Generate a stable key for the PDFViewer to force remount when data changes.
+  // Stable key forces PDFViewer remount on data changes.
   // This works around a known react-pdf bug where dynamic content changes
   // cause "Eo is not a function" errors.
-  const viewerKey = JSON.stringify(debouncedProfile);
+  // Note: JSON.stringify on resume data (~50KB max) is acceptable;
+  // more complex hashing would add unnecessary complexity.
+  const viewerKey = JSON.stringify(debouncedData);
 
   return (
     <PDFViewer

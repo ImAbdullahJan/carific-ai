@@ -30,9 +30,6 @@ interface ProfileEditorProps {
   profile: FullProfile;
 }
 
-// Transform profile data to form values
-// (Imports handled above)
-
 export function ProfileEditor({ profile }: ProfileEditorProps) {
   const router = useRouter();
 

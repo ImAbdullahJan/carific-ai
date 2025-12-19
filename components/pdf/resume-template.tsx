@@ -204,7 +204,8 @@ const styles = StyleSheet.create({
 
 function formatDate(date: Date | null): string {
   if (!date) return "";
-  const d = new Date(date);
+  // Defensive: handle string dates from API/JSON that may bypass type system at runtime
+  const d = date instanceof Date ? date : new Date(date);
   if (isNaN(d.getTime())) return "";
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
