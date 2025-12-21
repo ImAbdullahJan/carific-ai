@@ -33,6 +33,9 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(600);
 
+  const pdfUrlRef = useRef<string | null>(null);
+  const previousPdfUrlRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -48,7 +51,20 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
   }, []);
 
   useEffect(() => {
+    return () => {
+      if (pdfUrlRef.current) {
+        URL.revokeObjectURL(pdfUrlRef.current);
+      }
+      if (previousPdfUrlRef.current) {
+        URL.revokeObjectURL(previousPdfUrlRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
+    let generatedUrl: string | null = null;
+    let urlSetToState = false;
 
     const generatePdf = async () => {
       setIsRendering(true);
@@ -59,9 +75,14 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
           <ResumeTemplate data={debouncedData} />
         ).toBlob();
         const objectUrl = URL.createObjectURL(blob);
+        generatedUrl = objectUrl;
 
         if (!cancelled) {
-          setPdfUrl(objectUrl);
+          urlSetToState = true;
+          setPdfUrl(() => {
+            pdfUrlRef.current = objectUrl;
+            return objectUrl;
+          });
         } else {
           URL.revokeObjectURL(objectUrl);
         }
@@ -80,14 +101,19 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
 
     return () => {
       cancelled = true;
+      // Only revoke if URL was created but never set to state
+      if (generatedUrl && !urlSetToState) {
+        URL.revokeObjectURL(generatedUrl);
+      }
     };
   }, [debouncedData]);
 
   const handleRenderSuccess = () => {
     setPreviousPdfUrl((prev) => {
       if (prev && prev !== pdfUrl) {
-        setTimeout(() => URL.revokeObjectURL(prev), 100);
+        setTimeout(() => URL.revokeObjectURL(prev), 500);
       }
+      previousPdfUrlRef.current = pdfUrl;
       return pdfUrl;
     });
     setIsRendering(false);
