@@ -202,6 +202,41 @@ const styles = StyleSheet.create({
   },
 });
 
+/**
+ * Utility to clean URLs for cleaner visual presentation on a resume.
+ * Removes protocols and 'www.'
+ */
+function cleanUrl(url: string | null | undefined): string {
+  if (!url) return "";
+  return url
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .replace(/\/$/, ""); // Remove trailing slash
+}
+
+/**
+ * Helper to display a list of bullet points consistently across sections.
+ */
+function BulletList({ items }: { items: string[] }) {
+  if (!items || items.length === 0) return null;
+  return (
+    <View style={styles.bulletList}>
+      {items.map((item, i) => {
+        // Handle empty strings as spacers - allows user to manually control layout
+        if (!item || item.trim() === "") {
+          return <View key={i} style={{ height: 8 }} />;
+        }
+        return (
+          <View key={i} style={styles.bulletItem}>
+            <Text style={styles.bullet}>•</Text>
+            <Text style={styles.bulletText}>{item}</Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 function formatDate(date: Date | null): string {
   if (!date) return "";
   // Defensive: handle string dates from API/JSON that may bypass type system at runtime
@@ -254,20 +289,13 @@ export function ResumeTemplate({ data }: ResumeTemplateProps) {
             <Text style={styles.headline}>{data.headline}</Text>
           )}
           <Text style={styles.contactInfo}>
-            {[
-              data.email,
-              data.phone,
-              data.location,
-              data.website?.replace(/^https?:\/\//, ""),
-            ]
+            {[data.email, data.phone, data.location, cleanUrl(data.website)]
               .filter(Boolean)
               .join(" | ")}
           </Text>
           {data.socialLinks.length > 0 && (
             <Text style={styles.contactInfo}>
-              {data.socialLinks
-                .map((link) => link.url.replace(/^https?:\/\//, ""))
-                .join(" | ")}
+              {data.socialLinks.map((link) => cleanUrl(link.url)).join(" | ")}
             </Text>
           )}
         </View>
@@ -282,8 +310,10 @@ export function ResumeTemplate({ data }: ResumeTemplateProps) {
 
         {/* Work Experience */}
         {data.workExperiences.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Professional Experience</Text>
+          <View>
+            <Text style={styles.sectionTitle} minPresenceAhead={20}>
+              Professional Experience
+            </Text>
             {data.workExperiences.map((exp, index) => (
               <View key={index} style={styles.experienceItem}>
                 <View style={styles.experienceHeader}>
@@ -302,16 +332,7 @@ export function ResumeTemplate({ data }: ResumeTemplateProps) {
                     )}
                   </View>
                 </View>
-                {exp.bullets.length > 0 && (
-                  <View style={styles.bulletList}>
-                    {exp.bullets.map((bullet, i) => (
-                      <View key={i} style={styles.bulletItem}>
-                        <Text style={styles.bullet}>•</Text>
-                        <Text style={styles.bulletText}>{bullet}</Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
+                <BulletList items={exp.bullets} />
               </View>
             ))}
           </View>
@@ -319,8 +340,10 @@ export function ResumeTemplate({ data }: ResumeTemplateProps) {
 
         {/* Education */}
         {data.educations.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Education</Text>
+          <View>
+            <Text style={styles.sectionTitle} minPresenceAhead={20}>
+              Education
+            </Text>
             {data.educations.map((edu, index) => (
               <View key={index} style={styles.experienceItem}>
                 <View style={styles.experienceTitleRow}>
@@ -333,16 +356,7 @@ export function ResumeTemplate({ data }: ResumeTemplateProps) {
                   </Text>
                 </View>
                 <Text style={styles.educationSchool}>{edu.school}</Text>
-                {edu.highlights.length > 0 && (
-                  <View style={styles.bulletList}>
-                    {edu.highlights.map((highlight, i) => (
-                      <View key={i} style={styles.bulletItem}>
-                        <Text style={styles.bullet}>•</Text>
-                        <Text style={styles.bulletText}>{highlight}</Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
+                <BulletList items={edu.highlights} />
               </View>
             ))}
           </View>
@@ -351,7 +365,9 @@ export function ResumeTemplate({ data }: ResumeTemplateProps) {
         {/* Skills - Grouped by category, comma-separated for ATS */}
         {data.skills.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Skills</Text>
+            <Text style={styles.sectionTitle} minPresenceAhead={20}>
+              Skills
+            </Text>
             {Object.entries(groupedSkills).map(([category, skills]) => (
               <View key={category} style={styles.skillCategory}>
                 <Text style={styles.skillsText}>
@@ -366,7 +382,9 @@ export function ResumeTemplate({ data }: ResumeTemplateProps) {
         {/* Projects */}
         {data.projects.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Projects</Text>
+            <Text style={styles.sectionTitle} minPresenceAhead={20}>
+              Projects
+            </Text>
             {data.projects.map((project, index) => (
               <View key={index} style={styles.experienceItem}>
                 <View style={styles.experienceTitleRow}>
@@ -382,25 +400,14 @@ export function ResumeTemplate({ data }: ResumeTemplateProps) {
                   )}
                 </View>
                 {project.url && (
-                  <Text style={styles.projectUrl}>
-                    {project.url.replace(/^https?:\/\//, "")}
-                  </Text>
+                  <Text style={styles.projectUrl}>{cleanUrl(project.url)}</Text>
                 )}
                 {project.description && (
                   <Text style={styles.projectDescription}>
                     {project.description}
                   </Text>
                 )}
-                {project.highlights.length > 0 && (
-                  <View style={styles.bulletList}>
-                    {project.highlights.map((highlight, i) => (
-                      <View key={i} style={styles.bulletItem}>
-                        <Text style={styles.bullet}>•</Text>
-                        <Text style={styles.bulletText}>{highlight}</Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
+                <BulletList items={project.highlights} />
               </View>
             ))}
           </View>
@@ -409,7 +416,9 @@ export function ResumeTemplate({ data }: ResumeTemplateProps) {
         {/* Certifications */}
         {data.certifications.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Certifications</Text>
+            <Text style={styles.sectionTitle} minPresenceAhead={20}>
+              Certifications
+            </Text>
             {data.certifications.map((cert, index) => (
               <View key={index} style={styles.certItem}>
                 <Text style={styles.certName}>
@@ -436,7 +445,9 @@ export function ResumeTemplate({ data }: ResumeTemplateProps) {
         {/* Languages */}
         {data.languages.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Languages</Text>
+            <Text style={styles.sectionTitle} minPresenceAhead={20}>
+              Languages
+            </Text>
             <Text style={styles.inlineList}>
               {data.languages
                 .map(
@@ -451,7 +462,9 @@ export function ResumeTemplate({ data }: ResumeTemplateProps) {
         {/* Achievements */}
         {data.achievements.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Awards & Achievements</Text>
+            <Text style={styles.sectionTitle} minPresenceAhead={20}>
+              Awards & Achievements
+            </Text>
             {data.achievements.map((achievement, index) => (
               <View key={index} style={styles.experienceItem}>
                 <Text style={styles.certName}>
@@ -472,7 +485,9 @@ export function ResumeTemplate({ data }: ResumeTemplateProps) {
         {/* Volunteer Experience */}
         {data.volunteerExperiences.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Volunteer Experience</Text>
+            <Text style={styles.sectionTitle} minPresenceAhead={20}>
+              Volunteer Experience
+            </Text>
             {data.volunteerExperiences.map((exp, index) => (
               <View key={index} style={styles.experienceItem}>
                 <View style={styles.experienceHeader}>
@@ -486,16 +501,7 @@ export function ResumeTemplate({ data }: ResumeTemplateProps) {
                     {exp.organization}
                   </Text>
                 </View>
-                {exp.bullets.length > 0 && (
-                  <View style={styles.bulletList}>
-                    {exp.bullets.map((bullet, i) => (
-                      <View key={i} style={styles.bulletItem}>
-                        <Text style={styles.bullet}>•</Text>
-                        <Text style={styles.bulletText}>{bullet}</Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
+                <BulletList items={exp.bullets} />
               </View>
             ))}
           </View>

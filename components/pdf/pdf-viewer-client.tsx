@@ -28,7 +28,7 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
   const [numPages, setNumPages] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [error, setError] = useState<string | null>(null);
-  const [zoom, setZoom] = useState<number>(1);
+  const [zoom, setZoom] = useState<number>(0.75);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(600);
@@ -147,7 +147,7 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
   };
 
   const onResetZoom = () => {
-    setZoom(1);
+    setZoom(0.75);
   };
 
   const isFirstRender = !previousPdfUrl;
@@ -174,44 +174,44 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
       )}
 
       {!error && (
-        <div className="flex-1 flex items-start justify-center relative w-full overflow-auto p-5">
-          {shouldShowPrevious && previousPdfUrl && (
-            <div className="opacity-50 transition-opacity duration-200 ease-in-out">
-              <Document file={previousPdfUrl} loading={null} error={null}>
-                <Page
-                  pageNumber={currentPage}
-                  width={containerWidth * zoom}
-                  renderTextLayer={false}
-                  renderAnnotationLayer={false}
-                />
-              </Document>
-            </div>
-          )}
-
-          <div
-            className={
-              shouldShowPrevious
-                ? "absolute top-0 left-0 right-0 flex justify-center p-5"
-                : ""
-            }
-          >
-            {pdfUrl && (
-              <Document
-                file={pdfUrl}
-                loading={null}
-                error={null}
-                onLoadSuccess={handleDocumentLoadSuccess}
-                onLoadError={handleDocumentLoadError}
-              >
-                <Page
-                  pageNumber={currentPage}
-                  width={containerWidth * zoom}
-                  onRenderSuccess={handleRenderSuccess}
-                  renderTextLayer={true}
-                  renderAnnotationLayer={true}
-                />
-              </Document>
+        <div className="flex-1 relative w-full overflow-auto p-5 flex">
+          <div className="relative m-auto">
+            {shouldShowPrevious && previousPdfUrl && (
+              <div className="opacity-50 transition-opacity duration-200 ease-in-out">
+                <Document file={previousPdfUrl} loading={null} error={null}>
+                  <Page
+                    pageNumber={currentPage}
+                    width={containerWidth * zoom}
+                    renderTextLayer={false}
+                    renderAnnotationLayer={false}
+                  />
+                </Document>
+              </div>
             )}
+
+            <div
+              className={
+                shouldShowPrevious ? "absolute top-0 left-0 right-0" : ""
+              }
+            >
+              {pdfUrl && (
+                <Document
+                  file={pdfUrl}
+                  loading={null}
+                  error={null}
+                  onLoadSuccess={handleDocumentLoadSuccess}
+                  onLoadError={handleDocumentLoadError}
+                >
+                  <Page
+                    pageNumber={currentPage}
+                    width={containerWidth * zoom}
+                    onRenderSuccess={handleRenderSuccess}
+                    renderTextLayer={true}
+                    renderAnnotationLayer={true}
+                  />
+                </Document>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -245,7 +245,7 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
 
             <Button
               onClick={onResetZoom}
-              disabled={zoom === 1}
+              disabled={zoom === 0.75}
               title="Reset Zoom"
               variant="outline"
               size="icon-sm"
