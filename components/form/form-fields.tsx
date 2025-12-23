@@ -1,13 +1,7 @@
 "use client";
 
 import { format, parse } from "date-fns";
-import {
-  CalendarIcon,
-  ChevronDown,
-  ChevronUp,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { CalendarIcon, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useFieldContext } from "@/hooks/form-context";
 import { FormBase, FormControlProps } from "./form-base";
-import { ButtonGroup } from "@/components/ui/button-group";
+import { ArrayFieldActions } from "./form-components";
 import {
   Field,
   FieldContent,
@@ -256,24 +250,6 @@ export function StringArrayField({
   const isInvalid =
     field.state.meta.errors.length > 0 && field.state.meta.isTouched;
 
-  const addItem = () => {
-    field.pushValue("");
-  };
-
-  const removeItem = (index: number) => {
-    field.removeValue(index);
-  };
-
-  const updateItem = (index: number, value: string) => {
-    field.replaceValue(index, value);
-  };
-
-  const moveItem = (index: number, direction: "up" | "down") => {
-    const newIndex = direction === "up" ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= items.length) return;
-    field.moveValue(index, newIndex);
-  };
-
   return (
     <Field data-invalid={isInvalid || undefined}>
       <FieldContent>
@@ -283,7 +259,7 @@ export function StringArrayField({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={addItem}
+            onClick={() => field.pushValue("")}
             className="h-7 text-xs"
           >
             <Plus className="h-3 w-3 mr-1" />
@@ -300,46 +276,13 @@ export function StringArrayField({
             </span>
             <Input
               value={item}
-              onChange={(e) => updateItem(index, e.target.value)}
+              onChange={(e) => field.replaceValue(index, e.target.value)}
               onBlur={field.handleBlur}
               placeholder={placeholder}
               className="flex-1"
               aria-invalid={isInvalid}
             />
-            <ButtonGroup className="shrink-0">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => moveItem(index, "up")}
-                disabled={index === 0}
-                className="h-8 w-8 p-0"
-                title="Move Up"
-              >
-                <ChevronUp className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => moveItem(index, "down")}
-                disabled={index === items.length - 1}
-                className="h-8 w-8 p-0"
-                title="Move Down"
-              >
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => removeItem(index)}
-                className="h-8 w-8 p-0"
-                title="Remove"
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </ButtonGroup>
+            <ArrayFieldActions index={index} className="shrink-0" />
           </div>
         ))}
         {items.length === 0 && (

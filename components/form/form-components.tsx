@@ -1,7 +1,9 @@
 "use client";
 
+import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useFormContext } from "@/hooks/form-context";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { useFormContext, useFieldContext } from "@/hooks/form-context";
 
 // SubmitButton Component
 interface SubmitButtonProps {
@@ -29,5 +31,56 @@ export function SubmitButton({
         </Button>
       )}
     </form.Subscribe>
+  );
+}
+
+// ArrayFieldActions Component
+interface ArrayFieldActionsProps {
+  index: number;
+  className?: string;
+}
+
+export function ArrayFieldActions({
+  index,
+  className,
+}: ArrayFieldActionsProps) {
+  const field = useFieldContext<string[]>();
+  const total = field.state.value?.length ?? 0;
+
+  return (
+    <ButtonGroup className={className}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => field.moveValue(index, index - 1)}
+        disabled={index === 0}
+        className="h-8 w-8 p-0"
+        title="Move Up"
+      >
+        <ChevronUp className="h-4 w-4" />
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => field.moveValue(index, index + 1)}
+        disabled={index === total - 1}
+        className="h-8 w-8 p-0"
+        title="Move Down"
+      >
+        <ChevronDown className="h-4 w-4" />
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => field.removeValue(index)}
+        className="h-8 w-8 p-0"
+        title="Remove"
+      >
+        <Trash2 className="h-4 w-4 text-destructive" />
+      </Button>
+    </ButtonGroup>
   );
 }

@@ -1,11 +1,11 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { withForm } from "@/hooks/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldGroup } from "@/components/ui/field";
-import { ButtonGroup } from "@/components/ui/button-group";
+import { ArrayFieldActions } from "@/components/form/form-components";
 import {
   type ProfileFormValues,
   createEmptyLanguage,
@@ -26,7 +26,7 @@ export const LanguagesSection = withForm({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-md font-medium">Languages</h3>
-          <form.Field name="languages" mode="array">
+          <form.AppField name="languages" mode="array">
             {(field) => (
               <Button
                 type="button"
@@ -38,10 +38,10 @@ export const LanguagesSection = withForm({
                 Add Language
               </Button>
             )}
-          </form.Field>
+          </form.AppField>
         </div>
 
-        <form.Field name="languages" mode="array">
+        <form.AppField name="languages" mode="array">
           {(field) => (
             <div className="space-y-3">
               {field.state.value.map((language, index) => (
@@ -51,40 +51,7 @@ export const LanguagesSection = withForm({
                       <CardTitle className="text-sm font-medium">
                         Language {index + 1}
                       </CardTitle>
-                      <ButtonGroup className="shrink-0">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => field.moveValue(index, index - 1)}
-                          disabled={index === 0}
-                          className="h-8 w-8 p-0"
-                          title="Move Up"
-                        >
-                          <ChevronUp className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => field.moveValue(index, index + 1)}
-                          disabled={index === field.state.value.length - 1}
-                          className="h-8 w-8 p-0"
-                          title="Move Down"
-                        >
-                          <ChevronDown className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => field.removeValue(index)}
-                          className="h-8 w-8 p-0"
-                          title="Remove"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </ButtonGroup>
+                      <ArrayFieldActions index={index} className="shrink-0" />
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
@@ -114,7 +81,7 @@ export const LanguagesSection = withForm({
               ))}
             </div>
           )}
-        </form.Field>
+        </form.AppField>
       </div>
     );
   },

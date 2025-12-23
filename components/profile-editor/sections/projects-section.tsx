@@ -1,11 +1,11 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { withForm } from "@/hooks/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldGroup } from "@/components/ui/field";
-import { ButtonGroup } from "@/components/ui/button-group";
+import { ArrayFieldActions } from "@/components/form/form-components";
 import {
   type ProfileFormValues,
   createEmptyProject,
@@ -18,7 +18,7 @@ export const ProjectsSection = withForm({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-md font-medium">Projects</h3>
-          <form.Field name="projects" mode="array">
+          <form.AppField name="projects" mode="array">
             {(field) => (
               <Button
                 type="button"
@@ -30,10 +30,10 @@ export const ProjectsSection = withForm({
                 Add Project
               </Button>
             )}
-          </form.Field>
+          </form.AppField>
         </div>
 
-        <form.Field name="projects" mode="array">
+        <form.AppField name="projects" mode="array">
           {(field) => (
             <div className="space-y-4">
               {field.state.value.map((project, index) => (
@@ -43,40 +43,7 @@ export const ProjectsSection = withForm({
                       <CardTitle className="text-sm font-medium">
                         Project {index + 1}
                       </CardTitle>
-                      <ButtonGroup className="shrink-0">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => field.moveValue(index, index - 1)}
-                          disabled={index === 0}
-                          className="h-8 w-8 p-0"
-                          title="Move Up"
-                        >
-                          <ChevronUp className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => field.moveValue(index, index + 1)}
-                          disabled={index === field.state.value.length - 1}
-                          className="h-8 w-8 p-0"
-                          title="Move Down"
-                        >
-                          <ChevronDown className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => field.removeValue(index)}
-                          className="h-8 w-8 p-0"
-                          title="Remove"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </ButtonGroup>
+                      <ArrayFieldActions index={index} className="shrink-0" />
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
@@ -122,7 +89,10 @@ export const ProjectsSection = withForm({
                         </form.AppField>
                       </div>
 
-                      <form.AppField name={`projects[${index}].highlights`}>
+                      <form.AppField
+                        name={`projects[${index}].highlights`}
+                        mode="array"
+                      >
                         {(subField) => (
                           <subField.StringArrayField
                             label="Highlights"
@@ -137,7 +107,7 @@ export const ProjectsSection = withForm({
               ))}
             </div>
           )}
-        </form.Field>
+        </form.AppField>
       </div>
     );
   },

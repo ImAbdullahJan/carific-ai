@@ -1,11 +1,11 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { withForm } from "@/hooks/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldGroup } from "@/components/ui/field";
-import { ButtonGroup } from "@/components/ui/button-group";
+import { ArrayFieldActions } from "@/components/form/form-components";
 import {
   type ProfileFormValues,
   createEmptyAchievement,
@@ -18,7 +18,7 @@ export const AchievementsSection = withForm({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-md font-medium">Awards & Achievements</h3>
-          <form.Field name="achievements" mode="array">
+          <form.AppField name="achievements" mode="array">
             {(field) => (
               <Button
                 type="button"
@@ -30,10 +30,10 @@ export const AchievementsSection = withForm({
                 Add Achievement
               </Button>
             )}
-          </form.Field>
+          </form.AppField>
         </div>
 
-        <form.Field name="achievements" mode="array">
+        <form.AppField name="achievements" mode="array">
           {(field) => (
             <div className="space-y-4">
               {field.state.value.map((achievement, index) => (
@@ -43,40 +43,7 @@ export const AchievementsSection = withForm({
                       <CardTitle className="text-sm font-medium">
                         Achievement {index + 1}
                       </CardTitle>
-                      <ButtonGroup className="shrink-0">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => field.moveValue(index, index - 1)}
-                          disabled={index === 0}
-                          className="h-8 w-8 p-0"
-                          title="Move Up"
-                        >
-                          <ChevronUp className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => field.moveValue(index, index + 1)}
-                          disabled={index === field.state.value.length - 1}
-                          className="h-8 w-8 p-0"
-                          title="Move Down"
-                        >
-                          <ChevronDown className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => field.removeValue(index)}
-                          className="h-8 w-8 p-0"
-                          title="Remove"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </ButtonGroup>
+                      <ArrayFieldActions index={index} className="shrink-0" />
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
@@ -121,7 +88,7 @@ export const AchievementsSection = withForm({
               ))}
             </div>
           )}
-        </form.Field>
+        </form.AppField>
       </div>
     );
   },
