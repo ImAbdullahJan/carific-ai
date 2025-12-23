@@ -15,11 +15,11 @@ export const WorkExperienceSection = withForm({
   defaultValues: {} as ProfileFormValues,
   render: function Render({ form }) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-md font-medium">Work Experience</h3>
-          <form.AppField name="workExperiences" mode="array">
-            {(field) => (
+      <form.AppField name="workExperiences" mode="array">
+        {(field) => (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-md font-medium">Work Experience</h3>
               <Button
                 type="button"
                 variant="outline"
@@ -29,12 +29,8 @@ export const WorkExperienceSection = withForm({
                 <Plus className="h-4 w-4 mr-1" />
                 Add Experience
               </Button>
-            )}
-          </form.AppField>
-        </div>
+            </div>
 
-        <form.AppField name="workExperiences" mode="array">
-          {(field) => (
             <div className="space-y-4">
               {field.state.value.map((workExperience, index) => (
                 <Card key={workExperience.id}>
@@ -122,9 +118,9 @@ export const WorkExperienceSection = withForm({
                 </Card>
               ))}
             </div>
-          )}
-        </form.AppField>
-      </div>
+          </div>
+        )}
+      </form.AppField>
     );
   },
 });

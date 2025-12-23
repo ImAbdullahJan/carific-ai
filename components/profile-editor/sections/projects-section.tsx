@@ -15,11 +15,11 @@ export const ProjectsSection = withForm({
   defaultValues: {} as ProfileFormValues,
   render: function Render({ form }) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-md font-medium">Projects</h3>
-          <form.AppField name="projects" mode="array">
-            {(field) => (
+      <form.AppField name="projects" mode="array">
+        {(field) => (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-md font-medium">Projects</h3>
               <Button
                 type="button"
                 variant="outline"
@@ -29,12 +29,8 @@ export const ProjectsSection = withForm({
                 <Plus className="h-4 w-4 mr-1" />
                 Add Project
               </Button>
-            )}
-          </form.AppField>
-        </div>
+            </div>
 
-        <form.AppField name="projects" mode="array">
-          {(field) => (
             <div className="space-y-4">
               {field.state.value.map((project, index) => (
                 <Card key={project.id}>
@@ -106,9 +102,9 @@ export const ProjectsSection = withForm({
                 </Card>
               ))}
             </div>
-          )}
-        </form.AppField>
-      </div>
+          </div>
+        )}
+      </form.AppField>
     );
   },
 });

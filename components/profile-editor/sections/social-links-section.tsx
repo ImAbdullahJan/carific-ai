@@ -26,11 +26,11 @@ export const SocialLinksSection = withForm({
   defaultValues: {} as ProfileFormValues,
   render: function Render({ form }) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-md font-medium">Social Links</h3>
-          <form.AppField name="socialLinks" mode="array">
-            {(field) => (
+      <form.AppField name="socialLinks" mode="array">
+        {(field) => (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-md font-medium">Social Links</h3>
               <Button
                 type="button"
                 variant="outline"
@@ -40,12 +40,8 @@ export const SocialLinksSection = withForm({
                 <Plus className="h-4 w-4 mr-1" />
                 Add Link
               </Button>
-            )}
-          </form.AppField>
-        </div>
+            </div>
 
-        <form.AppField name="socialLinks" mode="array">
-          {(field) => (
             <div className="space-y-3">
               {field.state.value.map((socialLink, index) => (
                 <Card key={socialLink.id}>
@@ -91,9 +87,9 @@ export const SocialLinksSection = withForm({
                 </Card>
               ))}
             </div>
-          )}
-        </form.AppField>
-      </div>
+          </div>
+        )}
+      </form.AppField>
     );
   },
 });

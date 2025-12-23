@@ -23,11 +23,11 @@ export const LanguagesSection = withForm({
   defaultValues: {} as ProfileFormValues,
   render: function Render({ form }) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-md font-medium">Languages</h3>
-          <form.AppField name="languages" mode="array">
-            {(field) => (
+      <form.AppField name="languages" mode="array">
+        {(field) => (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-md font-medium">Languages</h3>
               <Button
                 type="button"
                 variant="outline"
@@ -37,12 +37,8 @@ export const LanguagesSection = withForm({
                 <Plus className="h-4 w-4 mr-1" />
                 Add Language
               </Button>
-            )}
-          </form.AppField>
-        </div>
+            </div>
 
-        <form.AppField name="languages" mode="array">
-          {(field) => (
             <div className="space-y-3">
               {field.state.value.map((language, index) => (
                 <Card key={language.id}>
@@ -80,9 +76,9 @@ export const LanguagesSection = withForm({
                 </Card>
               ))}
             </div>
-          )}
-        </form.AppField>
-      </div>
+          </div>
+        )}
+      </form.AppField>
     );
   },
 });

@@ -32,11 +32,11 @@ export const SkillsSection = withForm({
   defaultValues: {} as ProfileFormValues,
   render: function Render({ form }) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-md font-medium">Skills</h3>
-          <form.AppField name="skills" mode="array">
-            {(field) => (
+      <form.AppField name="skills" mode="array">
+        {(field) => (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-md font-medium">Skills</h3>
               <Button
                 type="button"
                 variant="outline"
@@ -46,12 +46,8 @@ export const SkillsSection = withForm({
                 <Plus className="h-4 w-4 mr-1" />
                 Add Skill
               </Button>
-            )}
-          </form.AppField>
-        </div>
+            </div>
 
-        <form.AppField name="skills" mode="array">
-          {(field) => (
             <div className="space-y-3">
               {field.state.value.map((skill, index) => (
                 <Card key={skill.id}>
@@ -98,9 +94,9 @@ export const SkillsSection = withForm({
                 </Card>
               ))}
             </div>
-          )}
-        </form.AppField>
-      </div>
+          </div>
+        )}
+      </form.AppField>
     );
   },
 });
