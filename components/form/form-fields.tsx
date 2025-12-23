@@ -257,29 +257,21 @@ export function StringArrayField({
     field.state.meta.errors.length > 0 && field.state.meta.isTouched;
 
   const addItem = () => {
-    field.handleChange([...items, ""]);
+    field.pushValue("");
   };
 
   const removeItem = (index: number) => {
-    field.handleChange(items.filter((_, i) => i !== index));
+    field.removeValue(index);
   };
 
   const updateItem = (index: number, value: string) => {
-    const newItems = [...items];
-    newItems[index] = value;
-    field.handleChange(newItems);
+    field.replaceValue(index, value);
   };
 
   const moveItem = (index: number, direction: "up" | "down") => {
     const newIndex = direction === "up" ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= items.length) return;
-
-    const newItems = [...items];
-    [newItems[index], newItems[newIndex]] = [
-      newItems[newIndex],
-      newItems[index],
-    ];
-    field.handleChange(newItems);
+    field.moveValue(index, newIndex);
   };
 
   return (
