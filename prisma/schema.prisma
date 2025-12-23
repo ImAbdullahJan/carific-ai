@@ -109,7 +109,8 @@ model UserProfile {
   visaStatus    String? // Important for job applications
 
   // Interests
-  hobbies String[] // e.g., ["Photography", "Hiking", "Chess"]
+  hobbies        String[] // e.g., ["Photography", "Hiking", "Chess"]
+  privacyConsent Boolean  @default(false)
 
   // Relations
   socialLinks          SocialLink[]

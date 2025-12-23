@@ -44,7 +44,8 @@ export function TextField({
   placeholder,
   type = "text",
   autoComplete,
-}: TextFieldProps) {
+  disabled,
+}: TextFieldProps & { disabled?: boolean }) {
   const field = useFieldContext<string>();
 
   return (
@@ -58,6 +59,7 @@ export function TextField({
         onChange={(e) => field.handleChange(e.target.value)}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        disabled={disabled}
         aria-invalid={
           field.state.meta.errors.length > 0 && field.state.meta.isTouched
         }
@@ -67,9 +69,13 @@ export function TextField({
 }
 
 // CheckboxField Component
-type CheckboxFieldProps = FormControlProps;
+type CheckboxFieldProps = FormControlProps & { disabled?: boolean };
 
-export function CheckboxField({ label, description }: CheckboxFieldProps) {
+export function CheckboxField({
+  label,
+  description,
+  disabled,
+}: CheckboxFieldProps) {
   const field = useFieldContext<boolean>();
 
   return (
@@ -85,6 +91,7 @@ export function CheckboxField({ label, description }: CheckboxFieldProps) {
         checked={field.state.value}
         onCheckedChange={(checked) => field.handleChange(checked === true)}
         onBlur={field.handleBlur}
+        disabled={disabled}
         aria-invalid={
           field.state.meta.errors.length > 0 && field.state.meta.isTouched
         }
@@ -104,7 +111,8 @@ export function TextAreaField({
   description,
   placeholder,
   rows = 3,
-}: TextAreaFieldProps) {
+  disabled,
+}: TextAreaFieldProps & { disabled?: boolean }) {
   const field = useFieldContext<string>();
 
   return (
@@ -117,6 +125,7 @@ export function TextAreaField({
         onChange={(e) => field.handleChange(e.target.value)}
         placeholder={placeholder}
         rows={rows}
+        disabled={disabled}
         aria-invalid={
           field.state.meta.errors.length > 0 && field.state.meta.isTouched
         }
@@ -141,7 +150,8 @@ export function SelectField({
   description,
   placeholder = "Select an option",
   options,
-}: SelectFieldProps) {
+  disabled,
+}: SelectFieldProps & { disabled?: boolean }) {
   const field = useFieldContext<string>();
 
   return (
@@ -152,6 +162,7 @@ export function SelectField({
           field.handleChange(value);
           field.handleBlur();
         }}
+        disabled={disabled}
       >
         <SelectTrigger
           id={field.name}
@@ -181,8 +192,9 @@ interface DateFieldProps extends FormControlProps {
 export function DateField({
   label,
   description,
+  disabled,
   placeholder = "Pick a date",
-}: DateFieldProps) {
+}: DateFieldProps & { disabled?: boolean }) {
   const field = useFieldContext<string>();
   const isInvalid =
     field.state.meta.errors.length > 0 && field.state.meta.isTouched;
@@ -214,6 +226,7 @@ export function DateField({
               !field.state.value && "text-muted-foreground"
             )}
             aria-invalid={isInvalid}
+            disabled={disabled}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {isValidDate ? format(dateValue, "PPP") : placeholder}

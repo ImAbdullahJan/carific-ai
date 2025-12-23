@@ -116,6 +116,7 @@ export const ProfileUpdateSchema = z.object({
   nationality: z.string().optional(),
   maritalStatus: z.string().optional(),
   visaStatus: z.string().optional(),
+  privacyConsent: z.boolean().default(false),
 
   // Interests
   hobbies: z.array(z.string()).default([]),
@@ -164,6 +165,7 @@ export type ProfileFormValues = {
   nationality: string;
   maritalStatus: string;
   visaStatus: string;
+  privacyConsent: boolean;
   hobbies: string[];
   socialLinks: Required<SocialLinkInput>[];
   workExperiences: Required<WorkExperienceInput>[];
@@ -277,6 +279,7 @@ export const DEFAULT_PROFILE_FORM_VALUES: ProfileFormValues = {
   nationality: "",
   maritalStatus: "",
   visaStatus: "",
+  privacyConsent: false,
   hobbies: [],
   socialLinks: [],
   workExperiences: [],

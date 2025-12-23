@@ -262,6 +262,8 @@ function formatDateRange(
 }
 
 function formatPersonalDetails(data: ResumeData): string {
+  if (!data.privacyConsent) return "";
+
   const details = [
     data.dateOfBirth && `DOB: ${formatDate(data.dateOfBirth)}`,
     data.gender && `Gender: ${data.gender}`,

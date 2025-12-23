@@ -30,6 +30,7 @@ export function profileToResume(profile: FullProfile): ResumeData {
     maritalStatus: profile.maritalStatus,
     visaStatus: profile.visaStatus,
     hobbies: profile.hobbies,
+    privacyConsent: profile.privacyConsent,
     socialLinks: profile.socialLinks.map((link) => ({
       platform: link.platform,
       url: link.url,
@@ -117,6 +118,7 @@ export function formToResume(formValues: ProfileFormValues): ResumeData {
     maritalStatus: formValues.maritalStatus || null,
     visaStatus: formValues.visaStatus || null,
     hobbies: formValues.hobbies,
+    privacyConsent: formValues.privacyConsent,
     socialLinks: formValues.socialLinks.map((link) => ({
       platform: link.platform,
       url: link.url,
@@ -202,6 +204,7 @@ export function profileToFormValues(profile: FullProfile): ProfileFormValues {
     maritalStatus: profile.maritalStatus || "",
     visaStatus: profile.visaStatus || "",
     hobbies: profile.hobbies || [],
+    privacyConsent: profile.privacyConsent,
     socialLinks: profile.socialLinks.map((link) => ({
       id: link.id,
       platform: link.platform,
