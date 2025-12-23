@@ -2,10 +2,10 @@
 
 import { withForm } from "@/hooks/form";
 import { FieldGroup } from "@/components/ui/field";
-import type { ProfileFormValues } from "@/lib/validations/profile-update";
+import { DEFAULT_PROFILE_FORM_VALUES } from "@/lib/validations/profile-update";
 
 export const BasicInfoSection = withForm({
-  defaultValues: {} as ProfileFormValues,
+  defaultValues: DEFAULT_PROFILE_FORM_VALUES,
   render: function Render({ form }) {
     return (
       <div className="space-y-4">

@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldGroup } from "@/components/ui/field";
 import { ArrayFieldActions } from "@/components/form/form-components";
 import {
-  type ProfileFormValues,
   createEmptyLanguage,
+  DEFAULT_PROFILE_FORM_VALUES,
 } from "@/lib/validations/profile-update";
 
 const PROFICIENCY_LEVELS = [
@@ -20,7 +20,7 @@ const PROFICIENCY_LEVELS = [
 ];
 
 export const LanguagesSection = withForm({
-  defaultValues: {} as ProfileFormValues,
+  defaultValues: DEFAULT_PROFILE_FORM_VALUES,
   render: function Render({ form }) {
     return (
       <form.AppField name="languages" mode="array">
@@ -41,8 +41,8 @@ export const LanguagesSection = withForm({
             </div>
 
             <div className="space-y-3">
-              {field.state.value.map((language, index) => (
-                <Card key={language.id}>
+              {field.state.value.map((_, index) => (
+                <Card key={index}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium">

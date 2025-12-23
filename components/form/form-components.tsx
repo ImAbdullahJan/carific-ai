@@ -40,7 +40,7 @@ interface ArrayFieldActionsProps {
   className?: string;
 }
 
-export function ArrayFieldActions<T = string>({
+export function ArrayFieldActions<T = unknown>({
   index,
   className,
 }: ArrayFieldActionsProps) {

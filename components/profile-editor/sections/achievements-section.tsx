@@ -7,12 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldGroup } from "@/components/ui/field";
 import { ArrayFieldActions } from "@/components/form/form-components";
 import {
-  type ProfileFormValues,
   createEmptyAchievement,
+  DEFAULT_PROFILE_FORM_VALUES,
 } from "@/lib/validations/profile-update";
 
 export const AchievementsSection = withForm({
-  defaultValues: {} as ProfileFormValues,
+  defaultValues: DEFAULT_PROFILE_FORM_VALUES,
   render: function Render({ form }) {
     return (
       <form.AppField name="achievements" mode="array">
@@ -33,8 +33,8 @@ export const AchievementsSection = withForm({
             </div>
 
             <div className="space-y-4">
-              {field.state.value.map((achievement, index) => (
-                <Card key={achievement.id}>
+              {field.state.value.map((_, index) => (
+                <Card key={index}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium">

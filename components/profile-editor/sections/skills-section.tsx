@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldGroup } from "@/components/ui/field";
 import { ArrayFieldActions } from "@/components/form/form-components";
 import {
-  type ProfileFormValues,
   createEmptySkill,
+  DEFAULT_PROFILE_FORM_VALUES,
 } from "@/lib/validations/profile-update";
 
 const SKILL_CATEGORIES = [
@@ -29,7 +29,7 @@ const SKILL_LEVELS = [
 ];
 
 export const SkillsSection = withForm({
-  defaultValues: {} as ProfileFormValues,
+  defaultValues: DEFAULT_PROFILE_FORM_VALUES,
   render: function Render({ form }) {
     return (
       <form.AppField name="skills" mode="array">
@@ -50,8 +50,8 @@ export const SkillsSection = withForm({
             </div>
 
             <div className="space-y-3">
-              {field.state.value.map((skill, index) => (
-                <Card key={skill.id}>
+              {field.state.value.map((_, index) => (
+                <Card key={index}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium">
