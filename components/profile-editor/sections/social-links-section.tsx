@@ -1,13 +1,14 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { withForm } from "@/hooks/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldGroup } from "@/components/ui/field";
+import { ArrayFieldActions } from "@/components/form/form-components";
 import {
-  type ProfileFormValues,
   createEmptySocialLink,
+  DEFAULT_PROFILE_FORM_VALUES,
 } from "@/lib/validations/profile-update";
 
 const PLATFORMS = [
@@ -22,45 +23,35 @@ const PLATFORMS = [
 ];
 
 export const SocialLinksSection = withForm({
-  defaultValues: {} as ProfileFormValues,
+  defaultValues: DEFAULT_PROFILE_FORM_VALUES,
   render: function Render({ form }) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-md font-medium">Social Links</h3>
-          <form.Field name="socialLinks" mode="array">
-            {(field) => (
+      <form.AppField name="socialLinks" mode="array">
+        {(field) => (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-md font-medium">Social Links</h3>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => field.pushValue(createEmptySocialLink())}
+                aria-label="Add social link"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Link
               </Button>
-            )}
-          </form.Field>
-        </div>
+            </div>
 
-        <form.Field name="socialLinks" mode="array">
-          {(field) => (
             <div className="space-y-3">
-              {field.state.value.map((socialLink, index) => (
-                <Card key={socialLink.id}>
+              {field.state.value.map((link, index) => (
+                <Card key={link.id}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium">
                         Link {index + 1}
                       </CardTitle>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => field.removeValue(index)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <ArrayFieldActions index={index} className="shrink-0" />
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
@@ -97,9 +88,9 @@ export const SocialLinksSection = withForm({
                 </Card>
               ))}
             </div>
-          )}
-        </form.Field>
-      </div>
+          </div>
+        )}
+      </form.AppField>
     );
   },
 });

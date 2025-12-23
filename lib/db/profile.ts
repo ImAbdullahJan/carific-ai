@@ -195,6 +195,7 @@ function mapProfileFields(data: ResumeExtraction) {
     maritalStatus: data.maritalStatus,
     visaStatus: data.visaStatus,
     hobbies: data.hobbies ?? [],
+    privacyConsent: data.privacyConsent ?? false,
   };
 }
 
@@ -396,6 +397,7 @@ export async function updateProfile(
           maritalStatus: data.maritalStatus || null,
           visaStatus: data.visaStatus || null,
           hobbies: data.hobbies || [],
+          privacyConsent: data.privacyConsent,
         },
       });
 

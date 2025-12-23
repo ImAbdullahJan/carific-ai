@@ -1,55 +1,46 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { withForm } from "@/hooks/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldGroup } from "@/components/ui/field";
+import { ArrayFieldActions } from "@/components/form/form-components";
 import {
-  type ProfileFormValues,
   createEmptyProject,
+  DEFAULT_PROFILE_FORM_VALUES,
 } from "@/lib/validations/profile-update";
 
 export const ProjectsSection = withForm({
-  defaultValues: {} as ProfileFormValues,
+  defaultValues: DEFAULT_PROFILE_FORM_VALUES,
   render: function Render({ form }) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-md font-medium">Projects</h3>
-          <form.Field name="projects" mode="array">
-            {(field) => (
+      <form.AppField name="projects" mode="array">
+        {(field) => (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-md font-medium">Projects</h3>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => field.pushValue(createEmptyProject())}
+                aria-label="Add project"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Project
               </Button>
-            )}
-          </form.Field>
-        </div>
+            </div>
 
-        <form.Field name="projects" mode="array">
-          {(field) => (
             <div className="space-y-4">
-              {field.state.value.map((project, index) => (
-                <Card key={project.id}>
+              {field.state.value.map((proj, index) => (
+                <Card key={proj.id}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium">
                         Project {index + 1}
                       </CardTitle>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => field.removeValue(index)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <ArrayFieldActions index={index} className="shrink-0" />
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
@@ -95,7 +86,10 @@ export const ProjectsSection = withForm({
                         </form.AppField>
                       </div>
 
-                      <form.AppField name={`projects[${index}].highlights`}>
+                      <form.AppField
+                        name={`projects[${index}].highlights`}
+                        mode="array"
+                      >
                         {(subField) => (
                           <subField.StringArrayField
                             label="Highlights"
@@ -109,9 +103,9 @@ export const ProjectsSection = withForm({
                 </Card>
               ))}
             </div>
-          )}
-        </form.Field>
-      </div>
+          </div>
+        )}
+      </form.AppField>
     );
   },
 });

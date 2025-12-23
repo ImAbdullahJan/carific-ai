@@ -1,55 +1,46 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { withForm } from "@/hooks/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldGroup } from "@/components/ui/field";
+import { ArrayFieldActions } from "@/components/form/form-components";
 import {
-  type ProfileFormValues,
   createEmptyWorkExperience,
+  DEFAULT_PROFILE_FORM_VALUES,
 } from "@/lib/validations/profile-update";
 
 export const WorkExperienceSection = withForm({
-  defaultValues: {} as ProfileFormValues,
+  defaultValues: DEFAULT_PROFILE_FORM_VALUES,
   render: function Render({ form }) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-md font-medium">Work Experience</h3>
-          <form.Field name="workExperiences" mode="array">
-            {(field) => (
+      <form.AppField name="workExperiences" mode="array">
+        {(field) => (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-md font-medium">Work Experience</h3>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => field.pushValue(createEmptyWorkExperience())}
+                aria-label="Add work experience"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Experience
               </Button>
-            )}
-          </form.Field>
-        </div>
+            </div>
 
-        <form.Field name="workExperiences" mode="array">
-          {(field) => (
             <div className="space-y-4">
-              {field.state.value.map((workExperience, index) => (
-                <Card key={workExperience.id}>
+              {field.state.value.map((exp, index) => (
+                <Card key={exp.id}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium">
                         Experience {index + 1}
                       </CardTitle>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => field.removeValue(index)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <ArrayFieldActions index={index} className="shrink-0" />
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -100,7 +91,10 @@ export const WorkExperienceSection = withForm({
                           name={`workExperiences[${index}].endDate`}
                         >
                           {(subField) => (
-                            <subField.DateField label="End Date" />
+                            <subField.DateField
+                              label="End Date"
+                              disabled={exp.current}
+                            />
                           )}
                         </form.AppField>
                       </div>
@@ -111,7 +105,10 @@ export const WorkExperienceSection = withForm({
                         )}
                       </form.AppField>
 
-                      <form.AppField name={`workExperiences[${index}].bullets`}>
+                      <form.AppField
+                        name={`workExperiences[${index}].bullets`}
+                        mode="array"
+                      >
                         {(subField) => (
                           <subField.StringArrayField
                             label="Key Responsibilities & Achievements"
@@ -125,9 +122,9 @@ export const WorkExperienceSection = withForm({
                 </Card>
               ))}
             </div>
-          )}
-        </form.Field>
-      </div>
+          </div>
+        )}
+      </form.AppField>
     );
   },
 });

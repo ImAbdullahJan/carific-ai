@@ -22,6 +22,7 @@ export const ResumeDataSchema = z.object({
   nationality: z.string().nullable(),
   maritalStatus: z.string().nullable(),
   visaStatus: z.string().nullable(),
+  privacyConsent: z.boolean(),
 
   // Lists
   hobbies: z.array(z.string()),

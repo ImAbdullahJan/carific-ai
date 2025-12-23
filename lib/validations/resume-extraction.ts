@@ -197,6 +197,10 @@ export const ResumeExtractionSchema = z.object({
     .string()
     .nullable()
     .describe("Visa or work authorization status if mentioned"),
+  privacyConsent: z
+    .boolean()
+    .default(false)
+    .describe("Whether the user has given privacy consent for sensitive data"),
 
   // Interests
   hobbies: z

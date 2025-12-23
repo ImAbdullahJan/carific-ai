@@ -7,114 +7,117 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldGroup } from "@/components/ui/field";
 import { ArrayFieldActions } from "@/components/form/form-components";
 import {
-  createEmptyEducation,
+  createEmptyVolunteerExperience,
   DEFAULT_PROFILE_FORM_VALUES,
 } from "@/lib/validations/profile-update";
 
-export const EducationSection = withForm({
+export const VolunteerExperienceSection = withForm({
   defaultValues: DEFAULT_PROFILE_FORM_VALUES,
   render: function Render({ form }) {
     return (
-      <form.AppField name="educations" mode="array">
+      <form.AppField name="volunteerExperiences" mode="array">
         {(field) => (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-md font-medium">Education</h3>
+              <h3 className="text-md font-medium">Volunteer Experience</h3>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => field.pushValue(createEmptyEducation())}
-                aria-label="Add education"
+                onClick={() =>
+                  field.pushValue(createEmptyVolunteerExperience())
+                }
+                aria-label="Add volunteer experience"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Add Education
+                Add Volunteer Experience
               </Button>
             </div>
 
             <div className="space-y-4">
-              {field.state.value.map((edu, index) => (
-                <Card key={edu.id}>
+              {field.state.value.map((exp, index) => (
+                <Card key={exp.id}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium">
-                        Education {index + 1}
+                        Volunteer Experience {index + 1}
                       </CardTitle>
                       <ArrayFieldActions index={index} className="shrink-0" />
                     </div>
                   </CardHeader>
-                  <CardContent className="pt-0">
+                  <CardContent>
                     <FieldGroup>
-                      <form.AppField name={`educations[${index}].school`}>
-                        {(subField) => (
-                          <subField.TextField
-                            label="School"
-                            placeholder="University of California"
-                          />
-                        )}
-                      </form.AppField>
-
                       <div className="grid grid-cols-2 gap-4">
-                        <form.AppField name={`educations[${index}].degree`}>
+                        <form.AppField
+                          name={`volunteerExperiences[${index}].organization`}
+                        >
                           {(subField) => (
                             <subField.TextField
-                              label="Degree"
-                              placeholder="Bachelor of Science"
+                              label="Organization"
+                              placeholder="Red Cross"
                             />
                           )}
                         </form.AppField>
                         <form.AppField
-                          name={`educations[${index}].fieldOfStudy`}
+                          name={`volunteerExperiences[${index}].role`}
                         >
                           {(subField) => (
                             <subField.TextField
-                              label="Field of Study"
-                              placeholder="Computer Science"
+                              label="Role"
+                              placeholder="Volunteer Coordinator"
                             />
                           )}
                         </form.AppField>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <form.AppField name={`educations[${index}].startDate`}>
-                          {(subField) => (
-                            <subField.DateField label="Start Date" />
-                          )}
-                        </form.AppField>
-                        <form.AppField name={`educations[${index}].endDate`}>
-                          {(subField) => (
-                            <subField.DateField
-                              label="End Date"
-                              disabled={edu.current}
-                            />
-                          )}
-                        </form.AppField>
-                      </div>
-
-                      <form.AppField name={`educations[${index}].location`}>
+                      <form.AppField
+                        name={`volunteerExperiences[${index}].location`}
+                      >
                         {(subField) => (
                           <subField.TextField
                             label="Location"
-                            placeholder="Berkeley, CA"
+                            placeholder="San Francisco, CA"
                           />
                         )}
                       </form.AppField>
 
-                      <form.AppField name={`educations[${index}].current`}>
+                      <div className="grid grid-cols-2 gap-4">
+                        <form.AppField
+                          name={`volunteerExperiences[${index}].startDate`}
+                        >
+                          {(subField) => (
+                            <subField.DateField label="Start Date" />
+                          )}
+                        </form.AppField>
+                        <form.AppField
+                          name={`volunteerExperiences[${index}].endDate`}
+                        >
+                          {(subField) => (
+                            <subField.DateField
+                              label="End Date"
+                              disabled={exp.current}
+                            />
+                          )}
+                        </form.AppField>
+                      </div>
+
+                      <form.AppField
+                        name={`volunteerExperiences[${index}].current`}
+                      >
                         {(subField) => (
-                          <subField.CheckboxField label="Currently studying here" />
+                          <subField.CheckboxField label="I currently volunteer here" />
                         )}
                       </form.AppField>
 
                       <form.AppField
-                        name={`educations[${index}].highlights`}
+                        name={`volunteerExperiences[${index}].bullets`}
                         mode="array"
                       >
                         {(subField) => (
                           <subField.StringArrayField
-                            label="Highlights"
-                            placeholder="Notable achievement, course, or activity..."
-                            addButtonText="Add Highlight"
+                            label="Key Responsibilities & Achievements"
+                            placeholder="Describe a responsibility or achievement..."
+                            addButtonText="Add Bullet"
                           />
                         )}
                       </form.AppField>

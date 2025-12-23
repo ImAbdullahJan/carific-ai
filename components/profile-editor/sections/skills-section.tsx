@@ -1,13 +1,14 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { withForm } from "@/hooks/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldGroup } from "@/components/ui/field";
+import { ArrayFieldActions } from "@/components/form/form-components";
 import {
-  type ProfileFormValues,
   createEmptySkill,
+  DEFAULT_PROFILE_FORM_VALUES,
 } from "@/lib/validations/profile-update";
 
 const SKILL_CATEGORIES = [
@@ -28,29 +29,26 @@ const SKILL_LEVELS = [
 ];
 
 export const SkillsSection = withForm({
-  defaultValues: {} as ProfileFormValues,
+  defaultValues: DEFAULT_PROFILE_FORM_VALUES,
   render: function Render({ form }) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-md font-medium">Skills</h3>
-          <form.Field name="skills" mode="array">
-            {(field) => (
+      <form.AppField name="skills" mode="array">
+        {(field) => (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-md font-medium">Skills</h3>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => field.pushValue(createEmptySkill())}
+                aria-label="Add skill group"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Skill
               </Button>
-            )}
-          </form.Field>
-        </div>
+            </div>
 
-        <form.Field name="skills" mode="array">
-          {(field) => (
             <div className="space-y-3">
               {field.state.value.map((skill, index) => (
                 <Card key={skill.id}>
@@ -59,14 +57,7 @@ export const SkillsSection = withForm({
                       <CardTitle className="text-sm font-medium">
                         Skill {index + 1}
                       </CardTitle>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => field.removeValue(index)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <ArrayFieldActions index={index} className="shrink-0" />
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
@@ -104,9 +95,9 @@ export const SkillsSection = withForm({
                 </Card>
               ))}
             </div>
-          )}
-        </form.Field>
-      </div>
+          </div>
+        )}
+      </form.AppField>
     );
   },
 });

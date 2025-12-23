@@ -116,6 +116,7 @@ export const ProfileUpdateSchema = z.object({
   nationality: z.string().optional(),
   maritalStatus: z.string().optional(),
   visaStatus: z.string().optional(),
+  privacyConsent: z.boolean().default(false),
 
   // Interests
   hobbies: z.array(z.string()).default([]),
@@ -164,6 +165,7 @@ export type ProfileFormValues = {
   nationality: string;
   maritalStatus: string;
   visaStatus: string;
+  privacyConsent: boolean;
   hobbies: string[];
   socialLinks: Required<SocialLinkInput>[];
   workExperiences: Required<WorkExperienceInput>[];
@@ -263,3 +265,29 @@ export const createEmptyAchievement = (): Required<AchievementInput> => ({
   date: "",
   description: "",
 });
+
+export const DEFAULT_PROFILE_FORM_VALUES: ProfileFormValues = {
+  displayName: "",
+  headline: "",
+  email: "",
+  phone: "",
+  website: "",
+  location: "",
+  bio: "",
+  dateOfBirth: "",
+  gender: "",
+  nationality: "",
+  maritalStatus: "",
+  visaStatus: "",
+  privacyConsent: false,
+  hobbies: [],
+  socialLinks: [],
+  workExperiences: [],
+  volunteerExperiences: [],
+  educations: [],
+  projects: [],
+  skills: [],
+  certifications: [],
+  languages: [],
+  achievements: [],
+};

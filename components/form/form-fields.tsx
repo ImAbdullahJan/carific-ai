@@ -1,7 +1,7 @@
 "use client";
 
 import { format, parse } from "date-fns";
-import { CalendarIcon, Plus, Trash2 } from "lucide-react";
+import { CalendarIcon, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useFieldContext } from "@/hooks/form-context";
 import { FormBase, FormControlProps } from "./form-base";
+import { ArrayFieldActions } from "./form-components";
 import {
   Field,
   FieldContent,
@@ -35,6 +36,7 @@ interface TextFieldProps extends FormControlProps {
   placeholder?: string;
   type?: "text" | "email" | "password";
   autoComplete?: string;
+  disabled?: boolean;
 }
 
 export function TextField({
@@ -43,6 +45,7 @@ export function TextField({
   placeholder,
   type = "text",
   autoComplete,
+  disabled,
 }: TextFieldProps) {
   const field = useFieldContext<string>();
 
@@ -57,6 +60,7 @@ export function TextField({
         onChange={(e) => field.handleChange(e.target.value)}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        disabled={disabled}
         aria-invalid={
           field.state.meta.errors.length > 0 && field.state.meta.isTouched
         }
@@ -66,9 +70,13 @@ export function TextField({
 }
 
 // CheckboxField Component
-type CheckboxFieldProps = FormControlProps;
+type CheckboxFieldProps = FormControlProps & { disabled?: boolean };
 
-export function CheckboxField({ label, description }: CheckboxFieldProps) {
+export function CheckboxField({
+  label,
+  description,
+  disabled,
+}: CheckboxFieldProps) {
   const field = useFieldContext<boolean>();
 
   return (
@@ -84,6 +92,7 @@ export function CheckboxField({ label, description }: CheckboxFieldProps) {
         checked={field.state.value}
         onCheckedChange={(checked) => field.handleChange(checked === true)}
         onBlur={field.handleBlur}
+        disabled={disabled}
         aria-invalid={
           field.state.meta.errors.length > 0 && field.state.meta.isTouched
         }
@@ -96,6 +105,7 @@ export function CheckboxField({ label, description }: CheckboxFieldProps) {
 interface TextAreaFieldProps extends FormControlProps {
   placeholder?: string;
   rows?: number;
+  disabled?: boolean;
 }
 
 export function TextAreaField({
@@ -103,6 +113,7 @@ export function TextAreaField({
   description,
   placeholder,
   rows = 3,
+  disabled,
 }: TextAreaFieldProps) {
   const field = useFieldContext<string>();
 
@@ -116,6 +127,7 @@ export function TextAreaField({
         onChange={(e) => field.handleChange(e.target.value)}
         placeholder={placeholder}
         rows={rows}
+        disabled={disabled}
         aria-invalid={
           field.state.meta.errors.length > 0 && field.state.meta.isTouched
         }
@@ -133,6 +145,7 @@ interface SelectOption {
 interface SelectFieldProps extends FormControlProps {
   placeholder?: string;
   options: SelectOption[];
+  disabled?: boolean;
 }
 
 export function SelectField({
@@ -140,6 +153,7 @@ export function SelectField({
   description,
   placeholder = "Select an option",
   options,
+  disabled,
 }: SelectFieldProps) {
   const field = useFieldContext<string>();
 
@@ -151,6 +165,7 @@ export function SelectField({
           field.handleChange(value);
           field.handleBlur();
         }}
+        disabled={disabled}
       >
         <SelectTrigger
           id={field.name}
@@ -175,11 +190,13 @@ export function SelectField({
 // DateField Component
 interface DateFieldProps extends FormControlProps {
   placeholder?: string;
+  disabled?: boolean;
 }
 
 export function DateField({
   label,
   description,
+  disabled,
   placeholder = "Pick a date",
 }: DateFieldProps) {
   const field = useFieldContext<string>();
@@ -213,6 +230,7 @@ export function DateField({
               !field.state.value && "text-muted-foreground"
             )}
             aria-invalid={isInvalid}
+            disabled={disabled}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {isValidDate ? format(dateValue, "PPP") : placeholder}
@@ -249,20 +267,6 @@ export function StringArrayField({
   const isInvalid =
     field.state.meta.errors.length > 0 && field.state.meta.isTouched;
 
-  const addItem = () => {
-    field.handleChange([...items, ""]);
-  };
-
-  const removeItem = (index: number) => {
-    field.handleChange(items.filter((_, i) => i !== index));
-  };
-
-  const updateItem = (index: number, value: string) => {
-    const newItems = [...items];
-    newItems[index] = value;
-    field.handleChange(newItems);
-  };
-
   return (
     <Field data-invalid={isInvalid || undefined}>
       <FieldContent>
@@ -272,8 +276,9 @@ export function StringArrayField({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={addItem}
+            onClick={() => field.pushValue("")}
             className="h-7 text-xs"
+            aria-label={addButtonText}
           >
             <Plus className="h-3 w-3 mr-1" />
             {addButtonText}
@@ -289,21 +294,13 @@ export function StringArrayField({
             </span>
             <Input
               value={item}
-              onChange={(e) => updateItem(index, e.target.value)}
+              onChange={(e) => field.replaceValue(index, e.target.value)}
               onBlur={field.handleBlur}
               placeholder={placeholder}
               className="flex-1"
               aria-invalid={isInvalid}
             />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => removeItem(index)}
-              className="h-8 w-8 p-0 shrink-0"
-            >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
+            <ArrayFieldActions index={index} className="shrink-0" />
           </div>
         ))}
         {items.length === 0 && (
