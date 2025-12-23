@@ -16,6 +16,8 @@ import "react-pdf/dist/Page/TextLayer.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
+const A4_ASPECT_RATIO = 1.414;
+
 interface PDFViewerClientProps {
   data: ResumeData;
 }
@@ -36,6 +38,7 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
 
   const pdfUrlRef = useRef<string | null>(null);
   const previousPdfUrlRef = useRef<string | null>(null);
+  const revokeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -52,14 +55,15 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
   }, []);
 
   useEffect(() => {
-    const currentPdfUrl = pdfUrlRef.current;
-    const currentPreviousPdfUrl = previousPdfUrlRef.current;
     return () => {
-      if (currentPdfUrl) {
-        URL.revokeObjectURL(currentPdfUrl);
+      if (pdfUrlRef.current) {
+        URL.revokeObjectURL(pdfUrlRef.current);
       }
-      if (currentPreviousPdfUrl) {
-        URL.revokeObjectURL(currentPreviousPdfUrl);
+      if (previousPdfUrlRef.current) {
+        URL.revokeObjectURL(previousPdfUrlRef.current);
+      }
+      if (revokeTimeoutRef.current) {
+        clearTimeout(revokeTimeoutRef.current);
       }
     };
   }, []);
@@ -113,10 +117,22 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
 
   const handleRenderSuccess = () => {
     setIsRendering(false);
+
+    // Clear any pending revocation
+    if (revokeTimeoutRef.current) {
+      clearTimeout(revokeTimeoutRef.current);
+    }
+
     // Revoke previous URL after a delay to allow for transition
     if (previousPdfUrl && previousPdfUrl !== pdfUrl) {
-      setTimeout(() => URL.revokeObjectURL(previousPdfUrl), 1000);
+      const urlToRevoke = previousPdfUrl;
+      revokeTimeoutRef.current = setTimeout(() => {
+        URL.revokeObjectURL(urlToRevoke);
+        revokeTimeoutRef.current = null;
+      }, 1000);
     }
+
+    previousPdfUrlRef.current = pdfUrl;
     setPreviousPdfUrl(pdfUrl);
   };
 
@@ -178,7 +194,7 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
             className="relative m-auto shadow-2xl bg-white"
             style={{
               width: containerWidth * zoom,
-              minHeight: containerWidth * zoom * 1.41, // Aspect ratio for A4
+              minHeight: containerWidth * zoom * A4_ASPECT_RATIO,
             }}
           >
             {/* Previous Document (Fading Out) */}
