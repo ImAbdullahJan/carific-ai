@@ -38,6 +38,7 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
 
   const pdfUrlRef = useRef<string | null>(null);
   const previousPdfUrlRef = useRef<string | null>(null);
+  const pendingRevokeUrlRef = useRef<string | null>(null);
   const revokeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -61,6 +62,9 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
       }
       if (previousPdfUrlRef.current) {
         URL.revokeObjectURL(previousPdfUrlRef.current);
+      }
+      if (pendingRevokeUrlRef.current) {
+        URL.revokeObjectURL(pendingRevokeUrlRef.current);
       }
       if (revokeTimeoutRef.current) {
         clearTimeout(revokeTimeoutRef.current);
@@ -118,22 +122,32 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
   const handleRenderSuccess = () => {
     setIsRendering(false);
 
-    // Clear any pending revocation
+    // Clear any pending revocation and revoke immediately if there was one
     if (revokeTimeoutRef.current) {
       clearTimeout(revokeTimeoutRef.current);
+      if (pendingRevokeUrlRef.current) {
+        URL.revokeObjectURL(pendingRevokeUrlRef.current);
+        pendingRevokeUrlRef.current = null;
+      }
     }
 
     // Revoke previous URL after a delay to allow for transition
     if (previousPdfUrl && previousPdfUrl !== pdfUrl) {
-      const urlToRevoke = previousPdfUrl;
+      pendingRevokeUrlRef.current = previousPdfUrl;
       revokeTimeoutRef.current = setTimeout(() => {
-        URL.revokeObjectURL(urlToRevoke);
+        if (pendingRevokeUrlRef.current) {
+          URL.revokeObjectURL(pendingRevokeUrlRef.current);
+          pendingRevokeUrlRef.current = null;
+        }
         revokeTimeoutRef.current = null;
       }, 1000);
     }
 
-    previousPdfUrlRef.current = pdfUrl;
-    setPreviousPdfUrl(pdfUrl);
+    // Delay updating the previousPdfUrl state to allow for the 300ms CSS transition
+    setTimeout(() => {
+      previousPdfUrlRef.current = pdfUrl;
+      setPreviousPdfUrl(pdfUrl);
+    }, 300);
   };
 
   const handleDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
