@@ -76,6 +76,67 @@ export const BasicInfoSection = withForm({
               )}
             </form.AppField>
           </div>
+
+          <div className="pt-4 border-t">
+            <h4 className="text-sm font-medium mb-4">
+              Personal Details (Optional)
+            </h4>
+            <div className="grid grid-cols-2 gap-4">
+              <form.AppField name="dateOfBirth">
+                {(field) => <field.DateField label="Date of Birth" />}
+              </form.AppField>
+              <form.AppField name="gender">
+                {(field) => (
+                  <field.SelectField
+                    label="Gender"
+                    placeholder="Select gender"
+                    options={[
+                      { value: "male", label: "Male" },
+                      { value: "female", label: "Female" },
+                      { value: "other", label: "Other" },
+                      {
+                        value: "prefer-not-to-say",
+                        label: "Prefer not to say",
+                      },
+                    ]}
+                  />
+                )}
+              </form.AppField>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <form.AppField name="nationality">
+                {(field) => (
+                  <field.TextField label="Nationality" placeholder="American" />
+                )}
+              </form.AppField>
+              <form.AppField name="maritalStatus">
+                {(field) => (
+                  <field.SelectField
+                    label="Marital Status"
+                    placeholder="Select status"
+                    options={[
+                      { value: "single", label: "Single" },
+                      { value: "married", label: "Married" },
+                      { value: "divorced", label: "Divorced" },
+                      { value: "widowed", label: "Widowed" },
+                    ]}
+                  />
+                )}
+              </form.AppField>
+            </div>
+
+            <div className="mt-4">
+              <form.AppField name="visaStatus">
+                {(field) => (
+                  <field.TextField
+                    label="Visa Status"
+                    placeholder="H-1B, Citizen, etc."
+                  />
+                )}
+              </form.AppField>
+            </div>
+          </div>
         </FieldGroup>
       </div>
     );

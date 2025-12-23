@@ -8,37 +8,39 @@ import { FieldGroup } from "@/components/ui/field";
 import { ArrayFieldActions } from "@/components/form/form-components";
 import {
   type ProfileFormValues,
-  createEmptyWorkExperience,
+  createEmptyVolunteerExperience,
 } from "@/lib/validations/profile-update";
 
-export const WorkExperienceSection = withForm({
+export const VolunteerExperienceSection = withForm({
   defaultValues: {} as ProfileFormValues,
   render: function Render({ form }) {
     return (
-      <form.AppField name="workExperiences" mode="array">
+      <form.AppField name="volunteerExperiences" mode="array">
         {(field) => (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-md font-medium">Work Experience</h3>
+              <h3 className="text-md font-medium">Volunteer Experience</h3>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => field.pushValue(createEmptyWorkExperience())}
-                aria-label="Add work experience"
+                onClick={() =>
+                  field.pushValue(createEmptyVolunteerExperience())
+                }
+                aria-label="Add volunteer experience"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Add Experience
+                Add Volunteer Experience
               </Button>
             </div>
 
             <div className="space-y-4">
-              {field.state.value.map((workExperience, index) => (
-                <Card key={workExperience.id}>
+              {field.state.value.map((volunteerExperience, index) => (
+                <Card key={volunteerExperience.id}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium">
-                        Experience {index + 1}
+                        Volunteer Experience {index + 1}
                       </CardTitle>
                       <ArrayFieldActions index={index} className="shrink-0" />
                     </div>
@@ -47,29 +49,29 @@ export const WorkExperienceSection = withForm({
                     <FieldGroup>
                       <div className="grid grid-cols-2 gap-4">
                         <form.AppField
-                          name={`workExperiences[${index}].company`}
+                          name={`volunteerExperiences[${index}].organization`}
                         >
                           {(subField) => (
                             <subField.TextField
-                              label="Company"
-                              placeholder="Acme Inc."
+                              label="Organization"
+                              placeholder="Red Cross"
                             />
                           )}
                         </form.AppField>
                         <form.AppField
-                          name={`workExperiences[${index}].position`}
+                          name={`volunteerExperiences[${index}].role`}
                         >
                           {(subField) => (
                             <subField.TextField
-                              label="Position"
-                              placeholder="Software Engineer"
+                              label="Role"
+                              placeholder="Volunteer Coordinator"
                             />
                           )}
                         </form.AppField>
                       </div>
 
                       <form.AppField
-                        name={`workExperiences[${index}].location`}
+                        name={`volunteerExperiences[${index}].location`}
                       >
                         {(subField) => (
                           <subField.TextField
@@ -81,14 +83,14 @@ export const WorkExperienceSection = withForm({
 
                       <div className="grid grid-cols-2 gap-4">
                         <form.AppField
-                          name={`workExperiences[${index}].startDate`}
+                          name={`volunteerExperiences[${index}].startDate`}
                         >
                           {(subField) => (
                             <subField.DateField label="Start Date" />
                           )}
                         </form.AppField>
                         <form.AppField
-                          name={`workExperiences[${index}].endDate`}
+                          name={`volunteerExperiences[${index}].endDate`}
                         >
                           {(subField) => (
                             <subField.DateField label="End Date" />
@@ -96,14 +98,16 @@ export const WorkExperienceSection = withForm({
                         </form.AppField>
                       </div>
 
-                      <form.AppField name={`workExperiences[${index}].current`}>
+                      <form.AppField
+                        name={`volunteerExperiences[${index}].current`}
+                      >
                         {(subField) => (
-                          <subField.CheckboxField label="I currently work here" />
+                          <subField.CheckboxField label="I currently volunteer here" />
                         )}
                       </form.AppField>
 
                       <form.AppField
-                        name={`workExperiences[${index}].bullets`}
+                        name={`volunteerExperiences[${index}].bullets`}
                         mode="array"
                       >
                         {(subField) => (

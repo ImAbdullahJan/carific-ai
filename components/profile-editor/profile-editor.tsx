@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PDFPreview } from "@/components/pdf";
 import type { getFullProfile } from "@/lib/db/profile";
 import { BasicInfoSection } from "./sections/basic-info-section";
+import { HobbiesSection } from "./sections/hobbies-section";
 import { WorkExperienceSection } from "./sections/work-experience-section";
 import { EducationSection } from "./sections/education-section";
 import { SkillsSection } from "./sections/skills-section";
@@ -19,6 +20,7 @@ import { CertificationsSection } from "./sections/certifications-section";
 import { LanguagesSection } from "./sections/languages-section";
 import { AchievementsSection } from "./sections/achievements-section";
 import { SocialLinksSection } from "./sections/social-links-section";
+import { VolunteerExperienceSection } from "./sections/volunteer-experience-section";
 import {
   profileToFormValues,
   formToResume,
@@ -126,6 +128,7 @@ export function ProfileEditor({ profile }: ProfileEditorProps) {
 
                   <TabsContent value="experience" className="space-y-6">
                     <WorkExperienceSection form={form} />
+                    <VolunteerExperienceSection form={form} />
                   </TabsContent>
 
                   <TabsContent value="education" className="space-y-6">
@@ -141,6 +144,7 @@ export function ProfileEditor({ profile }: ProfileEditorProps) {
                     <CertificationsSection form={form} />
                     <LanguagesSection form={form} />
                     <AchievementsSection form={form} />
+                    <HobbiesSection form={form} />
                   </TabsContent>
                 </Tabs>
               </form>

@@ -25,6 +25,7 @@ export const CertificationsSection = withForm({
                 variant="outline"
                 size="sm"
                 onClick={() => field.pushValue(createEmptyCertification())}
+                aria-label="Add certification"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Certification

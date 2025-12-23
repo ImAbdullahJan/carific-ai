@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
   },
   // Header Section
   header: {
-    marginBottom: 16,
+    marginBottom: 6,
     textAlign: "center",
   },
   name: {
@@ -261,6 +261,18 @@ function formatDateRange(
   return `${start} - ${end}`;
 }
 
+function formatPersonalDetails(data: ResumeData): string {
+  const details = [
+    data.dateOfBirth && `DOB: ${formatDate(data.dateOfBirth)}`,
+    data.gender && `Gender: ${data.gender}`,
+    data.nationality && `Nationality: ${data.nationality}`,
+    data.maritalStatus && `Marital: ${data.maritalStatus}`,
+    data.visaStatus && `Visa: ${data.visaStatus}`,
+  ].filter(Boolean);
+
+  return details.length > 0 ? details.join(" | ") : "";
+}
+
 // Group skills by category for better ATS parsing
 function groupSkillsByCategory(
   skills: ResumeData["skills"]
@@ -296,6 +308,11 @@ export function ResumeTemplate({ data }: ResumeTemplateProps) {
           {data.socialLinks.length > 0 && (
             <Text style={styles.contactInfo}>
               {data.socialLinks.map((link) => cleanUrl(link.url)).join(" | ")}
+            </Text>
+          )}
+          {formatPersonalDetails(data) && (
+            <Text style={styles.contactInfo}>
+              {formatPersonalDetails(data)}
             </Text>
           )}
         </View>
@@ -504,6 +521,16 @@ export function ResumeTemplate({ data }: ResumeTemplateProps) {
                 <BulletList items={exp.bullets} />
               </View>
             ))}
+          </View>
+        )}
+
+        {/* Hobbies */}
+        {data.hobbies.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle} minPresenceAhead={10}>
+              Hobbies & Interests
+            </Text>
+            <Text style={styles.inlineList}>{data.hobbies.join(", ")}</Text>
           </View>
         )}
       </Page>

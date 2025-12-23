@@ -42,6 +42,7 @@ export const SkillsSection = withForm({
                 variant="outline"
                 size="sm"
                 onClick={() => field.pushValue(createEmptySkill())}
+                aria-label="Add skill group"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Skill

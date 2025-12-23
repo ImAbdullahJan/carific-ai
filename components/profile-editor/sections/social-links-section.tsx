@@ -36,6 +36,7 @@ export const SocialLinksSection = withForm({
                 variant="outline"
                 size="sm"
                 onClick={() => field.pushValue(createEmptySocialLink())}
+                aria-label="Add social link"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Link

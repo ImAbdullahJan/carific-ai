@@ -40,11 +40,11 @@ interface ArrayFieldActionsProps {
   className?: string;
 }
 
-export function ArrayFieldActions({
+export function ArrayFieldActions<T = string>({
   index,
   className,
 }: ArrayFieldActionsProps) {
-  const field = useFieldContext<string[]>();
+  const field = useFieldContext<T[]>();
   const total = field.state.value?.length ?? 0;
 
   return (
@@ -57,6 +57,7 @@ export function ArrayFieldActions({
         disabled={index === 0}
         className="h-8 w-8 p-0"
         title="Move Up"
+        aria-label="Move item up"
       >
         <ChevronUp className="h-4 w-4" />
       </Button>
@@ -68,6 +69,7 @@ export function ArrayFieldActions({
         disabled={index === total - 1}
         className="h-8 w-8 p-0"
         title="Move Down"
+        aria-label="Move item down"
       >
         <ChevronDown className="h-4 w-4" />
       </Button>
@@ -78,6 +80,7 @@ export function ArrayFieldActions({
         onClick={() => field.removeValue(index)}
         className="h-8 w-8 p-0"
         title="Remove"
+        aria-label="Remove item"
       >
         <Trash2 className="h-4 w-4 text-destructive" />
       </Button>
