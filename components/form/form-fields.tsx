@@ -1,7 +1,13 @@
 "use client";
 
 import { format, parse } from "date-fns";
-import { CalendarIcon, Plus, Trash2 } from "lucide-react";
+import {
+  CalendarIcon,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +28,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useFieldContext } from "@/hooks/form-context";
 import { FormBase, FormControlProps } from "./form-base";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
   Field,
   FieldContent,
@@ -263,6 +270,18 @@ export function StringArrayField({
     field.handleChange(newItems);
   };
 
+  const moveItem = (index: number, direction: "up" | "down") => {
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= items.length) return;
+
+    const newItems = [...items];
+    [newItems[index], newItems[newIndex]] = [
+      newItems[newIndex],
+      newItems[index],
+    ];
+    field.handleChange(newItems);
+  };
+
   return (
     <Field data-invalid={isInvalid || undefined}>
       <FieldContent>
@@ -295,15 +314,40 @@ export function StringArrayField({
               className="flex-1"
               aria-invalid={isInvalid}
             />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => removeItem(index)}
-              className="h-8 w-8 p-0 shrink-0"
-            >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
+            <ButtonGroup className="shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => moveItem(index, "up")}
+                disabled={index === 0}
+                className="h-8 w-8 p-0"
+                title="Move Up"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => moveItem(index, "down")}
+                disabled={index === items.length - 1}
+                className="h-8 w-8 p-0"
+                title="Move Down"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => removeItem(index)}
+                className="h-8 w-8 p-0"
+                title="Remove"
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </ButtonGroup>
           </div>
         ))}
         {items.length === 0 && (
