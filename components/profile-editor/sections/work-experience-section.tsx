@@ -93,7 +93,7 @@ export const WorkExperienceSection = withForm({
                           {(subField) => (
                             <subField.DateField
                               label="End Date"
-                              disabled={field.state.value[index].current}
+                              disabled={exp.current}
                             />
                           )}
                         </form.AppField>

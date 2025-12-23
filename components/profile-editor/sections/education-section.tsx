@@ -85,7 +85,7 @@ export const EducationSection = withForm({
                           {(subField) => (
                             <subField.DateField
                               label="End Date"
-                              disabled={field.state.value[index].current}
+                              disabled={edu.current}
                             />
                           )}
                         </form.AppField>
