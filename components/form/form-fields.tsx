@@ -36,6 +36,7 @@ interface TextFieldProps extends FormControlProps {
   placeholder?: string;
   type?: "text" | "email" | "password";
   autoComplete?: string;
+  disabled?: boolean;
 }
 
 export function TextField({
@@ -45,7 +46,7 @@ export function TextField({
   type = "text",
   autoComplete,
   disabled,
-}: TextFieldProps & { disabled?: boolean }) {
+}: TextFieldProps) {
   const field = useFieldContext<string>();
 
   return (
@@ -104,6 +105,7 @@ export function CheckboxField({
 interface TextAreaFieldProps extends FormControlProps {
   placeholder?: string;
   rows?: number;
+  disabled?: boolean;
 }
 
 export function TextAreaField({
@@ -112,7 +114,7 @@ export function TextAreaField({
   placeholder,
   rows = 3,
   disabled,
-}: TextAreaFieldProps & { disabled?: boolean }) {
+}: TextAreaFieldProps) {
   const field = useFieldContext<string>();
 
   return (
@@ -143,6 +145,7 @@ interface SelectOption {
 interface SelectFieldProps extends FormControlProps {
   placeholder?: string;
   options: SelectOption[];
+  disabled?: boolean;
 }
 
 export function SelectField({
@@ -151,7 +154,7 @@ export function SelectField({
   placeholder = "Select an option",
   options,
   disabled,
-}: SelectFieldProps & { disabled?: boolean }) {
+}: SelectFieldProps) {
   const field = useFieldContext<string>();
 
   return (
@@ -187,6 +190,7 @@ export function SelectField({
 // DateField Component
 interface DateFieldProps extends FormControlProps {
   placeholder?: string;
+  disabled?: boolean;
 }
 
 export function DateField({
@@ -194,7 +198,7 @@ export function DateField({
   description,
   disabled,
   placeholder = "Pick a date",
-}: DateFieldProps & { disabled?: boolean }) {
+}: DateFieldProps) {
   const field = useFieldContext<string>();
   const isInvalid =
     field.state.meta.errors.length > 0 && field.state.meta.isTouched;

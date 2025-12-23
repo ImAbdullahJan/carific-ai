@@ -93,7 +93,10 @@ export const VolunteerExperienceSection = withForm({
                           name={`volunteerExperiences[${index}].endDate`}
                         >
                           {(subField) => (
-                            <subField.DateField label="End Date" />
+                            <subField.DateField
+                              label="End Date"
+                              disabled={field.state.value[index].current}
+                            />
                           )}
                         </form.AppField>
                       </div>
