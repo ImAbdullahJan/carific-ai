@@ -6,6 +6,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 import { useDebounce } from "use-debounce";
 import { Loader2, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { ResumeTemplate } from "./resume-template";
 import type { ResumeData } from "@/lib/types/resume";
@@ -51,12 +52,14 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
   }, []);
 
   useEffect(() => {
+    const currentPdfUrl = pdfUrlRef.current;
+    const currentPreviousPdfUrl = previousPdfUrlRef.current;
     return () => {
-      if (pdfUrlRef.current) {
-        URL.revokeObjectURL(pdfUrlRef.current);
+      if (currentPdfUrl) {
+        URL.revokeObjectURL(currentPdfUrl);
       }
-      if (previousPdfUrlRef.current) {
-        URL.revokeObjectURL(previousPdfUrlRef.current);
+      if (currentPreviousPdfUrl) {
+        URL.revokeObjectURL(currentPreviousPdfUrl);
       }
     };
   }, []);
@@ -109,14 +112,12 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
   }, [debouncedData]);
 
   const handleRenderSuccess = () => {
-    setPreviousPdfUrl((prev) => {
-      if (prev && prev !== pdfUrl) {
-        setTimeout(() => URL.revokeObjectURL(prev), 500);
-      }
-      previousPdfUrlRef.current = pdfUrl;
-      return pdfUrl;
-    });
     setIsRendering(false);
+    // Revoke previous URL after a delay to allow for transition
+    if (previousPdfUrl && previousPdfUrl !== pdfUrl) {
+      setTimeout(() => URL.revokeObjectURL(previousPdfUrl), 1000);
+    }
+    setPreviousPdfUrl(pdfUrl);
   };
 
   const handleDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
@@ -151,8 +152,6 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
   };
 
   const isFirstRender = !previousPdfUrl;
-  const shouldShowPrevious =
-    !isFirstRender && isRendering && previousPdfUrl !== pdfUrl;
   const shouldShowTextLoader = isFirstRender && isRendering;
 
   return (
@@ -175,9 +174,21 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
 
       {!error && (
         <div className="flex-1 relative w-full overflow-auto p-5 flex">
-          <div className="relative m-auto">
-            {shouldShowPrevious && previousPdfUrl && (
-              <div className="opacity-50 transition-opacity duration-200 ease-in-out">
+          <div
+            className="relative m-auto shadow-2xl bg-white"
+            style={{
+              width: containerWidth * zoom,
+              minHeight: containerWidth * zoom * 1.41, // Aspect ratio for A4
+            }}
+          >
+            {/* Previous Document (Fading Out) */}
+            {previousPdfUrl && previousPdfUrl !== pdfUrl && (
+              <div
+                className={cn(
+                  "transition-opacity duration-300 ease-in-out absolute inset-0 z-0",
+                  isRendering ? "opacity-100" : "opacity-0"
+                )}
+              >
                 <Document file={previousPdfUrl} loading={null} error={null}>
                   <Page
                     pageNumber={currentPage}
@@ -189,12 +200,14 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
               </div>
             )}
 
-            <div
-              className={
-                shouldShowPrevious ? "absolute top-0 left-0 right-0" : ""
-              }
-            >
-              {pdfUrl && (
+            {/* Current/New Document */}
+            {pdfUrl && (
+              <div
+                className={cn(
+                  "transition-opacity duration-300 ease-in-out relative z-10",
+                  isRendering && previousPdfUrl ? "opacity-0" : "opacity-100"
+                )}
+              >
                 <Document
                   file={pdfUrl}
                   loading={null}
@@ -210,8 +223,8 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
                     renderAnnotationLayer={true}
                   />
                 </Document>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -105,7 +105,7 @@ export function ProfileEditor({ profile }: ProfileEditorProps) {
 
         <Card className="flex-1 overflow-hidden">
           <ScrollArea className="h-[calc(100vh-220px)]">
-            <CardContent className="p-4">
+            <CardContent>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
