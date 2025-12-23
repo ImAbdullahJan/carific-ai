@@ -35,8 +35,8 @@ export const VolunteerExperienceSection = withForm({
             </div>
 
             <div className="space-y-4">
-              {field.state.value.map((_, index) => (
-                <Card key={index}>
+              {field.state.value.map((exp, index) => (
+                <Card key={exp.id}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium">

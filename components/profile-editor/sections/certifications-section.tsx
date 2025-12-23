@@ -33,8 +33,8 @@ export const CertificationsSection = withForm({
             </div>
 
             <div className="space-y-4">
-              {field.state.value.map((_, index) => (
-                <Card key={index}>
+              {field.state.value.map((cert, index) => (
+                <Card key={cert.id}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium">

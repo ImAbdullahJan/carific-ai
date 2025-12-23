@@ -44,8 +44,8 @@ export const SocialLinksSection = withForm({
             </div>
 
             <div className="space-y-3">
-              {field.state.value.map((_, index) => (
-                <Card key={index}>
+              {field.state.value.map((link, index) => (
+                <Card key={link.id}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium">
