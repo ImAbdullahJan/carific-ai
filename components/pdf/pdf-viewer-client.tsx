@@ -6,6 +6,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 import { useDebounce } from "use-debounce";
 import { Loader2, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { ResumeTemplate } from "./resume-template";
 import type { ResumeData } from "@/lib/types/resume";
@@ -14,6 +15,8 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
+const A4_ASPECT_RATIO = 1.414;
 
 interface PDFViewerClientProps {
   data: ResumeData;
@@ -35,6 +38,9 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
 
   const pdfUrlRef = useRef<string | null>(null);
   const previousPdfUrlRef = useRef<string | null>(null);
+  const pendingRevokeUrlRef = useRef<string | null>(null);
+  const revokeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -57,6 +63,15 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
       }
       if (previousPdfUrlRef.current) {
         URL.revokeObjectURL(previousPdfUrlRef.current);
+      }
+      if (pendingRevokeUrlRef.current) {
+        URL.revokeObjectURL(pendingRevokeUrlRef.current);
+      }
+      if (revokeTimeoutRef.current) {
+        clearTimeout(revokeTimeoutRef.current);
+      }
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current);
       }
     };
   }, []);
@@ -109,14 +124,38 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
   }, [debouncedData]);
 
   const handleRenderSuccess = () => {
-    setPreviousPdfUrl((prev) => {
-      if (prev && prev !== pdfUrl) {
-        setTimeout(() => URL.revokeObjectURL(prev), 500);
-      }
-      previousPdfUrlRef.current = pdfUrl;
-      return pdfUrl;
-    });
     setIsRendering(false);
+
+    // Clear any pending revocation and revoke immediately if there was one
+    if (revokeTimeoutRef.current) {
+      clearTimeout(revokeTimeoutRef.current);
+      if (pendingRevokeUrlRef.current) {
+        URL.revokeObjectURL(pendingRevokeUrlRef.current);
+        pendingRevokeUrlRef.current = null;
+      }
+    }
+
+    // Revoke previous URL after a delay to allow for transition
+    if (previousPdfUrl && previousPdfUrl !== pdfUrl) {
+      pendingRevokeUrlRef.current = previousPdfUrl;
+      revokeTimeoutRef.current = setTimeout(() => {
+        if (pendingRevokeUrlRef.current) {
+          URL.revokeObjectURL(pendingRevokeUrlRef.current);
+          pendingRevokeUrlRef.current = null;
+        }
+        revokeTimeoutRef.current = null;
+      }, 1000);
+    }
+
+    // Delay updating the previousPdfUrl state to allow for the 300ms CSS transition
+    if (transitionTimeoutRef.current) {
+      clearTimeout(transitionTimeoutRef.current);
+    }
+    transitionTimeoutRef.current = setTimeout(() => {
+      previousPdfUrlRef.current = pdfUrl;
+      setPreviousPdfUrl(pdfUrl);
+      transitionTimeoutRef.current = null;
+    }, 300);
   };
 
   const handleDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
@@ -151,8 +190,6 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
   };
 
   const isFirstRender = !previousPdfUrl;
-  const shouldShowPrevious =
-    !isFirstRender && isRendering && previousPdfUrl !== pdfUrl;
   const shouldShowTextLoader = isFirstRender && isRendering;
 
   return (
@@ -175,9 +212,21 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
 
       {!error && (
         <div className="flex-1 relative w-full overflow-auto p-5 flex">
-          <div className="relative m-auto">
-            {shouldShowPrevious && previousPdfUrl && (
-              <div className="opacity-50 transition-opacity duration-200 ease-in-out">
+          <div
+            className="relative m-auto shadow-2xl bg-white"
+            style={{
+              width: containerWidth * zoom,
+              minHeight: containerWidth * zoom * A4_ASPECT_RATIO,
+            }}
+          >
+            {/* Previous Document (Fading Out) */}
+            {previousPdfUrl && previousPdfUrl !== pdfUrl && (
+              <div
+                className={cn(
+                  "transition-opacity duration-300 ease-in-out absolute inset-0 z-0",
+                  isRendering ? "opacity-100" : "opacity-0"
+                )}
+              >
                 <Document file={previousPdfUrl} loading={null} error={null}>
                   <Page
                     pageNumber={currentPage}
@@ -189,12 +238,14 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
               </div>
             )}
 
-            <div
-              className={
-                shouldShowPrevious ? "absolute top-0 left-0 right-0" : ""
-              }
-            >
-              {pdfUrl && (
+            {/* Current/New Document */}
+            {pdfUrl && (
+              <div
+                className={cn(
+                  "transition-opacity duration-300 ease-in-out relative z-10",
+                  isRendering && previousPdfUrl ? "opacity-0" : "opacity-100"
+                )}
+              >
                 <Document
                   file={pdfUrl}
                   loading={null}
@@ -210,8 +261,8 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
                     renderAnnotationLayer={true}
                   />
                 </Document>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
