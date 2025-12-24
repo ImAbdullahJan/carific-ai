@@ -40,6 +40,7 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
   const previousPdfUrlRef = useRef<string | null>(null);
   const pendingRevokeUrlRef = useRef<string | null>(null);
   const revokeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -68,6 +69,9 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
       }
       if (revokeTimeoutRef.current) {
         clearTimeout(revokeTimeoutRef.current);
+      }
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current);
       }
     };
   }, []);
@@ -144,9 +148,13 @@ export function PDFViewerClient({ data }: PDFViewerClientProps) {
     }
 
     // Delay updating the previousPdfUrl state to allow for the 300ms CSS transition
-    setTimeout(() => {
+    if (transitionTimeoutRef.current) {
+      clearTimeout(transitionTimeoutRef.current);
+    }
+    transitionTimeoutRef.current = setTimeout(() => {
       previousPdfUrlRef.current = pdfUrl;
       setPreviousPdfUrl(pdfUrl);
+      transitionTimeoutRef.current = null;
     }, 300);
   };
 
