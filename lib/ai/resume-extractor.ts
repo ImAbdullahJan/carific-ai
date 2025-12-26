@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import {
   ResumeExtractionSchema,
   type ResumeExtraction,
@@ -145,16 +145,18 @@ export async function extractResumeData(
   const prompt = buildExtractionPrompt(resumeText, hints);
 
   try {
-    const { object } = await generateObject({
+    const { output } = await generateText({
       model: MODEL,
-      schema: ResumeExtractionSchema,
+      output: Output.object({
+        schema: ResumeExtractionSchema,
+      }),
       system: RESUME_EXTRACTION_SYSTEM_PROMPT,
       prompt,
     });
 
     return {
       success: true,
-      data: object,
+      data: output,
     };
   } catch (error) {
     console.error("[ResumeExtractor] Extraction failed:", error);
