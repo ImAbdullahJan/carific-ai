@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { extractResumeData } from "@/lib/ai";
+import { extractResumeData } from "@/ai/agent";
 import { checkAuth } from "@/lib/auth-check";
 import { saveExtractedProfile } from "@/lib/db/profile";
 
