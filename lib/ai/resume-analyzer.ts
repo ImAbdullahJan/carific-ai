@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import {
   ResumeAnalysisOutputSchema,
   type ResumeAnalysisInput,
@@ -95,12 +95,14 @@ ${pageCountInfo}
 JOB DESCRIPTION:
 ${jobDescription}`;
 
-  const { object } = await generateObject({
+  const { output } = await generateText({
     model: MODEL,
-    schema: ResumeAnalysisOutputSchema,
+    output: Output.object({
+      schema: ResumeAnalysisOutputSchema,
+    }),
     system: RESUME_ANALYSIS_SYSTEM_PROMPT,
     prompt,
   });
 
-  return object;
+  return output;
 }
