@@ -3,6 +3,7 @@ import {
   ResumeAnalysisOutputSchema,
   type ResumeAnalysisInput,
 } from "@/lib/validations/resume-analysis";
+import { RESUME_ANALYZER_MODEL } from "@/ai/constants";
 
 const RESUME_ANALYSIS_SYSTEM_PROMPT = `You are a resume reviewer. Analyze the resume against the job description.
 
@@ -72,8 +73,6 @@ Provide:
 - No exclamation marks
 - State facts, not opinions`;
 
-const MODEL = "google/gemini-2.5-flash-lite";
-
 /**
  * Analyzes a resume against a job description using AI
  * Returns a structured object response
@@ -96,7 +95,7 @@ JOB DESCRIPTION:
 ${jobDescription}`;
 
   const { output } = await generateText({
-    model: MODEL,
+    model: RESUME_ANALYZER_MODEL,
     output: Output.object({
       schema: ResumeAnalysisOutputSchema,
     }),

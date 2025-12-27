@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { analyzeResume } from "@/lib/ai";
+import { analyzeResume } from "@/ai/agent";
 import { checkAuth } from "@/lib/auth-check";
 import { ResumeAnalysisSchema } from "@/lib/validations/resume-analysis";
 
