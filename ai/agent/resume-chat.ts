@@ -3,7 +3,7 @@ import { InferAgentUIMessage, stepCountIs, ToolLoopAgent } from "ai";
 import { RESUME_CHAT_MODEL } from "@/ai/constants";
 import { collectJobDetailsTool, analyzeJobMatchTool } from "@/ai/tool";
 
-export const RESUME_ANALYSIS_SYSTEM_PROMPT = `You are a career assistant that helps users analyze job descriptions against their profile.
+const RESUME_ANALYSIS_SYSTEM_PROMPT = `You are a career assistant that helps users analyze job descriptions against their profile.
 
 When the user wants to analyze a job description:
 1. First, use the collectJobDetails tool to show a form for the user to input job title and description
