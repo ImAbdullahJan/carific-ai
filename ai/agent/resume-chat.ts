@@ -22,7 +22,7 @@ export const resumeChatAgent = new ToolLoopAgent({
     collectJobDetails: collectJobDetailsTool,
     analyzeJobMatch: analyzeJobMatchTool,
   },
-  stopWhen: stepCountIs(5),
+  stopWhen: stepCountIs(10),
 });
 
 export type ResumeChatAgentUIMessage = InferAgentUIMessage<

@@ -29,10 +29,12 @@ ${profile.bio || ""}`);
         const dateRange = exp.current
           ? `${formatDate(exp.startDate)} - Present`
           : `${formatDate(exp.startDate)} - ${formatDate(exp.endDate)}`;
-        const bullets = exp.bullets.map((b) => `  • ${b}`).join("\n");
-        return `${exp.position} at ${exp.company} (${dateRange})
-${exp.location ? `Location: ${exp.location}` : ""}
-${bullets}`;
+        const parts = [
+          `${exp.position} at ${exp.company} (${dateRange})`,
+          exp.location ? `Location: ${exp.location}` : null,
+          ...exp.bullets.map((b) => `  • ${b}`),
+        ].filter((p) => p !== null && p !== "");
+        return parts.join("\n");
       })
       .join("\n\n");
     sections.push(`## Work Experience\n${expText}`);
@@ -72,17 +74,18 @@ ${bullets}`;
       .map((cert) => `${cert.name}${cert.issuer ? ` - ${cert.issuer}` : ""}`)
       .join("\n");
     sections.push(`## Certifications\n${certText}`);
-  }
-
-  if (profile.projects.length > 0) {
-    const projText = profile.projects
-      .map((proj) => {
-        const highlights = proj.highlights.map((h) => `  • ${h}`).join("\n");
-        return `${proj.name}${proj.description ? `: ${proj.description}` : ""}
-${highlights}`;
-      })
-      .join("\n\n");
-    sections.push(`## Projects\n${projText}`);
+    if (profile.projects.length > 0) {
+      const projText = profile.projects
+        .map((proj) => {
+          const parts = [
+            `${proj.name}${proj.description ? `: ${proj.description}` : ""}`,
+            ...proj.highlights.map((h) => `  • ${h}`),
+          ].filter((p) => p !== "");
+          return parts.join("\n");
+        })
+        .join("\n\n");
+      sections.push(`## Projects\n${projText}`);
+    }
   }
 
   return sections.join("\n\n");
