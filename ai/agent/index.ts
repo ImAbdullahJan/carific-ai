@@ -1,9 +1,3 @@
 export { analyzeResume } from "./resume-analyzer";
-export {
-  extractResumeData,
-  parseExtractedDate,
-  type ResumeExtractionOptions,
-  type ResumeExtractionResult,
-  type ResumeExtractionError,
-  type ResumeExtractionResponse,
-} from "./resume-extractor";
+export { extractResumeData, parseExtractedDate } from "./resume-extractor";
+export { resumeChatAgent, type ResumeChatAgentUIMessage } from "./resume-chat";
