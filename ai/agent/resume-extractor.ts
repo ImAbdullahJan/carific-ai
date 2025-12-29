@@ -129,10 +129,10 @@ export async function extractResumeData(
   const { resumeText, hints } = options;
 
   // Validate input
-  if (!resumeText || resumeText.trim().length < 50) {
+  if (!resumeText || resumeText.trim().length < 200) {
     return {
       success: false,
-      error: "Resume text is too short. Please provide a complete resume.",
+      error: "Resume text is too short (minimum 200 characters). Please provide a complete resume.",
     };
   }
 

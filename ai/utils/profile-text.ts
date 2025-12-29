@@ -74,18 +74,19 @@ ${profile.bio || ""}`);
       .map((cert) => `${cert.name}${cert.issuer ? ` - ${cert.issuer}` : ""}`)
       .join("\n");
     sections.push(`## Certifications\n${certText}`);
-    if (profile.projects.length > 0) {
-      const projText = profile.projects
-        .map((proj) => {
-          const parts = [
-            `${proj.name}${proj.description ? `: ${proj.description}` : ""}`,
-            ...proj.highlights.map((h) => `  • ${h}`),
-          ].filter((p) => p !== "");
-          return parts.join("\n");
-        })
-        .join("\n\n");
-      sections.push(`## Projects\n${projText}`);
-    }
+  }
+
+  if (profile.projects.length > 0) {
+    const projText = profile.projects
+      .map((proj) => {
+        const parts = [
+          `${proj.name}${proj.description ? `: ${proj.description}` : ""}`,
+          ...proj.highlights.map((h) => `  • ${h}`),
+        ].filter((p) => p !== "");
+        return parts.join("\n");
+      })
+      .join("\n\n");
+    sections.push(`## Projects\n${projText}`);
   }
 
   return sections.join("\n\n");

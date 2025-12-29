@@ -12,6 +12,12 @@ export async function POST(request: Request) {
     }
     const { messages }: { messages: ResumeChatAgentUIMessage[] } =
       await request.json();
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return NextResponse.json(
+        { error: "Invalid request: messages array is required" },
+        { status: 400 }
+      );
+    }
 
     return createAgentUIStreamResponse({
       agent: resumeChatAgent,
