@@ -17,10 +17,12 @@ Phone: ${profile.phone || "Not provided"}
 Location: ${profile.location || "Not provided"}
 Website: ${profile.website || "Not provided"}`);
 
-  if (profile.headline || profile.bio) {
+  const headline = profile.headline?.trim();
+  const bio = profile.bio?.trim();
+  if (headline || bio) {
     sections.push(`## Summary
-${profile.headline || ""}
-${profile.bio || ""}`);
+${headline || ""}
+${bio || ""}`);
   }
 
   if (profile.workExperiences.length > 0) {
