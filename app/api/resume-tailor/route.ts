@@ -1,6 +1,6 @@
 import { createAgentUIStreamResponse } from "ai";
 
-import { resumeChatAgent, type ResumeChatAgentUIMessage } from "@/ai/agent";
+import { resumeTailorAgent, type ResumeTailorAgentUIMessage } from "@/ai/agent";
 import { checkAuth } from "@/lib/auth-check";
 import { NextResponse } from "next/server";
 
@@ -10,23 +10,18 @@ export async function POST(request: Request) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const { messages }: { messages: ResumeChatAgentUIMessage[] } =
+
+    const { messages }: { messages: ResumeTailorAgentUIMessage[] } =
       await request.json();
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json(
-        { error: "Invalid request: messages array is required" },
-        { status: 400 }
-      );
-    }
 
     return createAgentUIStreamResponse({
-      agent: resumeChatAgent,
+      agent: resumeTailorAgent,
       uiMessages: messages,
     });
   } catch (error) {
-    console.error("Resume chat error:", error);
+    console.error("Resume tailor error:", error);
     return NextResponse.json(
-      { error: "Failed to process chat request" },
+      { error: "Failed to process tailor request" },
       { status: 500 }
     );
   }
