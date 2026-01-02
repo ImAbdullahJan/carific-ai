@@ -36,6 +36,7 @@ export const tailorSummaryTool = tool({
     jobDescription: z.string().describe("The full job description"),
   }),
   outputSchema: TailoredSummaryOutputSchema,
+  strict: true,
   execute: async ({ jobTitle, jobDescription }) => {
     const session = await checkAuth();
     if (!session) {
@@ -74,7 +75,7 @@ ${jobDescription}`;
       prompt,
     });
 
-    return output;
+    return { ...output, stepCompleted: "tailor_summary" as const };
   },
 });
 

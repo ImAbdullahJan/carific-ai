@@ -53,13 +53,11 @@ export function JobDetailsCard({ part, onSubmit }: JobDetailsCardProps) {
 
   if (submittedData) {
     return (
-      <Card className="w-full max-w-lg border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30">
+      <Card className="w-full max-w-lg">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
-            <BriefcaseIcon className="size-5 text-green-600 dark:text-green-400" />
-            <CardTitle className="text-base text-green-700 dark:text-green-300">
-              Job Details Submitted
-            </CardTitle>
+            <BriefcaseIcon className="size-5" />
+            <CardTitle className="text-base">Job Details Submitted</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">

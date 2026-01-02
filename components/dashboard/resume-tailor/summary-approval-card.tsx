@@ -48,20 +48,13 @@ export function SummaryApprovalCard({
   if (part.state === "output-available") {
     const { approved, customText: savedText } = part.output;
     return (
-      <Card
-        className={cn(
-          "w-full max-w-2xl border-2",
-          approved
-            ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30"
-            : "border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950/30"
-        )}
-      >
+      <Card className="w-full max-w-2xl border-2">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             {approved ? (
-              <CheckIcon className="size-5 text-green-600 dark:text-green-400" />
+              <CheckIcon className="size-5" />
             ) : (
-              <SkipForwardIcon className="size-5 text-yellow-600 dark:text-yellow-400" />
+              <SkipForwardIcon className="size-5" />
             )}
             <CardTitle className="text-base">
               {approved ? "Summary Approved" : "Summary Skipped"}
@@ -91,12 +84,17 @@ export function SummaryApprovalCard({
     onSubmit({
       approved: true,
       customText: isEditing ? customText : summaryData.suggested,
+      stepCompleted: "approve_summary",
     });
   };
 
   const handleSkip = () => {
     setIsSubmitting(true);
-    onSubmit({ approved: false });
+    onSubmit({
+      approved: false,
+      customText: null,
+      stepCompleted: "approve_summary",
+    });
   };
 
   return (
@@ -104,7 +102,7 @@ export function SummaryApprovalCard({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <SparklesIcon className="size-5 text-purple-500" />
+            <SparklesIcon className="size-5" />
             <CardTitle className="text-base">Professional Summary</CardTitle>
           </div>
           <Badge variant="outline">Step 1 of 3</Badge>
@@ -132,9 +130,7 @@ export function SummaryApprovalCard({
         {/* Suggested Summary */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-medium text-green-600 dark:text-green-400">
-              Suggested
-            </h4>
+            <h4 className="text-sm font-medium">Suggested</h4>
             <Button
               variant="ghost"
               size="sm"
@@ -158,7 +154,7 @@ export function SummaryApprovalCard({
               disabled={isSubmitting}
             />
           ) : (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-900 dark:bg-green-950/30">
+            <div className="rounded-lg border p-3">
               <p className="text-sm">{summaryData.suggested}</p>
             </div>
           )}

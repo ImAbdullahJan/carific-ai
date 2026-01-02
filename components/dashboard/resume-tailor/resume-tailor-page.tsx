@@ -45,6 +45,8 @@ import type {
   TailoredSummaryOutput,
 } from "@/ai/tool/resume-tailor";
 import type { ResumeData } from "@/lib/types/resume";
+import { PlanProgressCard } from "./plan-progress-card";
+import type { TailoringPlan, PlanStepType } from "@/ai/tool/resume-tailor";
 
 interface ResumeTailorPageProps {
   initialProfile: ResumeData;
@@ -70,21 +72,61 @@ export function ResumeTailorPage({
       sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     });
 
-  // Derive tailored data directly from messages
-  const tailoredData = useMemo(() => {
+  // Derive tailored data and plan directly from messages
+  const { tailoredData, plan, completedSteps, currentStep } = useMemo(() => {
     let summary: TailoredSummaryOutput | undefined;
+    let plan: TailoringPlan | null = null;
+    const completed = new Set<PlanStepType>();
+    let current: PlanStepType | undefined;
 
     for (const msg of messages) {
       for (const part of msg.parts) {
+        // Extract plan
         if (
-          part.type === "tool-tailorSummary" &&
+          part.type === "tool-createTailoringPlan" &&
           part.state === "output-available"
         ) {
-          summary = part.output;
+          plan = part.output;
+        }
+
+        // Track JD collection
+        if (
+          part.type === "tool-collectJobDetails" &&
+          part.state === "output-available"
+        ) {
+          completed.add("collect_jd");
+        }
+
+        // Track Summary
+        if (part.type === "tool-tailorSummary") {
+          if (part.state === "output-available") {
+            summary = part.output;
+            completed.add("tailor_summary");
+          } else if (part.state === "input-streaming") {
+            current = "tailor_summary";
+          }
+        }
+
+        // Track Approval
+        if (part.type === "tool-approveSummary") {
+          if (part.state === "output-available") {
+            completed.add("approve_summary");
+          } else if (
+            part.state === "input-available" ||
+            part.state === "input-streaming" ||
+            part.state === "approval-requested"
+          ) {
+            current = "approve_summary";
+          }
         }
       }
     }
-    return { summary };
+    return {
+      tailoredData: { summary },
+      plan,
+      completedSteps: completed,
+      currentStep: current,
+    };
   }, [messages]);
 
   // Build live preview data by applying approved changes to initial profile
@@ -212,6 +254,27 @@ export function ResumeTailorPage({
                               </MessageResponse>
                             );
 
+                          case "tool-createTailoringPlan":
+                            if (part.state === "output-available") {
+                              return (
+                                <PlanProgressCard
+                                  key={part.toolCallId}
+                                  plan={part.output}
+                                  completedSteps={completedSteps}
+                                  currentStep={currentStep}
+                                />
+                              );
+                            }
+                            return (
+                              <div
+                                key={part.toolCallId}
+                                className="flex items-center gap-2 text-muted-foreground"
+                              >
+                                <Loader2Icon className="size-4 animate-spin" />
+                                <span>Creating tailoring plan...</span>
+                              </div>
+                            );
+
                           case "tool-collectJobDetails":
                             return (
                               <JobDetailsCard
@@ -228,11 +291,11 @@ export function ResumeTailorPage({
                               return (
                                 <Card
                                   key={part.toolCallId}
-                                  className="w-full max-w-2xl border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-950/30"
+                                  className="w-full max-w-2xl"
                                 >
                                   <CardHeader className="pb-2">
                                     <div className="flex items-center gap-2">
-                                      <CheckCircle2Icon className="size-4 text-purple-600" />
+                                      <CheckCircle2Icon className="size-4" />
                                       <CardTitle className="text-sm">
                                         Summary Generated
                                       </CardTitle>

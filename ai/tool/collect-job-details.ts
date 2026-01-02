@@ -11,6 +11,7 @@ export const collectJobDetailsTool = tool({
         "A brief message to show above the form, e.g., 'Please enter the job details'"
       ),
   }),
+  strict: true,
   outputSchema: z.object({
     jobTitle: z.string(),
     jobDescription: z.string(),
