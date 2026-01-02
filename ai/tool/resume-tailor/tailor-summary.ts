@@ -76,10 +76,8 @@ ${jobDescription}`;
 
 export const approveSummaryTool = tool({
   description:
-    "Collect user's approval or edits for the tailored summary. Called after showing the summary suggestion.",
-  inputSchema: z.object({
-    message: z.string().describe("Message to show with the approval form"),
-  }),
+    "Show the approval form for the tailored summary. Call this immediately after tailorSummary completes. No message needed - the UI will display the summary automatically.",
+  inputSchema: z.object({}),
   outputSchema: SummaryApprovalSchema,
 });
 

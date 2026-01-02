@@ -4,14 +4,12 @@ import { TailoringPlanSchema } from "./schemas";
 
 export const createTailoringPlanTool = tool({
   description:
-    "Create a tailoring plan for the user's resume. Call this at the start of every tailoring session to show the user what steps will be taken.",
-  inputSchema: z.object({
-    userIntent: z.string().describe("What the user wants to accomplish"),
-  }),
+    "Create a tailoring plan for the user's resume. Call this immediately on the first user message. No need to analyze user intent - just call it.",
+  inputSchema: z.object({}),
   outputSchema: TailoringPlanSchema,
-  execute: async ({ userIntent }) => {
+  execute: async () => {
     // For now, return a fixed plan for summary tailoring
-    // In the future, this could be AI-driven based on userIntent
+    // In the future, this could be AI-driven based on user intent
     return {
       steps: [
         {

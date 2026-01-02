@@ -23,7 +23,7 @@ IMPORTANT: Follow this exact sequence for every tailoring session:
 
 3. **Tailor Summary**: IMMEDIATELY after collectJobDetails completes, call tailorSummary with the job details.
 
-4. **Approve Summary**: IMMEDIATELY after tailorSummary completes, call approveSummary to let the user review.
+4. **Approve Summary**: IMMEDIATELY after tailorSummary completes, call approveSummary (with empty input) to show the approval form.
 
 5. **Completion**: After approval, summarize what was done and ask if they want to continue with other sections.
 

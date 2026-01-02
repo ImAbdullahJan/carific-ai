@@ -3,14 +3,8 @@ import { z } from "zod";
 
 export const collectJobDetailsTool = tool({
   description:
-    "Show a form to collect job title and job description from the user. Use this when the user wants to analyze a job posting.",
-  inputSchema: z.object({
-    message: z
-      .string()
-      .describe(
-        "A brief message to show above the form, e.g., 'Please enter the job details'"
-      ),
-  }),
+    "Show a form to collect job title and job description from the user. Call this immediately after creating the plan. No message needed - the form is self-explanatory.",
+  inputSchema: z.object({}),
   strict: true,
   outputSchema: z.object({
     jobTitle: z.string(),
