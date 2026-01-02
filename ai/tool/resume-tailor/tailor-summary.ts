@@ -7,26 +7,21 @@ import { getFullProfile } from "@/lib/db/profile";
 
 import { TailoredSummaryOutputSchema, SummaryApprovalSchema } from "./schemas";
 
-const TAILOR_SUMMARY_PROMPT = `You are a resume expert. Generate a tailored professional summary for a job application.
+const TAILOR_SUMMARY_PROMPT = `
+You are an expert resume writer. Your task is to analyze the job description and the user's current profile to create a highly tailored professional summary.
 
-## Task
-Create a compelling 2-3 sentence professional summary that:
-1. Highlights the candidate's most relevant experience for this specific role
-2. Incorporates key terms from the job description naturally
-3. Positions the candidate as an ideal fit
+Steps:
+1. Analyze the Job Description to identify top 3-5 critical hard skills and 2 soft skills.
+2. Analyze the User's Profile (current summary, skills, experience) to see what matches.
+3. Calculate a "Match Score" (0-100) based on how well the CURRENT or PROPOSED summary fits the job.
+   - If the user has relevant experience, the tailored summary should aim for a high score (90+).
+4. Create a "Match Analysis": A single sentence translating the score (e.g., "Matches 95% of key requirements including Python and Leadership").
+5. Write the "Suggested Summary": 2-3 powerful sentences incorporating the keywords naturally.
+6. Provide "Reasoning": Why is this better?
+7. List "Keywords Incorporated": The specific keywords from the JD you used.
 
-## Output Requirements
-- current: The user's existing summary/bio (or null if none)
-- suggested: Your tailored 2-3 sentence summary
-- reasoning: Brief explanation of why this summary works better (1-2 sentences)
-- keywordsIncorporated: Array of job description keywords you included
-
-## Style Guidelines
-- Start with years of experience or a strong qualifier
-- Use active, confident language
-- Be specific, not generic
-- Avoid buzzwords like "passionate", "driven", "results-oriented"
-- Keep it under 50 words`;
+Maximize the impact. Use action verbs.
+`;
 
 export const tailorSummaryTool = tool({
   description:

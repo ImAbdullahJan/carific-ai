@@ -10,6 +10,16 @@ export const TailoredSummaryOutputSchema = z.object({
     .describe(
       "A tailored 2-3 sentence professional summary for this specific job"
     ),
+  matchScore: z
+    .number()
+    .min(0)
+    .max(100)
+    .describe(
+      "A score from 0-100 indicating how well the summary matches the job"
+    ),
+  matchAnalysis: z
+    .string()
+    .describe("A brief analysis explaining the match score quality"),
   reasoning: z
     .string()
     .describe("Brief explanation of why this summary is better for this role"),
