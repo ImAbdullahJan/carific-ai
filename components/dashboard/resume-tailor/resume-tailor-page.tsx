@@ -41,12 +41,17 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { ResumeTailorAgentUIMessage } from "@/ai/agent";
 import type {
+  ExperienceApproval,
   SummaryApproval,
+  TailoredExperienceOutput,
   TailoredSummaryOutput,
 } from "@/ai/tool/resume-tailor";
 import type { ResumeData } from "@/lib/types/resume";
 import { PlanProgressCard } from "./plan-progress-card";
-import type { TailoringPlan, PlanStepType } from "@/ai/tool/resume-tailor";
+import type { TailoringPlan } from "@/ai/tool/resume-tailor";
+import { ExperienceApprovalCard } from "./experience-approval-card";
+import { approveExperienceEntryTool } from "@/ai/tool/resume-tailor";
+import { UIToolInvocation } from "ai";
 
 interface ResumeTailorPageProps {
   initialProfile: ResumeData;
@@ -55,12 +60,55 @@ interface ResumeTailorPageProps {
 
 interface ApprovedChanges {
   summary?: { approved: boolean; text?: string };
+  experiences?: Record<string, { approved: boolean; bullets?: string[] }>;
 }
 
-export function ResumeTailorPage({
-  initialProfile,
-  resumeId,
-}: ResumeTailorPageProps) {
+/**
+ * Helper function to find the experience data for an approval step
+ * @param part - The approval tool part
+ * @param tailoredExperiences - Map of tailored experiences by ID
+ * @param messages - All messages up to current point
+ * @param currentMsg - The current message being rendered
+ * @returns The experience data to display, or undefined if not found
+ */
+function findExperienceForApproval(
+  part: UIToolInvocation<typeof approveExperienceEntryTool>,
+  tailoredExperiences: Record<string, TailoredExperienceOutput>,
+  messages: ResumeTailorAgentUIMessage[],
+  currentMsg: ResumeTailorAgentUIMessage
+): TailoredExperienceOutput | undefined {
+  if (part.state === "output-available") {
+    // Approval completed - get experience data using the ID from output
+    const expId = part.output.experienceId;
+    return tailoredExperiences[expId];
+  }
+
+  // Approval in progress - find the most recently tailored experience
+  // that hasn't been approved yet by checking message history
+  const allMessages = messages.slice(0, messages.indexOf(currentMsg) + 1);
+  const approvedExpIds = new Set<string>();
+
+  // Collect all approved experience IDs from previous messages
+  for (const m of allMessages) {
+    for (const p of m.parts) {
+      if (
+        p.type === "tool-approveExperienceEntry" &&
+        p.state === "output-available"
+      ) {
+        approvedExpIds.add(p.output.experienceId);
+      }
+    }
+  }
+
+  // Find the first tailored experience that hasn't been approved
+  const unapprovedExpId = Object.keys(tailoredExperiences).find(
+    (expId) => !approvedExpIds.has(expId)
+  );
+
+  return unapprovedExpId ? tailoredExperiences[unapprovedExpId] : undefined;
+}
+
+export function ResumeTailorPage({ initialProfile }: ResumeTailorPageProps) {
   const [showPreview, setShowPreview] = useState(true);
   const [approvedChanges, setApprovedChanges] = useState<ApprovedChanges>({});
 
@@ -73,61 +121,104 @@ export function ResumeTailorPage({
     });
 
   // Derive tailored data and plan directly from messages
-  const { tailoredData, plan, completedSteps, currentStep } = useMemo(() => {
-    let summary: TailoredSummaryOutput | undefined;
-    let plan: TailoringPlan | null = null;
-    const completed = new Set<PlanStepType>();
-    let current: PlanStepType | undefined;
+  const { tailoredData, plan, completedStepIds, currentStepId } =
+    useMemo(() => {
+      let summary: TailoredSummaryOutput | undefined;
+      const experiences: Record<string, TailoredExperienceOutput> = {};
+      let plan: TailoringPlan | null = null;
+      const completed = new Set<string>();
+      let currentId: string | undefined;
 
-    for (const msg of messages) {
-      for (const part of msg.parts) {
-        // Extract plan
-        if (
-          part.type === "tool-createTailoringPlan" &&
-          part.state === "output-available"
-        ) {
-          plan = part.output;
-        }
-
-        // Track JD collection
-        if (
-          part.type === "tool-collectJobDetails" &&
-          part.state === "output-available"
-        ) {
-          completed.add("collect_jd");
-        }
-
-        // Track Summary
-        if (part.type === "tool-tailorSummary") {
-          if (part.state === "output-available") {
-            summary = part.output;
-            completed.add("tailor_summary");
-          } else if (part.state === "input-streaming") {
-            current = "tailor_summary";
-          }
-        }
-
-        // Track Approval
-        if (part.type === "tool-approveSummary") {
-          if (part.state === "output-available") {
-            completed.add("approve_summary");
-          } else if (
-            part.state === "input-available" ||
-            part.state === "input-streaming" ||
-            part.state === "approval-requested"
+      for (const msg of messages) {
+        for (const part of msg.parts) {
+          // Extract plan
+          if (
+            part.type === "tool-createTailoringPlan" &&
+            part.state === "output-available"
           ) {
-            current = "approve_summary";
+            plan = part.output;
+          }
+
+          // Track JD collection
+          if (part.type === "tool-collectJobDetails") {
+            if (part.state === "output-available") {
+              completed.add("collect_jd");
+            } else if (
+              part.state === "input-available" ||
+              part.state === "input-streaming"
+            ) {
+              currentId = "collect_jd";
+            }
+          }
+
+          // Track Summary
+          if (part.type === "tool-tailorSummary") {
+            if (part.state === "output-available") {
+              summary = part.output;
+              completed.add("tailor_summary");
+            } else if (part.state === "input-streaming") {
+              currentId = "tailor_summary";
+            }
+          }
+
+          // Track Approval
+          if (part.type === "tool-approveSummary") {
+            if (part.state === "output-available") {
+              completed.add("approve_summary");
+            } else if (
+              part.state === "input-available" ||
+              part.state === "input-streaming" ||
+              part.state === "approval-requested"
+            ) {
+              currentId = "approve_summary";
+            }
+          }
+
+          // Track Experience Tailoring
+          if (part.type === "tool-tailorExperienceEntry") {
+            if (part.state === "output-available") {
+              experiences[part.output.experienceId] = part.output;
+              completed.add(`tailor_exp_${part.output.experienceId}`);
+            } else if (part.state === "input-streaming") {
+              // Try to find experienceId in input if available
+              const expId = part.input?.experienceId;
+              if (expId) {
+                currentId = `tailor_exp_${expId}`;
+              }
+            }
+          }
+
+          // Track Experience Approval
+          if (part.type === "tool-approveExperienceEntry") {
+            if (part.state === "output-available") {
+              completed.add(`approve_exp_${part.output.experienceId}`);
+            } else if (
+              part.state === "input-available" ||
+              part.state === "input-streaming" ||
+              part.state === "approval-requested"
+            ) {
+              currentId = "approve_experience";
+            }
           }
         }
       }
-    }
-    return {
-      tailoredData: { summary },
-      plan,
-      completedSteps: completed,
-      currentStep: current,
-    };
-  }, [messages]);
+
+      return {
+        tailoredData: { summary, experiences },
+        plan,
+        completedStepIds: completed,
+        currentStepId: currentId,
+      };
+    }, [messages]);
+
+  // Determine the active step ID for plan progress tracking
+  const activeStepId = useMemo(() => {
+    if (currentStepId) return currentStepId;
+    if (!plan || status !== "streaming") return undefined;
+
+    // Find the first incomplete step
+    return plan.steps.find((s) => !completedStepIds.has(s.id))?.id;
+  }, [plan, completedStepIds, currentStepId, status]);
 
   // Build live preview data by applying approved changes to initial profile
   const previewData = useMemo((): ResumeData => {
@@ -138,8 +229,33 @@ export function ResumeTailorPage({
       preview.bio = approvedChanges.summary.text;
     }
 
+    // Apply approved experience changes
+    if (approvedChanges.experiences) {
+      preview.workExperiences = preview.workExperiences.map((exp) => {
+        // Find the matching experience by comparing company and position
+        const matchingExpId = Object.keys(
+          approvedChanges.experiences || {}
+        ).find((expId) => {
+          const tailoredExp = tailoredData.experiences[expId];
+          return (
+            tailoredExp &&
+            tailoredExp.originalCompany === exp.company &&
+            tailoredExp.originalRole === exp.position
+          );
+        });
+
+        if (matchingExpId) {
+          const change = approvedChanges.experiences?.[matchingExpId];
+          if (change?.approved && change.bullets) {
+            return { ...exp, bullets: change.bullets };
+          }
+        }
+        return exp;
+      });
+    }
+
     return preview;
-  }, [initialProfile, approvedChanges]);
+  }, [initialProfile, approvedChanges, tailoredData.experiences]);
 
   const isLoading = status === "streaming" || status === "submitted";
 
@@ -164,7 +280,6 @@ export function ResumeTailorPage({
 
   const handleSummaryApproval = useCallback(
     (toolCallId: string, data: SummaryApproval) => {
-      // Update local state for live preview
       setApprovedChanges((prev) => ({
         ...prev,
         summary: {
@@ -180,6 +295,32 @@ export function ResumeTailorPage({
       });
     },
     [addToolOutput, tailoredData.summary]
+  );
+
+  const handleExperienceApproval = useCallback(
+    (toolCallId: string, data: ExperienceApproval) => {
+      const expId = data.experienceId;
+      const suggestedBullets =
+        tailoredData.experiences[expId]?.suggestedBullets;
+
+      setApprovedChanges((prev) => ({
+        ...prev,
+        experiences: {
+          ...prev.experiences,
+          [expId]: {
+            approved: data.approved,
+            bullets: data.finalBullets || suggestedBullets,
+          },
+        },
+      }));
+
+      addToolOutput({
+        tool: "approveExperienceEntry",
+        toolCallId,
+        output: data,
+      });
+    },
+    [addToolOutput, tailoredData.experiences]
   );
 
   return (
@@ -224,11 +365,20 @@ export function ResumeTailorPage({
               </>
             )}
           </Button>
-          {approvedChanges.summary?.approved ? (
-            <Badge variant="secondary" className="text-xs">
-              Summary updated
-            </Badge>
-          ) : null}
+          <div className="flex gap-2">
+            {approvedChanges.summary?.approved && (
+              <Badge variant="secondary" className="text-xs">
+                Summary updated
+              </Badge>
+            )}
+            {Object.values(approvedChanges.experiences || {}).some(
+              (e) => e.approved
+            ) && (
+              <Badge variant="secondary" className="text-xs">
+                Experience updated
+              </Badge>
+            )}
+          </div>
         </div>
 
         {/* Chat Content */}
@@ -260,8 +410,8 @@ export function ResumeTailorPage({
                                 <PlanProgressCard
                                   key={part.toolCallId}
                                   plan={part.output}
-                                  completedSteps={completedSteps}
-                                  currentStep={currentStep}
+                                  completedStepIds={completedStepIds}
+                                  currentStepId={activeStepId}
                                 />
                               );
                             }
@@ -343,6 +493,45 @@ export function ResumeTailorPage({
                                 }
                               />
                             );
+
+                          case "tool-tailorExperienceEntry":
+                            if (part.state !== "output-available") {
+                              return (
+                                <div
+                                  key={part.toolCallId}
+                                  className="flex items-center gap-2 text-muted-foreground"
+                                >
+                                  <Loader2Icon className="size-4 animate-spin" />
+                                  <span>Optimizing experience bullets...</span>
+                                </div>
+                              );
+                            }
+                            return null; // Don't show card for this, wait for approval step
+
+                          case "tool-approveExperienceEntry": {
+                            const expData = findExperienceForApproval(
+                              part,
+                              tailoredData.experiences,
+                              messages,
+                              msg
+                            );
+
+                            if (!expData) return null;
+
+                            return (
+                              <ExperienceApprovalCard
+                                key={part.toolCallId}
+                                part={part}
+                                experienceData={expData}
+                                onSubmit={(data) =>
+                                  handleExperienceApproval(
+                                    part.toolCallId,
+                                    data
+                                  )
+                                }
+                              />
+                            );
+                          }
 
                           default:
                             return null;

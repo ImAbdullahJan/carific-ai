@@ -7,14 +7,14 @@ import type { TailoringPlan, PlanStepType } from "@/ai/tool/resume-tailor";
 
 interface PlanProgressCardProps {
   plan: TailoringPlan;
-  completedSteps: Set<PlanStepType>;
-  currentStep?: PlanStepType;
+  completedStepIds: Set<string>;
+  currentStepId?: string;
 }
 
 export function PlanProgressCard({
   plan,
-  completedSteps,
-  currentStep,
+  completedStepIds,
+  currentStepId,
 }: PlanProgressCardProps) {
   return (
     <Card className="w-full max-w-md">
@@ -26,8 +26,8 @@ export function PlanProgressCard({
       <CardContent>
         <div className="space-y-3">
           {plan.steps.map((step, index) => {
-            const isCompleted = completedSteps.has(step.type);
-            const isCurrent = step.type === currentStep;
+            const isCompleted = completedStepIds.has(step.id);
+            const isCurrent = step.id === currentStepId;
 
             return (
               <div key={step.id} className="flex items-start gap-3">

@@ -37,6 +37,7 @@ export function profileToResume(profile: FullProfile): ResumeData {
       label: link.label || null,
     })),
     workExperiences: profile.workExperiences.map((exp) => ({
+      id: exp.id,
       company: exp.company,
       position: exp.position,
       location: exp.location || null,
@@ -46,6 +47,7 @@ export function profileToResume(profile: FullProfile): ResumeData {
       bullets: exp.bullets,
     })),
     volunteerExperiences: profile.volunteerExperiences.map((exp) => ({
+      id: exp.id,
       organization: exp.organization,
       role: exp.role,
       location: exp.location || null,
@@ -55,6 +57,7 @@ export function profileToResume(profile: FullProfile): ResumeData {
       bullets: exp.bullets,
     })),
     educations: profile.educations.map((edu) => ({
+      id: edu.id,
       school: edu.school,
       degree: edu.degree,
       fieldOfStudy: edu.fieldOfStudy || null,
@@ -65,6 +68,7 @@ export function profileToResume(profile: FullProfile): ResumeData {
       highlights: edu.highlights,
     })),
     projects: profile.projects.map((project) => ({
+      id: project.id,
       name: project.name,
       description: project.description || null,
       url: project.url || null,
@@ -73,11 +77,13 @@ export function profileToResume(profile: FullProfile): ResumeData {
       highlights: project.highlights,
     })),
     skills: profile.skills.map((skill) => ({
+      id: skill.id,
       name: skill.name,
       category: skill.category || null,
       level: skill.level || null,
     })),
     certifications: profile.certifications.map((cert) => ({
+      id: cert.id,
       name: cert.name,
       issuer: cert.issuer || null,
       issueDate: cert.issueDate,
@@ -86,10 +92,12 @@ export function profileToResume(profile: FullProfile): ResumeData {
       credentialUrl: cert.credentialUrl || null,
     })),
     languages: profile.languages.map((lang) => ({
+      id: lang.id,
       name: lang.name,
       proficiency: lang.proficiency || null,
     })),
     achievements: profile.achievements.map((achievement) => ({
+      id: achievement.id,
       title: achievement.title,
       issuer: achievement.issuer || null,
       date: achievement.date,

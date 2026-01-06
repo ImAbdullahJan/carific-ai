@@ -44,7 +44,9 @@ export type SummaryApproval = z.infer<typeof SummaryApprovalSchema>;
 export const PlanStepTypeSchema = z.enum([
   "collect_jd",
   "tailor_summary",
+  "tailor_experience",
   "approve_summary",
+  "approve_experience",
   "finalize",
 ]);
 export type PlanStepType = z.infer<typeof PlanStepTypeSchema>;
@@ -53,7 +55,8 @@ export const PlanStepSchema = z.object({
   id: z.string(),
   type: PlanStepTypeSchema,
   label: z.string(),
-  description: z.string(),
+  description: z.string().optional(),
+  context: z.object({ experienceId: z.string().optional() }).optional(),
 });
 export type PlanStep = z.infer<typeof PlanStepSchema>;
 
@@ -65,3 +68,44 @@ export const TailoringPlanSchema = z.object({
   }),
 });
 export type TailoringPlan = z.infer<typeof TailoringPlanSchema>;
+
+export const TailoredExperienceOutputSchema = z.object({
+  experienceId: z.string(),
+  originalRole: z.string(),
+  originalCompany: z.string(),
+  originalBullets: z
+    .array(z.string())
+    .describe("The candidate's original bullet points before optimization"),
+  relevanceScore: z
+    .number()
+    .min(0)
+    .max(100)
+    .describe(
+      "How relevant this role is to the target job (0-100). 90+: Directly related, 70-89: Related with transferable skills, 50-69: Some relevance, <50: Limited relevance"
+    ),
+  suggestedBullets: z
+    .array(z.string())
+    .min(2)
+    .max(6)
+    .describe("2-6 optimized bullet points, reordered by relevance"),
+  reasoning: z
+    .string()
+    .describe("Brief explanation of why these changes improve the resume"),
+  improvements: z
+    .array(z.string())
+    .describe(
+      "2-3 specific improvements made (e.g., 'Added React keyword', 'Quantified impact with metrics')"
+    ),
+  stepCompleted: z.literal("tailor_experience").nullable(),
+});
+export type TailoredExperienceOutput = z.infer<
+  typeof TailoredExperienceOutputSchema
+>;
+
+export const ExperienceApprovalSchema = z.object({
+  experienceId: z.string(),
+  approved: z.boolean(),
+  finalBullets: z.array(z.string()).optional(),
+  stepCompleted: z.literal("approve_experience").nullable(),
+});
+export type ExperienceApproval = z.infer<typeof ExperienceApprovalSchema>;

@@ -2,7 +2,12 @@ import { InferAgentUIMessage, stepCountIs, ToolLoopAgent } from "ai";
 
 import { RESUME_CHAT_MODEL } from "@/ai/constants";
 import { collectJobDetailsTool } from "@/ai/tool";
-import { tailorSummaryTool, approveSummaryTool } from "@/ai/tool/resume-tailor";
+import {
+  tailorSummaryTool,
+  approveSummaryTool,
+  tailorExperienceEntryTool,
+  approveExperienceEntryTool,
+} from "@/ai/tool/resume-tailor";
 
 import { createTailoringPlanTool } from "@/ai/tool/resume-tailor";
 
@@ -25,7 +30,13 @@ IMPORTANT: Follow this exact sequence for every tailoring session:
 
 4. **Approve Summary**: IMMEDIATELY after tailorSummary completes, call approveSummary (with empty input) to show the approval form.
 
-5. **Completion**: After approval, summarize what was done and ask if they want to continue with other sections.
+5. **Tailor Experience (Iterative Loop)**:
+   - If the next step in the plan (check context) is 'tailor_experience', call tailorExperienceEntryTool with the experienceId from the step context.
+   - DO NOT attempt to tailor all experiences at once. Do them one by one as per the plan.
+
+6. **Approve Experience**: IMMEDIATELY after tailorExperienceEntryTool completes, call approveExperienceEntryTool (with empty input) to show the tailored bullets.
+
+7. **Completion**: After approval, summarize what was done and ask if they want to continue with other sections.
 
 ## Important Rules
 
@@ -50,6 +61,8 @@ export const resumeTailorAgent = new ToolLoopAgent({
     collectJobDetails: collectJobDetailsTool,
     tailorSummary: tailorSummaryTool,
     approveSummary: approveSummaryTool,
+    tailorExperienceEntry: tailorExperienceEntryTool,
+    approveExperienceEntry: approveExperienceEntryTool,
   },
   stopWhen: stepCountIs(10),
 });
