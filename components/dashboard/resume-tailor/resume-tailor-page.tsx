@@ -45,11 +45,14 @@ import type {
   SummaryApproval,
   TailoredExperienceOutput,
   TailoredSummaryOutput,
+  TailoredSkillsOutput,
+  SkillsApproval,
+  TailoringPlan,
 } from "@/ai/tool/resume-tailor";
 import type { ResumeData } from "@/lib/types/resume";
 import { PlanProgressCard } from "./plan-progress-card";
-import type { TailoringPlan } from "@/ai/tool/resume-tailor";
 import { ExperienceApprovalCard } from "./experience-approval-card";
+import { SkillsApprovalCard } from "./skills-approval-card";
 import { approveExperienceEntryTool } from "@/ai/tool/resume-tailor";
 import { UIToolInvocation } from "ai";
 
@@ -61,6 +64,10 @@ interface ResumeTailorPageProps {
 interface ApprovedChanges {
   summary?: { approved: boolean; text?: string };
   experiences?: Record<string, { approved: boolean; bullets?: string[] }>;
+  skills?: {
+    approved: boolean;
+    finalSkills?: { name: string; category: string }[];
+  };
 }
 
 /**
@@ -125,6 +132,7 @@ export function ResumeTailorPage({ initialProfile }: ResumeTailorPageProps) {
     useMemo(() => {
       let summary: TailoredSummaryOutput | undefined;
       const experiences: Record<string, TailoredExperienceOutput> = {};
+      let skills: TailoredSkillsOutput | undefined;
       let plan: TailoringPlan | null = null;
       const completed = new Set<string>();
       let currentId: string | undefined;
@@ -200,11 +208,34 @@ export function ResumeTailorPage({ initialProfile }: ResumeTailorPageProps) {
               currentId = "approve_experience";
             }
           }
+
+          // Track Skills Tailoring
+          if (part.type === "tool-tailorSkills") {
+            if (part.state === "output-available") {
+              skills = part.output;
+              completed.add("tailor_skills");
+            } else if (part.state === "input-streaming") {
+              currentId = "tailor_skills";
+            }
+          }
+
+          // Track Skills Approval
+          if (part.type === "tool-approveSkills") {
+            if (part.state === "output-available") {
+              completed.add("approve_skills");
+            } else if (
+              part.state === "input-available" ||
+              part.state === "input-streaming" ||
+              part.state === "approval-requested"
+            ) {
+              currentId = "approve_skills";
+            }
+          }
         }
       }
 
       return {
-        tailoredData: { summary, experiences },
+        tailoredData: { summary, experiences, skills },
         plan,
         completedStepIds: completed,
         currentStepId: currentId,
@@ -227,6 +258,18 @@ export function ResumeTailorPage({ initialProfile }: ResumeTailorPageProps) {
     // Apply approved summary
     if (approvedChanges.summary?.approved && approvedChanges.summary.text) {
       preview.bio = approvedChanges.summary.text;
+    }
+
+    // Apply approved skills changes
+    if (
+      approvedChanges.skills?.approved &&
+      approvedChanges.skills.finalSkills
+    ) {
+      preview.skills = approvedChanges.skills.finalSkills.map((s) => ({
+        name: s.name,
+        category: s.category,
+        level: null,
+      }));
     }
 
     // Apply approved experience changes
@@ -321,6 +364,25 @@ export function ResumeTailorPage({ initialProfile }: ResumeTailorPageProps) {
       });
     },
     [addToolOutput, tailoredData.experiences]
+  );
+
+  const handleSkillsApproval = useCallback(
+    (toolCallId: string, data: SkillsApproval) => {
+      setApprovedChanges((prev) => ({
+        ...prev,
+        skills: {
+          approved: data.approved,
+          finalSkills: data.finalSkills,
+        },
+      }));
+
+      addToolOutput({
+        tool: "approveSkills",
+        toolCallId,
+        output: data,
+      });
+    },
+    [addToolOutput]
   );
 
   return (
@@ -532,6 +594,32 @@ export function ResumeTailorPage({ initialProfile }: ResumeTailorPageProps) {
                               />
                             );
                           }
+
+                          case "tool-tailorSkills":
+                            if (part.state !== "output-available") {
+                              return (
+                                <div
+                                  key={part.toolCallId}
+                                  className="flex items-center gap-2 text-muted-foreground"
+                                >
+                                  <Loader2Icon className="size-4 animate-spin" />
+                                  <span>Analyzing skills relevance...</span>
+                                </div>
+                              );
+                            }
+                            return null;
+
+                          case "tool-approveSkills":
+                            return (
+                              <SkillsApprovalCard
+                                key={part.toolCallId}
+                                part={part}
+                                skillsData={tailoredData.skills}
+                                onSubmit={(data) =>
+                                  handleSkillsApproval(part.toolCallId, data)
+                                }
+                              />
+                            );
 
                           default:
                             return null;

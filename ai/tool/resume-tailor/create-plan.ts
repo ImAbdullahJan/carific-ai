@@ -62,6 +62,22 @@ export const createTailoringPlanTool = tool({
       });
     }
 
+    // Add steps for skills tailoring
+    if (profile.skills && profile.skills.length > 0) {
+      steps.push({
+        id: "tailor_skills",
+        type: "tailor_skills" as const,
+        label: "Tailor Skills",
+        description: "Reorganize skills for relevance",
+      });
+      steps.push({
+        id: "approve_skills",
+        type: "approve_skills" as const,
+        label: "Review Skills",
+        description: "Approve skill changes",
+      });
+    }
+
     steps.push({
       id: "finalize",
       type: "finalize" as const,

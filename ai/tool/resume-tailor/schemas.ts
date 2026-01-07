@@ -47,6 +47,8 @@ export const PlanStepTypeSchema = z.enum([
   "tailor_experience",
   "approve_summary",
   "approve_experience",
+  "tailor_skills",
+  "approve_skills",
   "finalize",
 ]);
 export type PlanStepType = z.infer<typeof PlanStepTypeSchema>;
@@ -109,3 +111,41 @@ export const ExperienceApprovalSchema = z.object({
   stepCompleted: z.literal("approve_experience").nullable(),
 });
 export type ExperienceApproval = z.infer<typeof ExperienceApprovalSchema>;
+
+export const TailoredSkillsOutputSchema = z.object({
+  originalSkills: z.array(
+    z.object({
+      name: z.string(),
+      category: z.string().nullable(),
+    })
+  ),
+  suggestedSkills: z.array(
+    z.object({
+      name: z.string(),
+      category: z.string(),
+      relevance: z.enum(["high", "medium", "low"]),
+      isNew: z
+        .boolean()
+        .describe("True if this is a suggested skill not in original"),
+    })
+  ),
+  reasoning: z.string(),
+  improvements: z.array(z.string()),
+  keywordsMatched: z.array(z.string()),
+  stepCompleted: z.literal("tailor_skills").nullable(),
+});
+export type TailoredSkillsOutput = z.infer<typeof TailoredSkillsOutputSchema>;
+
+export const SkillsApprovalSchema = z.object({
+  approved: z.boolean(),
+  finalSkills: z
+    .array(
+      z.object({
+        name: z.string(),
+        category: z.string(),
+      })
+    )
+    .optional(),
+  stepCompleted: z.literal("approve_skills").nullable(),
+});
+export type SkillsApproval = z.infer<typeof SkillsApprovalSchema>;

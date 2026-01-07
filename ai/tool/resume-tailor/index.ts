@@ -12,4 +12,10 @@ export {
   type TailorExperienceEntryTool,
   type ApproveExperienceEntryTool,
 } from "./tailor-experience";
+export {
+  tailorSkillsTool,
+  approveSkillsTool,
+  type TailorSkillsTool,
+  type ApproveSkillsTool,
+} from "./tailor-skills";
 export { createTailoringPlanTool } from "./create-plan";
