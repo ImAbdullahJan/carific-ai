@@ -59,6 +59,8 @@ import { UIToolInvocation } from "ai";
 interface ResumeTailorPageProps {
   initialProfile: ResumeData;
   resumeId: string;
+  chatId: string;
+  initialMessages?: ResumeTailorAgentUIMessage[];
 }
 
 interface ApprovedChanges {
@@ -115,14 +117,30 @@ function findExperienceForApproval(
   return unapprovedExpId ? tailoredExperiences[unapprovedExpId] : undefined;
 }
 
-export function ResumeTailorPage({ initialProfile }: ResumeTailorPageProps) {
+export function ResumeTailorPage({
+  initialProfile,
+  chatId,
+  initialMessages,
+}: ResumeTailorPageProps) {
   const [showPreview, setShowPreview] = useState(true);
   const [approvedChanges, setApprovedChanges] = useState<ApprovedChanges>({});
 
   const { messages, sendMessage, addToolOutput, status } =
     useChat<ResumeTailorAgentUIMessage>({
+      id: chatId,
+      messages: initialMessages,
       transport: new DefaultChatTransport({
         api: "/api/resume-tailor",
+        prepareSendMessagesRequest: ({ messages: msgs }) => {
+          // Send only the last message + chatId (server loads full history)
+          const lastMessage = msgs[msgs.length - 1];
+          return {
+            body: {
+              message: lastMessage,
+              chatId,
+            },
+          };
+        },
       }),
       sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     });

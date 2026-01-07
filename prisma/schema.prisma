@@ -335,6 +335,68 @@ model Resume {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  tailoringChats TailoringChat[]
+
   @@index([profileId])
   @@map("resume")
+}
+
+model TailoringChat {
+  id       String @id @default(cuid())
+  resumeId String
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  messages TailoringMessage[]
+
+  createdAt DateTime @default(now())
+
+  @@index([resumeId])
+  @@map("tailoring_chat")
+}
+
+model TailoringMessage {
+  id     String        @id @default(cuid())
+  chatId String
+  chat   TailoringChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  role   String // "user" | "assistant"
+
+  parts TailoringMessagePart[]
+
+  createdAt DateTime @default(now())
+
+  @@index([chatId])
+  @@index([chatId, createdAt])
+  @@map("tailoring_message")
+}
+
+model TailoringMessagePart {
+  id        String           @id @default(cuid())
+  messageId String
+  message   TailoringMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  type  String // "text", "reasoning", "tool-invocation"
+  order Int    @default(0)
+
+  createdAt DateTime @default(now())
+
+  // ========== Text Parts ==========
+  text String?
+
+  // ========== Reasoning Parts ==========
+  reasoning String?
+
+  // ========== Generic Tool Columns ==========
+  toolCallId String?
+  toolName   String?
+  toolState  String? // "input-streaming" | "input-available" | "output-available" | "output-error" | "approval-requested" | etc.
+  toolInput  Json?
+  toolOutput Json?
+  toolError  String?
+
+  // ========== Provider Metadata ==========
+  providerMetadata Json?
+
+  @@index([messageId])
+  @@index([messageId, order])
+  @@map("tailoring_message_part")
 }
