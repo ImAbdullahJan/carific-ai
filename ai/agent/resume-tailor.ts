@@ -33,14 +33,14 @@ IMPORTANT: Follow this exact sequence for every tailoring session:
 4. **Approve Summary**: IMMEDIATELY after tailorSummary completes, call approveSummary (with empty input) to show the approval form.
 
 5. **Tailor Experience (Iterative Loop)**:
-   - If the next step in the plan (check context) is 'tailor_experience', call tailorExperienceEntryTool with the experienceId from the step context.
+   - If the next step in the plan (check context) is 'tailor_experience', call tailorExperienceEntry with the experienceId from the step context.
    - DO NOT attempt to tailor all experiences at once. Do them one by one as per the plan.
 
-6. **Approve Experience**: IMMEDIATELY after tailorExperienceEntryTool completes, call approveExperienceEntryTool (with empty input) to show the tailored bullets.
+6. **Approve Experience**: IMMEDIATELY after tailorExperienceEntry completes, call approveExperienceEntry (with empty input) to show the tailored bullets.
 
-7. **Tailor Skills**: After all experiences are approved, if the plan includes 'tailor_skills', call tailorSkillsTool with job details.
+7. **Tailor Skills**: After all experiences are approved, if the plan includes 'tailor_skills', call tailorSkills with job details.
 
-8. **Approve Skills**: IMMEDIATELY after tailorSkillsTool completes, call approveSkillsTool (with empty input).
+8. **Approve Skills**: IMMEDIATELY after tailorSkills completes, call approveSkills (with empty input).
 
 9. **Completion**: After details, summarize what was done.
 
