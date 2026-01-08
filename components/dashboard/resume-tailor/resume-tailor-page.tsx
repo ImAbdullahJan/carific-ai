@@ -53,6 +53,7 @@ import type { ResumeData } from "@/lib/types/resume";
 import { PlanProgressCard } from "./plan-progress-card";
 import { ExperienceApprovalCard } from "./experience-approval-card";
 import { SkillsApprovalCard } from "./skills-approval-card";
+import { StepGuide } from "./step-guide";
 import { approveExperienceEntryTool } from "@/ai/tool/resume-tailor";
 import { UIToolInvocation } from "ai";
 
@@ -269,6 +270,26 @@ export function ResumeTailorPage({
     return plan.steps.find((s) => !completedStepIds.has(s.id))?.id;
   }, [plan, completedStepIds, currentStepId, status]);
 
+  // Check if there are any pending approval requests
+  const hasPendingApproval = useMemo(() => {
+    if (messages.length === 0) return false;
+
+    // Check the last message for approval-requested state
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage.role !== "assistant") return false;
+
+    return lastMessage.parts.some((part) => {
+      return (
+        (part.type === "tool-approveSummary" ||
+          part.type === "tool-approveExperienceEntry" ||
+          part.type === "tool-approveSkills" ||
+          part.type === "tool-collectJobDetails") &&
+        (part.state === "approval-requested" ||
+          part.state === "input-available")
+      );
+    });
+  }, [messages]);
+
   // Build live preview data by applying approved changes to initial profile
   const previewData = useMemo((): ResumeData => {
     const preview = { ...initialProfile };
@@ -465,11 +486,41 @@ export function ResumeTailorPage({
         <Conversation className="flex-1">
           <ConversationContent>
             {messages.length === 0 ? (
-              <ConversationEmptyState
-                title="Resume Tailor"
-                description="I'll help you tailor your professional summary for a specific job. Just tell me the job you're applying for and I'll suggest improvements."
-                icon={<WandIcon className="size-12" />}
-              />
+              <>
+                <ConversationEmptyState
+                  title="Resume Tailor"
+                  description="I'll help you tailor your professional summary for a specific job. Just tell me the job you're applying for and I'll suggest improvements."
+                  icon={<WandIcon className="size-12" />}
+                />
+                {/* Step Guide - Shows welcome message when no messages */}
+                {!isLoading && (
+                  <StepGuide
+                    plan={plan}
+                    completedStepIds={completedStepIds}
+                    hasMessages={false}
+                    isStreaming={false}
+                    onStart={() =>
+                      sendMessage({
+                        role: "user",
+                        parts: [
+                          {
+                            type: "text",
+                            text: "Let's start tailoring my resume!",
+                          },
+                        ],
+                      })
+                    }
+                    onContinue={() =>
+                      sendMessage({
+                        role: "user",
+                        parts: [
+                          { type: "text", text: "Continue to the next step" },
+                        ],
+                      })
+                    }
+                  />
+                )}
+              </>
             ) : (
               <>
                 {messages.map((msg) => (
@@ -646,6 +697,34 @@ export function ResumeTailorPage({
                     </MessageContent>
                   </Message>
                 ))}
+                {/* Step Guide - Shows when agent stops and no pending approvals */}
+                {!isLoading && !hasPendingApproval && (
+                  <StepGuide
+                    plan={plan}
+                    completedStepIds={completedStepIds}
+                    hasMessages={messages.length > 0}
+                    isStreaming={false}
+                    onStart={() =>
+                      sendMessage({
+                        role: "user",
+                        parts: [
+                          {
+                            type: "text",
+                            text: "Let's start tailoring my resume!",
+                          },
+                        ],
+                      })
+                    }
+                    onContinue={() =>
+                      sendMessage({
+                        role: "user",
+                        parts: [
+                          { type: "text", text: "Continue to the next step" },
+                        ],
+                      })
+                    }
+                  />
+                )}
                 {isLoading && (
                   <Message from="assistant">
                     <MessageContent>
