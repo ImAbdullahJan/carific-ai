@@ -9,12 +9,26 @@ import {
 
 /**
  * Creates a new tailoring chat session for a resume.
+ * Note: With 1:1 relationship, this should only be called once per resume.
  */
 export async function createTailoringChat(resumeId: string): Promise<string> {
   const chat = await prisma.tailoringChat.create({
     data: { resumeId },
   });
   return chat.id;
+}
+
+/**
+ * Gets or creates a tailoring chat for a resume (1:1 relationship).
+ */
+export async function getOrCreateChatForResume(
+  resumeId: string
+): Promise<string> {
+  const existingChat = await getChatForResume(resumeId);
+  if (existingChat) {
+    return existingChat.id;
+  }
+  return createTailoringChat(resumeId);
 }
 
 /**
@@ -31,6 +45,12 @@ export async function upsertMessage({
   id: string;
   message: ResumeTailorAgentUIMessage;
 }): Promise<void> {
+  // Skip messages with no parts (invalid state)
+  if (!message.parts || message.parts.length === 0) {
+    console.warn(`Skipping message ${id} with no parts`);
+    return;
+  }
+
   const mappedParts = mapUIMessagePartsToDBParts(message.parts, id);
 
   await prisma.$transaction(async (tx) => {
@@ -64,6 +84,7 @@ export async function upsertMessage({
 
 /**
  * Loads all messages for a chat, reconstructing UIMessages from DB.
+ * Filters out messages with no parts (invalid state).
  */
 export async function loadChat(
   chatId: string
@@ -78,20 +99,21 @@ export async function loadChat(
     orderBy: { createdAt: "asc" },
   });
 
-  return messages.map((msg) => ({
-    id: msg.id,
-    role: msg.role as ResumeTailorAgentUIMessage["role"],
-    parts: msg.parts.map(mapDBPartToUIMessagePart),
-  }));
+  return messages
+    .filter((msg) => msg.parts.length > 0) // Filter out messages with no parts
+    .map((msg) => ({
+      id: msg.id,
+      role: msg.role as ResumeTailorAgentUIMessage["role"],
+      parts: msg.parts.map(mapDBPartToUIMessagePart),
+    }));
 }
 
 /**
- * Gets all tailoring chats for a resume.
+ * Gets the tailoring chat for a resume (1:1 relationship).
  */
-export async function getChatsForResume(resumeId: string) {
-  return prisma.tailoringChat.findMany({
+export async function getChatForResume(resumeId: string) {
+  return prisma.tailoringChat.findUnique({
     where: { resumeId },
-    orderBy: { createdAt: "desc" },
   });
 }
 
@@ -135,15 +157,5 @@ export async function deleteMessageAndSubsequent(
         createdAt: { gte: targetMessage.createdAt },
       },
     });
-  });
-}
-
-/**
- * Gets the most recent chat for a resume, or null if none exists.
- */
-export async function getMostRecentChat(resumeId: string) {
-  return prisma.tailoringChat.findFirst({
-    where: { resumeId },
-    orderBy: { createdAt: "desc" },
   });
 }

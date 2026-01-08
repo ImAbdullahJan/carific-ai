@@ -335,7 +335,7 @@ model Resume {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tailoringChats TailoringChat[]
+  tailoringChat TailoringChat?
 
   @@index([profileId])
   @@map("resume")
@@ -343,14 +343,13 @@ model Resume {
 
 model TailoringChat {
   id       String @id @default(cuid())
-  resumeId String
+  resumeId String @unique
   resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   messages TailoringMessage[]
 
   createdAt DateTime @default(now())
 
-  @@index([resumeId])
   @@map("tailoring_chat")
 }
 
