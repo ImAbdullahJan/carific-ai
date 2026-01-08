@@ -72,7 +72,7 @@ export const resumeTailorAgent = new ToolLoopAgent({
     tailorSkills: tailorSkillsTool,
     approveSkills: approveSkillsTool,
   },
-  stopWhen: stepCountIs(20),
+  stopWhen: stepCountIs(30),
 });
 
 export type ResumeTailorAgentUIMessage = InferAgentUIMessage<
