@@ -28,7 +28,7 @@ import type { SkillsApproval } from "@/ai/tool/resume-tailor";
 
 export type SkillsApprovalCardProps = {
   part: UIToolInvocation<typeof approveSkillsTool>;
-  skillsData?: {
+  skillsData: {
     originalSkills: { name: string; category: string | null }[];
     suggestedSkills: {
       name: string;
@@ -76,15 +76,6 @@ export function SkillsApprovalCard({
           </p>
         </CardContent>
       </Card>
-    );
-  }
-
-  if (!skillsData) {
-    return (
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Loader2Icon className="size-4 animate-spin" />
-        <span>Analyzing skills relevance...</span>
-      </div>
     );
   }
 

@@ -51,7 +51,7 @@ Rewrite the candidate's work experience bullets to maximize relevance for the ta
 - Maintain chronological and factual accuracy
 - If original bullet is vague, improve clarity but don't invent details
 - Remove bullets that are completely irrelevant to target job
-- Return 2-6 bullets minimum (even if original has more)
+- Return 2-6 bullets (even if original has more)
 `;
 
 export const tailorExperienceEntryTool = tool({

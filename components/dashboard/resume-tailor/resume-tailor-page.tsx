@@ -614,6 +614,7 @@ export function ResumeTailorPage({
                             );
 
                           case "tool-approveSummary":
+                            if (!tailoredData.summary) return null;
                             return (
                               <SummaryApprovalCard
                                 key={part.toolCallId}
@@ -679,6 +680,7 @@ export function ResumeTailorPage({
                             return null;
 
                           case "tool-approveSkills":
+                            if (!tailoredData.skills) return null;
                             return (
                               <SkillsApprovalCard
                                 key={part.toolCallId}

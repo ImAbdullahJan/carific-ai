@@ -57,7 +57,8 @@ export async function POST(request: Request) {
         writer.merge(result.toUIMessageStream({ sendStart: false }));
       },
       onError: (error) => {
-        return error instanceof Error ? error.message : String(error);
+        console.error("Stream error:", error);
+        return "An error occurred while processing your request";
       },
       originalMessages: messages,
       onFinish: async ({ responseMessage }) => {
