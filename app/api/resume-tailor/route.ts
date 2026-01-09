@@ -8,7 +8,8 @@ import { NextResponse } from "next/server";
 
 import { resumeTailorAgent, type ResumeTailorAgentUIMessage } from "@/ai/agent";
 import { checkAuth } from "@/lib/auth-check";
-import { upsertMessage, loadChat } from "@/lib/db/tailoring-chat";
+import { upsertMessage, loadChat, getChat } from "@/lib/db/tailoring-chat";
+import { applyApprovedChanges } from "@/lib/db/resume";
 
 // Allow streaming responses up to 60 seconds
 export const maxDuration = 60;
@@ -66,8 +67,20 @@ export async function POST(request: Request) {
             id: responseMessage.id,
             message: responseMessage,
           });
+
+          // Check for approved changes and persist to resume
+          const chat = await getChat(chatId);
+          if (chat) {
+            // We need the full history to resolve references (e.g. suggested bullets from previous turn)
+            const allMessages = await loadChat(chatId);
+            await applyApprovedChanges(
+              chat.resumeId,
+              responseMessage,
+              allMessages
+            );
+          }
         } catch (error) {
-          console.error("Failed to persist response message:", error);
+          console.error("Failed to persist response or resume updates:", error);
         }
       },
     });

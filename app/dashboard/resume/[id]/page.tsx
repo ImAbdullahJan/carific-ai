@@ -7,6 +7,7 @@ import { getFullProfile } from "@/lib/db/profile";
 import { profileToResume } from "@/lib/profile-transformation";
 import { getResumeById } from "@/lib/db/resume";
 import { getOrCreateChatForResume, loadChat } from "@/lib/db/tailoring-chat";
+import type { ResumeData } from "@/lib/types/resume";
 
 export default async function ResumeTailorPageRoute({
   params,
@@ -29,7 +30,9 @@ export default async function ResumeTailorPageRoute({
     redirect("/dashboard/resume");
   }
 
-  const resumeData = profileToResume(profile);
+  // Use the persisted resume content (snapshot) if available, otherwise fall back to profile data
+  const resumeData =
+    (resume.content as unknown as ResumeData) || profileToResume(profile);
 
   // Get or create a tailoring chat for this resume (1:1 relationship)
   const chatId = await getOrCreateChatForResume(resume.id);
