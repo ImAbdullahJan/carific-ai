@@ -49,7 +49,6 @@ export const PlanStepTypeSchema = z.enum([
   "approve_experience",
   "tailor_skills",
   "approve_skills",
-  "finalize",
 ]);
 export type PlanStepType = z.infer<typeof PlanStepTypeSchema>;
 

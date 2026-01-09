@@ -78,13 +78,6 @@ export const createTailoringPlanTool = tool({
       });
     }
 
-    steps.push({
-      id: "finalize",
-      type: "finalize" as const,
-      label: "Finalize",
-      description: "Save changes to your resume",
-    });
-
     return {
       steps,
       targetJob: {

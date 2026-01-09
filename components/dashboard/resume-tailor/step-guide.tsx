@@ -77,7 +77,7 @@ export function StepGuide({
   if (!nextStep) {
     return (
       <Card className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-green-500/10 mx-4 mt-4">
-        <CardContent className="pt-6">
+        <CardContent>
           <div className="flex items-start gap-4">
             <div className="rounded-full bg-green-500/10 p-3 shrink-0">
               <CheckCircle className="h-6 w-6 text-green-600" />
