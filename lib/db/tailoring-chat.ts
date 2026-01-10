@@ -63,7 +63,6 @@ export async function upsertMessage({
         role: message.role,
       },
       update: {
-        chatId,
         role: message.role,
       },
     });
@@ -123,6 +122,27 @@ export async function getChatForResume(resumeId: string) {
 export async function getChat(chatId: string) {
   return prisma.tailoringChat.findUnique({
     where: { id: chatId },
+  });
+}
+
+/**
+ * Gets a single chat by ID including the owner's userId.
+ * Used for authorization checks.
+ */
+export async function getChatWithOwner(chatId: string) {
+  return prisma.tailoringChat.findUnique({
+    where: { id: chatId },
+    include: {
+      resume: {
+        include: {
+          profile: {
+            select: {
+              userId: true,
+            },
+          },
+        },
+      },
+    },
   });
 }
 

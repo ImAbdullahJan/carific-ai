@@ -8,7 +8,12 @@ import { NextResponse } from "next/server";
 
 import { resumeTailorAgent, type ResumeTailorAgentUIMessage } from "@/ai/agent";
 import { checkAuth } from "@/lib/auth-check";
-import { upsertMessage, loadChat, getChat } from "@/lib/db/tailoring-chat";
+import {
+  upsertMessage,
+  loadChat,
+  getChat,
+  getChatWithOwner,
+} from "@/lib/db/tailoring-chat";
 import { applyApprovedChanges } from "@/lib/db/resume";
 
 // Allow streaming responses up to 60 seconds
@@ -28,6 +33,24 @@ export async function POST(request: Request) {
       message: ResumeTailorAgentUIMessage;
       chatId: string;
     } = await request.json();
+
+    // 1. Validation: Ensure required fields are present
+    if (!chatId || !message) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // 2. Authorization: Verify user owns this chat (IDOR protection)
+    const chatWithOwner = await getChatWithOwner(chatId);
+    if (!chatWithOwner) {
+      return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+    }
+
+    if (chatWithOwner.resume.profile.userId !== session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     // Save the incoming message first (user or assistant with tool result)
     await upsertMessage({ chatId, id: message.id, message });
