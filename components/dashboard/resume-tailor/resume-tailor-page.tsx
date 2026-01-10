@@ -54,6 +54,7 @@ import { PlanProgressCard } from "./plan-progress-card";
 import { ExperienceApprovalCard } from "./experience-approval-card";
 import { SkillsApprovalCard } from "./skills-approval-card";
 import { StepGuide } from "./step-guide";
+import { ToolErrorCard } from "./tool-error-card";
 import { approveExperienceEntryTool } from "@/ai/tool/resume-tailor";
 import { UIToolInvocation } from "ai";
 
@@ -71,6 +72,25 @@ interface ApprovedChanges {
     approved: boolean;
     finalSkills?: { name: string; category: string }[];
   };
+}
+
+/**
+ * Helper function to get experience name from plan by experience ID
+ */
+function getExperienceNameFromPlan(
+  experienceId: string | undefined,
+  plan: TailoringPlan | null
+): string {
+  if (!experienceId || !plan) return "experience";
+  const step = plan.steps.find(
+    (s) =>
+      s.type === "tailor_experience" && s.context?.experienceId === experienceId
+  );
+  // Label format is "Tailor: Position @ Company" - extract the part after "Tailor: "
+  if (step?.label) {
+    return step.label.replace("Tailor: ", "").replace(" @ ", " at ");
+  }
+  return "experience";
 }
 
 /**
@@ -568,6 +588,38 @@ export function ResumeTailorPage({
                             );
 
                           case "tool-tailorSummary":
+                            if (part.state === "output-error") {
+                              return (
+                                <ToolErrorCard
+                                  key={part.toolCallId}
+                                  title="Failed to generate summary"
+                                  errorText={part.errorText}
+                                  defaultMessage="An error occurred while tailoring the summary."
+                                  onRetry={() =>
+                                    sendMessage({
+                                      role: "user",
+                                      parts: [
+                                        {
+                                          type: "text",
+                                          text: "Please retry tailoring the summary.",
+                                        },
+                                      ],
+                                    })
+                                  }
+                                  onSkip={() =>
+                                    sendMessage({
+                                      role: "user",
+                                      parts: [
+                                        {
+                                          type: "text",
+                                          text: "Skip the summary and continue to the next step.",
+                                        },
+                                      ],
+                                    })
+                                  }
+                                />
+                              );
+                            }
                             if (part.state === "output-available") {
                               return (
                                 <Card
@@ -626,7 +678,43 @@ export function ResumeTailorPage({
                               />
                             );
 
-                          case "tool-tailorExperienceEntry":
+                          case "tool-tailorExperienceEntry": {
+                            const expName = getExperienceNameFromPlan(
+                              part.input?.experienceId,
+                              plan
+                            );
+                            if (part.state === "output-error") {
+                              return (
+                                <ToolErrorCard
+                                  key={part.toolCallId}
+                                  title={`Failed to optimize ${expName}`}
+                                  errorText={part.errorText}
+                                  defaultMessage="An error occurred while tailoring the experience entry."
+                                  onRetry={() =>
+                                    sendMessage({
+                                      role: "user",
+                                      parts: [
+                                        {
+                                          type: "text",
+                                          text: `Please retry tailoring ${expName}.`,
+                                        },
+                                      ],
+                                    })
+                                  }
+                                  onSkip={() =>
+                                    sendMessage({
+                                      role: "user",
+                                      parts: [
+                                        {
+                                          type: "text",
+                                          text: `Skip ${expName} and continue to the next step.`,
+                                        },
+                                      ],
+                                    })
+                                  }
+                                />
+                              );
+                            }
                             if (part.state !== "output-available") {
                               return (
                                 <div
@@ -634,11 +722,12 @@ export function ResumeTailorPage({
                                   className="flex items-center gap-2 text-muted-foreground"
                                 >
                                   <Loader2Icon className="size-4 animate-spin" />
-                                  <span>Optimizing experience bullets...</span>
+                                  <span>Optimizing {expName}...</span>
                                 </div>
                               );
                             }
                             return null; // Don't show card for this, wait for approval step
+                          }
 
                           case "tool-approveExperienceEntry": {
                             const expData = findExperienceForApproval(
@@ -666,6 +755,38 @@ export function ResumeTailorPage({
                           }
 
                           case "tool-tailorSkills":
+                            if (part.state === "output-error") {
+                              return (
+                                <ToolErrorCard
+                                  key={part.toolCallId}
+                                  title="Failed to analyze skills"
+                                  errorText={part.errorText}
+                                  defaultMessage="An error occurred while tailoring skills."
+                                  onRetry={() =>
+                                    sendMessage({
+                                      role: "user",
+                                      parts: [
+                                        {
+                                          type: "text",
+                                          text: "Please retry tailoring the skills.",
+                                        },
+                                      ],
+                                    })
+                                  }
+                                  onSkip={() =>
+                                    sendMessage({
+                                      role: "user",
+                                      parts: [
+                                        {
+                                          type: "text",
+                                          text: "Skip skills tailoring and finish.",
+                                        },
+                                      ],
+                                    })
+                                  }
+                                />
+                              );
+                            }
                             if (part.state !== "output-available") {
                               return (
                                 <div
