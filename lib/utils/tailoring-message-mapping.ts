@@ -9,6 +9,38 @@ type DBPartInsert = Prisma.TailoringMessagePartCreateManyInput;
 type DBPartSelect = Prisma.TailoringMessagePartGetPayload<object>;
 
 /**
+ * Helper to map a tool part to DB format.
+ */
+function mapToolPartToDB(
+  part: Extract<
+    ResumeTailorAgentUIMessage["parts"][number],
+    { toolCallId: string }
+  >,
+  messageId: string,
+  index: number,
+  toolName: string,
+  isDynamic = false
+): DBPartInsert {
+  return {
+    messageId,
+    order: index,
+    type: isDynamic ? "dynamic-tool" : "tool-invocation",
+    toolCallId: part.toolCallId,
+    toolName,
+    toolState: part.state,
+    toolInput: part.input as Prisma.InputJsonValue | undefined,
+    toolOutput:
+      part.state === "output-available"
+        ? (part.output as Prisma.InputJsonValue | undefined)
+        : undefined,
+    toolError:
+      part.state === "output-error" || part.state === "output-denied"
+        ? part.errorText
+        : undefined,
+  };
+}
+
+/**
  * Maps UI message parts to database part records for insertion.
  * Uses generic JSONB columns for tool input/output - no per-tool columns needed.
  */
@@ -49,36 +81,26 @@ export function mapUIMessagePartsToDBParts(
         });
         break;
 
+      case "dynamic-tool":
+        result.push(
+          mapToolPartToDB(part, messageId, index, part.toolName, true)
+        );
+        break;
+
       default:
         // Handle all tool-* types generically
-        if (part.type.startsWith("tool-") || part.type === "dynamic-tool") {
-          const toolName = part.type.replace("tool-", "");
-          const toolPart = part as {
-            toolCallId: string;
-            state: string;
-            input?: unknown;
-            output?: unknown;
-            errorText?: string;
-          };
-
-          result.push({
-            messageId,
-            order: index,
-            type: "tool-invocation",
-            toolCallId: toolPart.toolCallId,
-            toolName,
-            toolState: toolPart.state,
-            toolInput: toolPart.input as Prisma.InputJsonValue | undefined,
-            toolOutput:
-              toolPart.state === "output-available"
-                ? (toolPart.output as Prisma.InputJsonValue | undefined)
-                : undefined,
-            toolError:
-              toolPart.state === "output-error"
-                ? toolPart.errorText
-                : undefined,
-          });
+        if (part.type.startsWith("tool-") && "toolCallId" in part) {
+          result.push(
+            mapToolPartToDB(
+              part,
+              messageId,
+              index,
+              part.type.replace("tool-", "")
+            )
+          );
         } else {
+          // Handle other part types: file, source-url, source-document, data-*
+          // For now, log a warning as these aren't used in resume tailoring
           console.warn(`Unhandled part type: ${part.type}`);
         }
         break;
@@ -116,7 +138,10 @@ export function mapDBPartToUIMessagePart(
       };
 
     case "tool-invocation":
-      return mapGenericToolPart(part);
+      return mapGenericToolPart(part, false);
+
+    case "dynamic-tool":
+      return mapGenericToolPart(part, true);
 
     default:
       throw new Error(`Unsupported part type in DB->UI mapping: ${part.type}`);
@@ -127,10 +152,11 @@ export function mapDBPartToUIMessagePart(
  * Maps a generic tool invocation from DB back to typed UI part.
  */
 function mapGenericToolPart(
-  part: DBPartSelect
+  part: DBPartSelect,
+  isDynamic: boolean
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
-  const type = `tool-${part.toolName}` as const;
+  const type = isDynamic ? "dynamic-tool" : (`tool-${part.toolName}` as const);
   const state = part.toolState!;
   const toolCallId = part.toolCallId!;
 
