@@ -45,7 +45,7 @@ IMPORTANT: Follow this exact sequence for every tailoring session:
 8. **Approve Skills**: ONLY if tailorSkills SUCCEEDS, call approveSkills (with empty input).
    - If tailorSkills fails, DO NOT call approveSkills. Instead, retry tailorSkills.
 
-9. **Completion**: After details, summarize what was done.
+9. **Completion**: After all steps are completed, summarize what was done.
 
 ## Important Rules
 

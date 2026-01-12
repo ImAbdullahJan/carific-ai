@@ -65,7 +65,6 @@ import { UIToolInvocation } from "ai";
 
 interface ResumeTailorPageProps {
   initialProfile: ResumeData;
-  resumeId: string;
   chatId: string;
   initialMessages?: ResumeTailorAgentUIMessage[];
   initialPlanSteps?: DBPlanStep[];

@@ -52,7 +52,6 @@ export default async function ResumeTailorPageRoute({
       <main>
         <ResumeTailorPage
           initialProfile={resumeData}
-          resumeId={resume.id}
           chatId={chatId}
           initialMessages={initialMessages}
           initialPlanSteps={initialPlanSteps}
