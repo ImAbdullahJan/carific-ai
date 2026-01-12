@@ -4,13 +4,11 @@ import { ArrowRight, Sparkles, MessageSquare, CheckCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { PlanStep } from "@/ai/tool/resume-tailor";
+import type { DBPlanStep } from "@/lib/db/tailoring-chat";
 
 interface StepGuideProps {
-  /** The current plan with all steps */
-  plan: { steps: PlanStep[] } | null;
-  /** Set of completed step IDs */
-  completedStepIds: Set<string>;
+  /** Plan steps from database */
+  planSteps: DBPlanStep[];
   /** Whether there are any messages yet */
   hasMessages: boolean;
   /** Whether the agent is currently streaming */
@@ -22,8 +20,7 @@ interface StepGuideProps {
 }
 
 export function StepGuide({
-  plan,
-  completedStepIds,
+  planSteps,
   hasMessages,
   isStreaming,
   onStart,
@@ -65,15 +62,23 @@ export function StepGuide({
     );
   }
 
-  // If no plan yet, don't show guide
-  if (!plan) {
+  // If no plan steps yet, don't show guide
+  if (planSteps.length === 0) {
     return null;
   }
 
-  // Find the next incomplete step
-  const nextStep = plan.steps.find((step) => !completedStepIds.has(step.id));
+  // Calculate progress from DB steps
+  const completedCount = planSteps.filter(
+    (s) => s.status === "completed" || s.status === "skipped"
+  ).length;
+  const totalCount = planSteps.length;
 
-  // All steps completed
+  // Find the next pending step (not completed or skipped)
+  const nextStep = planSteps.find(
+    (step) => step.status === "pending" || step.status === "in_progress"
+  );
+
+  // All steps completed or skipped
   if (!nextStep) {
     return (
       <Card className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-green-500/10 mx-4 mt-4">
@@ -129,8 +134,7 @@ export function StepGuide({
               <div className="flex items-center gap-2 mb-2">
                 <h3 className="font-semibold text-lg">Next Step</h3>
                 <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                  {Array.from(completedStepIds).length} of {plan.steps.length}{" "}
-                  completed
+                  {completedCount} of {totalCount} completed
                 </span>
               </div>
               <p className="font-medium text-sm mb-1">{nextStep.label}</p>

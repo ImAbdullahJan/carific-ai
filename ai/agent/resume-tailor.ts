@@ -69,22 +69,27 @@ IMPORTANT: Follow this exact sequence for every tailoring session:
 - Direct and actionable
 - Encouraging but not overly enthusiastic`;
 
-export const resumeTailorAgent = new ToolLoopAgent({
-  model: RESUME_CHAT_MODEL,
-  instructions: RESUME_TAILOR_SYSTEM_PROMPT,
-  tools: {
-    createTailoringPlan: createTailoringPlanTool,
-    collectJobDetails: collectJobDetailsTool,
-    tailorSummary: tailorSummaryTool,
-    approveSummary: approveSummaryTool,
-    tailorExperienceEntry: tailorExperienceEntryTool,
-    approveExperienceEntry: approveExperienceEntryTool,
-    tailorSkills: tailorSkillsTool,
-    approveSkills: approveSkillsTool,
-  },
-  stopWhen: stepCountIs(30),
-});
+/**
+ * Creates a resume tailor agent instance with chat-specific tools.
+ * @param chatId - The chat ID for persisting plan state
+ */
+export const createResumeTailorAgent = (chatId: string) =>
+  new ToolLoopAgent({
+    model: RESUME_CHAT_MODEL,
+    instructions: RESUME_TAILOR_SYSTEM_PROMPT,
+    tools: {
+      createTailoringPlan: createTailoringPlanTool(chatId),
+      collectJobDetails: collectJobDetailsTool,
+      tailorSummary: tailorSummaryTool,
+      approveSummary: approveSummaryTool,
+      tailorExperienceEntry: tailorExperienceEntryTool,
+      approveExperienceEntry: approveExperienceEntryTool,
+      tailorSkills: tailorSkillsTool,
+      approveSkills: approveSkillsTool,
+    },
+    stopWhen: stepCountIs(30),
+  });
 
 export type ResumeTailorAgentUIMessage = InferAgentUIMessage<
-  typeof resumeTailorAgent
+  ReturnType<typeof createResumeTailorAgent>
 >;

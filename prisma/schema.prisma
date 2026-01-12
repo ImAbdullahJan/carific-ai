@@ -346,11 +346,49 @@ model TailoringChat {
   resumeId String @unique
   resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
-  messages TailoringMessage[]
+  messages  TailoringMessage[]
+  planSteps TailoringPlanStep[]
+
+  // Target job details (populated after collectJobDetails)
+  targetJobTitle       String?
+  targetJobDescription String?
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("tailoring_chat")
+}
+
+enum TailoringStepStatus {
+  pending
+  in_progress
+  completed
+  skipped
+}
+
+model TailoringPlanStep {
+  id     String        @id @default(cuid())
+  chatId String
+  chat   TailoringChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  stepId      String // e.g., "collect_jd", "tailor_summary", "tailor_exp_abc123"
+  type        String // "collect_jd", "tailor_summary", "approve_summary", "tailor_experience", etc.
+  label       String
+  description String?
+  order       Int
+
+  // Context for experience steps
+  experienceId String?
+
+  status TailoringStepStatus @default(pending)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([chatId, stepId])
+  @@index([chatId])
+  @@index([chatId, order])
+  @@map("tailoring_plan_step")
 }
 
 model TailoringMessage {

@@ -6,7 +6,11 @@ import { ResumeTailorPage } from "@/components/dashboard/resume-tailor";
 import { getFullProfile } from "@/lib/db/profile";
 import { profileToResume } from "@/lib/profile-transformation";
 import { getResumeById } from "@/lib/db/resume";
-import { getOrCreateChatForResume, loadChat } from "@/lib/db/tailoring-chat";
+import {
+  getOrCreateChatForResume,
+  loadChat,
+  getPlanSteps,
+} from "@/lib/db/tailoring-chat";
 import type { ResumeData } from "@/lib/types/resume";
 
 export default async function ResumeTailorPageRoute({
@@ -37,6 +41,7 @@ export default async function ResumeTailorPageRoute({
   // Get or create a tailoring chat for this resume (1:1 relationship)
   const chatId = await getOrCreateChatForResume(resume.id);
   const initialMessages = await loadChat(chatId);
+  const initialPlanSteps = await getPlanSteps(chatId);
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,6 +55,7 @@ export default async function ResumeTailorPageRoute({
           resumeId={resume.id}
           chatId={chatId}
           initialMessages={initialMessages}
+          initialPlanSteps={initialPlanSteps}
         />
       </main>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useChat } from "@ai-sdk/react";
 import {
   DefaultChatTransport,
@@ -50,6 +50,11 @@ import type {
   TailoringPlan,
 } from "@/ai/tool/resume-tailor";
 import type { ResumeData } from "@/lib/types/resume";
+import type { DBPlanStep } from "@/lib/db/tailoring-chat";
+import {
+  refreshPlanSteps,
+  skipStep as skipStepAction,
+} from "@/lib/actions/tailoring-plan";
 import { PlanProgressCard } from "./plan-progress-card";
 import { ExperienceApprovalCard } from "./experience-approval-card";
 import { SkillsApprovalCard } from "./skills-approval-card";
@@ -63,6 +68,7 @@ interface ResumeTailorPageProps {
   resumeId: string;
   chatId: string;
   initialMessages?: ResumeTailorAgentUIMessage[];
+  initialPlanSteps?: DBPlanStep[];
 }
 
 interface ApprovedChanges {
@@ -142,9 +148,12 @@ export function ResumeTailorPage({
   initialProfile,
   chatId,
   initialMessages,
+  initialPlanSteps = [],
 }: ResumeTailorPageProps) {
   const [showPreview, setShowPreview] = useState(true);
   const [approvedChanges, setApprovedChanges] = useState<ApprovedChanges>({});
+  const [planSteps, setPlanSteps] = useState<DBPlanStep[]>(initialPlanSteps);
+  const [prevStatus, setPrevStatus] = useState<string | null>(null);
 
   const { messages, sendMessage, addToolOutput, status } =
     useChat<ResumeTailorAgentUIMessage>({
@@ -166,129 +175,70 @@ export function ResumeTailorPage({
       sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     });
 
-  // Derive tailored data and plan directly from messages
-  const { tailoredData, plan, completedStepIds, currentStepId } =
-    useMemo(() => {
-      let summary: TailoredSummaryOutput | undefined;
-      const experiences: Record<string, TailoredExperienceOutput> = {};
-      let skills: TailoredSkillsOutput | undefined;
-      let plan: TailoringPlan | null = null;
-      const completed = new Set<string>();
-      let currentId: string | undefined;
+  // Refresh plan steps from DB when streaming completes
+  useEffect(() => {
+    // When status changes from streaming/submitted to ready, refresh plan steps
+    if (
+      (prevStatus === "streaming" || prevStatus === "submitted") &&
+      status === "ready"
+    ) {
+      refreshPlanSteps(chatId).then((result) => {
+        if (result.success && result.steps) {
+          setPlanSteps(result.steps);
+        }
+      });
+    }
+    setPrevStatus(status);
+  }, [status, prevStatus, chatId]);
 
-      for (const msg of messages) {
-        for (const part of msg.parts) {
-          // Extract plan
-          if (
-            part.type === "tool-createTailoringPlan" &&
-            part.state === "output-available"
-          ) {
-            plan = part.output;
-          }
+  // Derive tailored data and plan from messages (for displaying tool outputs)
+  const { tailoredData, plan } = useMemo(() => {
+    let summary: TailoredSummaryOutput | undefined;
+    const experiences: Record<string, TailoredExperienceOutput> = {};
+    let skills: TailoredSkillsOutput | undefined;
+    let plan: TailoringPlan | null = null;
 
-          // Track JD collection
-          if (part.type === "tool-collectJobDetails") {
-            if (part.state === "output-available") {
-              completed.add("collect_jd");
-            } else if (
-              part.state === "input-available" ||
-              part.state === "input-streaming"
-            ) {
-              currentId = "collect_jd";
-            }
-          }
+    for (const msg of messages) {
+      for (const part of msg.parts) {
+        // Extract plan (for experience name lookup)
+        if (
+          part.type === "tool-createTailoringPlan" &&
+          part.state === "output-available"
+        ) {
+          plan = part.output;
+        }
 
-          // Track Summary
-          if (part.type === "tool-tailorSummary") {
-            if (part.state === "output-available") {
-              summary = part.output;
-              completed.add("tailor_summary");
-            } else if (part.state === "input-streaming") {
-              currentId = "tailor_summary";
-            }
-          }
+        // Extract summary output
+        if (
+          part.type === "tool-tailorSummary" &&
+          part.state === "output-available"
+        ) {
+          summary = part.output;
+        }
 
-          // Track Approval
-          if (part.type === "tool-approveSummary") {
-            if (part.state === "output-available") {
-              completed.add("approve_summary");
-            } else if (
-              part.state === "input-available" ||
-              part.state === "input-streaming" ||
-              part.state === "approval-requested"
-            ) {
-              currentId = "approve_summary";
-            }
-          }
+        // Extract experience outputs
+        if (
+          part.type === "tool-tailorExperienceEntry" &&
+          part.state === "output-available"
+        ) {
+          experiences[part.output.experienceId] = part.output;
+        }
 
-          // Track Experience Tailoring
-          if (part.type === "tool-tailorExperienceEntry") {
-            if (part.state === "output-available") {
-              experiences[part.output.experienceId] = part.output;
-              completed.add(`tailor_exp_${part.output.experienceId}`);
-            } else if (part.state === "input-streaming") {
-              // Try to find experienceId in input if available
-              const expId = part.input?.experienceId;
-              if (expId) {
-                currentId = `tailor_exp_${expId}`;
-              }
-            }
-          }
-
-          // Track Experience Approval
-          if (part.type === "tool-approveExperienceEntry") {
-            if (part.state === "output-available") {
-              completed.add(`approve_exp_${part.output.experienceId}`);
-            } else if (
-              part.state === "input-available" ||
-              part.state === "input-streaming" ||
-              part.state === "approval-requested"
-            ) {
-              currentId = "approve_experience";
-            }
-          }
-
-          // Track Skills Tailoring
-          if (part.type === "tool-tailorSkills") {
-            if (part.state === "output-available") {
-              skills = part.output;
-              completed.add("tailor_skills");
-            } else if (part.state === "input-streaming") {
-              currentId = "tailor_skills";
-            }
-          }
-
-          // Track Skills Approval
-          if (part.type === "tool-approveSkills") {
-            if (part.state === "output-available") {
-              completed.add("approve_skills");
-            } else if (
-              part.state === "input-available" ||
-              part.state === "input-streaming" ||
-              part.state === "approval-requested"
-            ) {
-              currentId = "approve_skills";
-            }
-          }
+        // Extract skills output
+        if (
+          part.type === "tool-tailorSkills" &&
+          part.state === "output-available"
+        ) {
+          skills = part.output;
         }
       }
+    }
 
-      return {
-        tailoredData: { summary, experiences, skills },
-        plan,
-        completedStepIds: completed,
-        currentStepId: currentId,
-      };
-    }, [messages]);
-
-  // Determine the active step ID for plan progress tracking
-  const activeStepId = useMemo(() => {
-    if (currentStepId) return currentStepId;
-    if (!plan || status !== "streaming") return undefined;
-
-    // Find the first incomplete step
-    return plan.steps.find((s) => !completedStepIds.has(s.id))?.id;
-  }, [plan, completedStepIds, currentStepId, status]);
+    return {
+      tailoredData: { summary, experiences, skills },
+      plan,
+    };
+  }, [messages]);
 
   // Check if there are any pending approval requests
   const hasPendingApproval = useMemo(() => {
@@ -360,6 +310,23 @@ export function ResumeTailorPage({
   }, [initialProfile, approvedChanges, tailoredData.experiences]);
 
   const isLoading = status === "streaming" || status === "submitted";
+
+  // Helper to skip a step - updates DB and sends message to agent
+  const handleSkipStep = useCallback(
+    async (stepId: string, skipMessage: string) => {
+      // Update DB first
+      const result = await skipStepAction(chatId, stepId);
+      if (result.success && result.steps) {
+        setPlanSteps(result.steps);
+      }
+      // Then send message to agent
+      sendMessage({
+        role: "user",
+        parts: [{ type: "text", text: skipMessage }],
+      });
+    },
+    [chatId, sendMessage]
+  );
 
   const handleSubmit = useCallback(
     async ({ text }: { text: string }) => {
@@ -515,8 +482,7 @@ export function ResumeTailorPage({
                 {/* Step Guide - Shows welcome message when no messages */}
                 {!isLoading && (
                   <StepGuide
-                    plan={plan}
-                    completedStepIds={completedStepIds}
+                    planSteps={planSteps}
                     hasMessages={false}
                     isStreaming={false}
                     onStart={() =>
@@ -560,9 +526,7 @@ export function ResumeTailorPage({
                               return (
                                 <PlanProgressCard
                                   key={part.toolCallId}
-                                  plan={part.output}
-                                  completedStepIds={completedStepIds}
-                                  currentStepId={activeStepId}
+                                  planSteps={planSteps}
                                 />
                               );
                             }
@@ -607,15 +571,10 @@ export function ResumeTailorPage({
                                     })
                                   }
                                   onSkip={() =>
-                                    sendMessage({
-                                      role: "user",
-                                      parts: [
-                                        {
-                                          type: "text",
-                                          text: "Skip the summary and continue to the next step.",
-                                        },
-                                      ],
-                                    })
+                                    handleSkipStep(
+                                      "tailor_summary",
+                                      "Skip the summary and continue to the next step."
+                                    )
                                   }
                                 />
                               );
@@ -679,8 +638,9 @@ export function ResumeTailorPage({
                             );
 
                           case "tool-tailorExperienceEntry": {
+                            const expId = part.input?.experienceId;
                             const expName = getExperienceNameFromPlan(
-                              part.input?.experienceId,
+                              expId,
                               plan
                             );
                             if (part.state === "output-error") {
@@ -702,15 +662,10 @@ export function ResumeTailorPage({
                                     })
                                   }
                                   onSkip={() =>
-                                    sendMessage({
-                                      role: "user",
-                                      parts: [
-                                        {
-                                          type: "text",
-                                          text: `Skip ${expName} and continue to the next step.`,
-                                        },
-                                      ],
-                                    })
+                                    handleSkipStep(
+                                      `tailor_exp_${expId}`,
+                                      `Skip ${expName} and continue to the next step.`
+                                    )
                                   }
                                 />
                               );
@@ -774,15 +729,10 @@ export function ResumeTailorPage({
                                     })
                                   }
                                   onSkip={() =>
-                                    sendMessage({
-                                      role: "user",
-                                      parts: [
-                                        {
-                                          type: "text",
-                                          text: "Skip skills tailoring and finish.",
-                                        },
-                                      ],
-                                    })
+                                    handleSkipStep(
+                                      "tailor_skills",
+                                      "Skip skills tailoring and finish."
+                                    )
                                   }
                                 />
                               );
@@ -823,8 +773,7 @@ export function ResumeTailorPage({
                 {/* Step Guide - Shows when agent stops and no pending approvals */}
                 {!isLoading && !hasPendingApproval && (
                   <StepGuide
-                    plan={plan}
-                    completedStepIds={completedStepIds}
+                    planSteps={planSteps}
                     hasMessages={messages.length > 0}
                     isStreaming={false}
                     onStart={() =>

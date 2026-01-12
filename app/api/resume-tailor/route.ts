@@ -6,13 +6,17 @@ import {
 } from "ai";
 import { NextResponse } from "next/server";
 
-import { resumeTailorAgent, type ResumeTailorAgentUIMessage } from "@/ai/agent";
+import {
+  createResumeTailorAgent,
+  type ResumeTailorAgentUIMessage,
+} from "@/ai/agent";
 import { checkAuth } from "@/lib/auth-check";
 import {
   upsertMessage,
   loadChat,
   getChat,
   getChatWithOwner,
+  completeStep,
 } from "@/lib/db/tailoring-chat";
 import { applyApprovedChanges } from "@/lib/db/resume";
 
@@ -69,7 +73,8 @@ export async function POST(request: Request) {
           });
         }
 
-        const result = await resumeTailorAgent.stream({
+        const agent = createResumeTailorAgent(chatId);
+        const result = await agent.stream({
           messages: await convertToModelMessages(messages),
         });
 
@@ -91,6 +96,41 @@ export async function POST(request: Request) {
             id: responseMessage.id,
             message: responseMessage,
           });
+
+          // Update step status based on completed tool outputs
+          for (const part of responseMessage.parts) {
+            if (!("state" in part) || part.state !== "output-available")
+              continue;
+
+            // Map tool types to step IDs
+            if (part.type === "tool-collectJobDetails") {
+              await completeStep(chatId, "collect_jd");
+            } else if (part.type === "tool-tailorSummary") {
+              await completeStep(chatId, "tailor_summary");
+            } else if (part.type === "tool-approveSummary") {
+              await completeStep(chatId, "approve_summary");
+            } else if (
+              part.type === "tool-tailorExperienceEntry" &&
+              part.output?.experienceId
+            ) {
+              await completeStep(
+                chatId,
+                `tailor_exp_${part.output.experienceId}`
+              );
+            } else if (
+              part.type === "tool-approveExperienceEntry" &&
+              part.output?.experienceId
+            ) {
+              await completeStep(
+                chatId,
+                `approve_exp_${part.output.experienceId}`
+              );
+            } else if (part.type === "tool-tailorSkills") {
+              await completeStep(chatId, "tailor_skills");
+            } else if (part.type === "tool-approveSkills") {
+              await completeStep(chatId, "approve_skills");
+            }
+          }
 
           // Check for approved changes and persist to resume
           const chat = await getChat(chatId);

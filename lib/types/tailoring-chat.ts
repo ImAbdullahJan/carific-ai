@@ -1,5 +1,5 @@
 import type { UIMessage, UIMessagePart, InferUITools, JSONValue } from "ai";
-import type { resumeTailorAgent } from "@/ai/agent";
+import type { createResumeTailorAgent } from "@/ai/agent";
 import type {
   TailoringPlan,
   TailoredSummaryOutput,
@@ -10,8 +10,9 @@ import type {
   SkillsApproval,
 } from "@/ai/tool/resume-tailor";
 
-// Infer tool types from the agent
-export type TailoringToolSet = InferUITools<typeof resumeTailorAgent.tools>;
+// Infer tool types from the agent (using ReturnType since it's now a factory)
+type AgentInstance = ReturnType<typeof createResumeTailorAgent>;
+export type TailoringToolSet = InferUITools<AgentInstance["tools"]>;
 
 // No custom data parts for now
 export type TailoringDataPart = Record<string, never>;

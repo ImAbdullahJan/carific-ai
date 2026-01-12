@@ -1,7 +1,9 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import type { TailoringStepStatus } from "@/lib/generated/prisma/client";
 import type { ResumeTailorAgentUIMessage } from "@/ai/agent";
+import type { PlanStep } from "@/ai/tool/resume-tailor/schemas";
 import {
   mapUIMessagePartsToDBParts,
   mapDBPartToUIMessagePart,
@@ -178,4 +180,170 @@ export async function deleteMessageAndSubsequent(
       },
     });
   });
+}
+
+// ============================================================
+// Plan Management Functions
+// ============================================================
+
+export interface DBPlanStep {
+  id: string;
+  stepId: string;
+  type: string;
+  label: string;
+  description: string | null;
+  order: number;
+  experienceId: string | null;
+  status: TailoringStepStatus;
+}
+
+/**
+ * Creates plan steps in the database from the tool output.
+ * Deletes any existing steps for this chat first (fresh plan).
+ */
+export async function savePlanSteps(
+  chatId: string,
+  steps: PlanStep[]
+): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    // Delete existing plan steps for this chat
+    await tx.tailoringPlanStep.deleteMany({
+      where: { chatId },
+    });
+
+    // Create new plan steps
+    await tx.tailoringPlanStep.createMany({
+      data: steps.map((step, index) => ({
+        chatId,
+        stepId: step.id,
+        type: step.type,
+        label: step.label,
+        description: step.description ?? null,
+        order: index,
+        experienceId: step.context?.experienceId ?? null,
+        status: "pending" as TailoringStepStatus,
+      })),
+    });
+  });
+}
+
+/**
+ * Gets all plan steps for a chat, ordered by their sequence.
+ */
+export async function getPlanSteps(chatId: string): Promise<DBPlanStep[]> {
+  return prisma.tailoringPlanStep.findMany({
+    where: { chatId },
+    orderBy: { order: "asc" },
+  });
+}
+
+/**
+ * Updates the status of a specific plan step.
+ */
+export async function updateStepStatus(
+  chatId: string,
+  stepId: string,
+  status: TailoringStepStatus
+): Promise<void> {
+  await prisma.tailoringPlanStep.update({
+    where: {
+      chatId_stepId: { chatId, stepId },
+    },
+    data: { status },
+  });
+}
+
+/**
+ * Marks a step as completed.
+ */
+export async function completeStep(
+  chatId: string,
+  stepId: string
+): Promise<void> {
+  await updateStepStatus(chatId, stepId, "completed");
+}
+
+/**
+ * Marks a step as skipped.
+ */
+export async function skipStep(chatId: string, stepId: string): Promise<void> {
+  await updateStepStatus(chatId, stepId, "skipped");
+}
+
+/**
+ * Marks a step as in progress.
+ */
+export async function startStep(chatId: string, stepId: string): Promise<void> {
+  await updateStepStatus(chatId, stepId, "in_progress");
+}
+
+/**
+ * Gets the next pending step in the plan.
+ */
+export async function getNextPendingStep(
+  chatId: string
+): Promise<DBPlanStep | null> {
+  return prisma.tailoringPlanStep.findFirst({
+    where: {
+      chatId,
+      status: "pending",
+    },
+    orderBy: { order: "asc" },
+  });
+}
+
+/**
+ * Gets plan progress statistics.
+ */
+export async function getPlanProgress(chatId: string): Promise<{
+  total: number;
+  completed: number;
+  skipped: number;
+  pending: number;
+  inProgress: number;
+}> {
+  const steps = await getPlanSteps(chatId);
+  return {
+    total: steps.length,
+    completed: steps.filter((s) => s.status === "completed").length,
+    skipped: steps.filter((s) => s.status === "skipped").length,
+    pending: steps.filter((s) => s.status === "pending").length,
+    inProgress: steps.filter((s) => s.status === "in_progress").length,
+  };
+}
+
+/**
+ * Updates the target job details for a chat.
+ */
+export async function updateTargetJob(
+  chatId: string,
+  jobTitle: string,
+  jobDescription: string
+): Promise<void> {
+  await prisma.tailoringChat.update({
+    where: { id: chatId },
+    data: {
+      targetJobTitle: jobTitle,
+      targetJobDescription: jobDescription,
+    },
+  });
+}
+
+/**
+ * Gets the target job details for a chat.
+ */
+export async function getTargetJob(
+  chatId: string
+): Promise<{ title: string | null; description: string | null }> {
+  const chat = await prisma.tailoringChat.findUnique({
+    where: { id: chatId },
+    select: {
+      targetJobTitle: true,
+      targetJobDescription: true,
+    },
+  });
+  return {
+    title: chat?.targetJobTitle ?? null,
+    description: chat?.targetJobDescription ?? null,
+  };
 }
