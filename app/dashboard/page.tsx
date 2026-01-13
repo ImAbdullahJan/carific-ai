@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 import { checkAuth } from "@/lib/auth-check";
 import { ROUTES } from "@/lib/constants";
-import { DashboardHeader, ResumeAnalyzerForm } from "@/components/dashboard";
+import { DashboardHeader, DashboardContent } from "@/components/dashboard";
+import { getFullProfile } from "@/lib/db/profile";
+import { getResumesForProfile } from "@/lib/db/resume";
 
 export default async function DashboardPage() {
   const session = await checkAuth();
@@ -10,12 +12,14 @@ export default async function DashboardPage() {
   }
 
   const { user } = session;
+  const profile = await getFullProfile(user.id);
+  const resumes = profile ? await getResumesForProfile(profile.id) : [];
 
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader userName={user.name} userEmail={user.email} />
-      <main className="container mx-auto p-4">
-        <ResumeAnalyzerForm />
+      <main className="container mx-auto p-4 py-8">
+        <DashboardContent profile={profile} resumes={resumes} />
       </main>
     </div>
   );
