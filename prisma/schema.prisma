@@ -335,6 +335,105 @@ model Resume {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  tailoringChat TailoringChat?
+
   @@index([profileId])
   @@map("resume")
+}
+
+model TailoringChat {
+  id       String @id @default(cuid())
+  resumeId String @unique
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  messages  TailoringMessage[]
+  planSteps TailoringPlanStep[]
+
+  // Target job details (populated after collectJobDetails)
+  targetJobTitle       String?
+  targetJobDescription String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tailoring_chat")
+}
+
+enum TailoringStepStatus {
+  pending
+  in_progress
+  completed
+  skipped
+}
+
+model TailoringPlanStep {
+  id     String        @id @default(cuid())
+  chatId String
+  chat   TailoringChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  stepId      String // e.g., "collect_jd", "tailor_summary", "tailor_exp_abc123"
+  type        String // "collect_jd", "tailor_summary", "approve_summary", "tailor_experience", etc.
+  label       String
+  description String?
+  order       Int
+
+  // Context for experience steps
+  experienceId String?
+
+  status TailoringStepStatus @default(pending)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([chatId, stepId])
+  @@index([chatId])
+  @@index([chatId, order])
+  @@map("tailoring_plan_step")
+}
+
+model TailoringMessage {
+  id     String        @id @default(cuid())
+  chatId String
+  chat   TailoringChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  role   String // "user" | "assistant"
+
+  parts TailoringMessagePart[]
+
+  createdAt DateTime @default(now())
+
+  @@index([chatId])
+  @@index([chatId, createdAt])
+  @@map("tailoring_message")
+}
+
+model TailoringMessagePart {
+  id        String           @id @default(cuid())
+  messageId String
+  message   TailoringMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  type  String // "text", "reasoning", "tool-invocation"
+  order Int    @default(0)
+
+  createdAt DateTime @default(now())
+
+  // ========== Text Parts ==========
+  text String?
+
+  // ========== Reasoning Parts ==========
+  reasoning String?
+
+  // ========== Generic Tool Columns ==========
+  toolCallId String?
+  toolName   String?
+  toolState  String? // "input-streaming" | "input-available" | "output-available" | "output-error" | "approval-requested" | etc.
+  toolInput  Json?
+  toolOutput Json?
+  toolError  String?
+
+  // ========== Provider Metadata ==========
+  providerMetadata Json?
+
+  @@index([messageId])
+  @@index([messageId, order])
+  @@map("tailoring_message_part")
 }

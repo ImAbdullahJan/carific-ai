@@ -11,7 +11,7 @@ import {
   type AchievementExtraction,
   type SocialLinkExtraction,
 } from "@/lib/validations/resume-extraction";
-import { parseExtractedDate } from "@/lib/ai/resume-extractor";
+import { parseExtractedDate } from "@/ai/agent/resume-extractor";
 
 export interface SaveProfileResult {
   success: true;

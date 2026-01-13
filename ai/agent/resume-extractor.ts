@@ -3,11 +3,7 @@ import {
   ResumeExtractionSchema,
   type ResumeExtraction,
 } from "@/lib/validations/resume-extraction";
-
-// ============================================================
-// RESUME EXTRACTION AI AGENT
-// Extracts structured profile data from raw resume text
-// ============================================================
+import { RESUME_EXTRACTOR_MODEL } from "@/ai/constants";
 
 const RESUME_EXTRACTION_SYSTEM_PROMPT = `You are an expert resume parser. Your task is to extract structured data from resume text with high accuracy.
 
@@ -106,8 +102,6 @@ Transform unstructured resume text into a clean, structured JSON format that can
 5. Be thorough - extract EVERYTHING from the resume
 6. When in doubt about categorization, make your best judgment based on context`;
 
-const MODEL = "google/gemini-2.5-flash-lite";
-
 export interface ResumeExtractionOptions {
   /** The raw resume text to extract data from */
   resumeText: string;
@@ -135,10 +129,10 @@ export async function extractResumeData(
   const { resumeText, hints } = options;
 
   // Validate input
-  if (!resumeText || resumeText.trim().length < 50) {
+  if (!resumeText || resumeText.trim().length < 200) {
     return {
       success: false,
-      error: "Resume text is too short. Please provide a complete resume.",
+      error: "Resume text is too short (minimum 200 characters). Please provide a complete resume.",
     };
   }
 
@@ -146,7 +140,7 @@ export async function extractResumeData(
 
   try {
     const { output } = await generateText({
-      model: MODEL,
+      model: RESUME_EXTRACTOR_MODEL,
       output: Output.object({
         schema: ResumeExtractionSchema,
       }),
