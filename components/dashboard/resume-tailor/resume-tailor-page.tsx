@@ -263,24 +263,55 @@ export function ResumeTailorPage({
     });
   }, [messages]);
 
-  // Detect stuck state: last message is from user but no assistant response
-  // This happens when the stream disconnected before the agent could respond
+  // Detect stuck state: stream disconnected before agent could respond
+  // Case 1: Last message is from user (no assistant response at all)
+  // Case 2: Last message is assistant but only has step-start (incomplete response)
   const stuckState = useMemo(() => {
     if (messages.length === 0) return null;
     if (status === "streaming" || status === "submitted") return null;
 
     const lastMessage = messages[messages.length - 1];
-    if (lastMessage.role !== "user") return null;
 
-    // Extract the text from the user's message
-    const textPart = lastMessage.parts.find((p) => p.type === "text");
-    const messageText =
-      textPart && "text" in textPart ? textPart.text : undefined;
+    // Case 1: Last message is from user - no response at all
+    if (lastMessage.role === "user") {
+      const textPart = lastMessage.parts.find((p) => p.type === "text");
+      const messageText =
+        textPart && "text" in textPart ? textPart.text : undefined;
 
-    return {
-      messageId: lastMessage.id,
-      messageText,
-    };
+      return {
+        messageId: lastMessage.id,
+        messageText,
+      };
+    }
+
+    // Case 2: Last message is assistant but has no meaningful content
+    // This happens when stream started but disconnected before any content
+    if (lastMessage.role === "assistant") {
+      // Check if the message has any meaningful content parts
+      const hasMeaningfulContent = lastMessage.parts.some(
+        (p) =>
+          p.type === "text" ||
+          p.type === "reasoning" ||
+          p.type.startsWith("tool-")
+      );
+
+      if (!hasMeaningfulContent && messages.length >= 2) {
+        // Find the user message that triggered this incomplete response
+        const userMessage = messages[messages.length - 2];
+        if (userMessage?.role === "user") {
+          const textPart = userMessage.parts.find((p) => p.type === "text");
+          const messageText =
+            textPart && "text" in textPart ? textPart.text : undefined;
+
+          return {
+            messageId: userMessage.id,
+            messageText,
+          };
+        }
+      }
+    }
+
+    return null;
   }, [messages, status]);
 
   // Build live preview data by applying approved changes to initial profile
