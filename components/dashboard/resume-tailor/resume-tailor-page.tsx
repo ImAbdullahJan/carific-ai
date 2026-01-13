@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useChat } from "@ai-sdk/react";
 import {
   DefaultChatTransport,
@@ -59,6 +59,7 @@ import { PlanProgressCard } from "./plan-progress-card";
 import { ExperienceApprovalCard } from "./experience-approval-card";
 import { SkillsApprovalCard } from "./skills-approval-card";
 import { StepGuide } from "./step-guide";
+import { RetryCard } from "./retry-card";
 import { ToolErrorCard } from "./tool-error-card";
 import { approveExperienceEntryTool } from "@/ai/tool/resume-tailor";
 import { UIToolInvocation } from "ai";
@@ -151,8 +152,9 @@ export function ResumeTailorPage({
 }: ResumeTailorPageProps) {
   const [showPreview, setShowPreview] = useState(true);
   const [approvedChanges, setApprovedChanges] = useState<ApprovedChanges>({});
-  const [planSteps, setPlanSteps] = useState<DBPlanStep[]>(initialPlanSteps);
-  const [prevStatus, setPrevStatus] = useState<string | null>(null);
+  const [planSteps, setPlanSteps] = useState<DBPlanStep[]>(
+    initialPlanSteps ?? []
+  );
 
   const { messages, sendMessage, addToolOutput, status } =
     useChat<ResumeTailorAgentUIMessage>({
@@ -175,7 +177,9 @@ export function ResumeTailorPage({
     });
 
   // Refresh plan steps from DB when streaming completes
+  const prevStatusRef = useRef(status);
   useEffect(() => {
+    const prevStatus = prevStatusRef.current;
     // When status changes from streaming/submitted to ready, refresh plan steps
     if (
       (prevStatus === "streaming" || prevStatus === "submitted") &&
@@ -187,8 +191,8 @@ export function ResumeTailorPage({
         }
       });
     }
-    setPrevStatus(status);
-  }, [status, prevStatus, chatId]);
+    prevStatusRef.current = status;
+  }, [status, chatId]);
 
   // Derive tailored data and plan from messages (for displaying tool outputs)
   const { tailoredData, plan } = useMemo(() => {
@@ -259,6 +263,26 @@ export function ResumeTailorPage({
     });
   }, [messages]);
 
+  // Detect stuck state: last message is from user but no assistant response
+  // This happens when the stream disconnected before the agent could respond
+  const stuckState = useMemo(() => {
+    if (messages.length === 0) return null;
+    if (status === "streaming" || status === "submitted") return null;
+
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage.role !== "user") return null;
+
+    // Extract the text from the user's message
+    const textPart = lastMessage.parts.find((p) => p.type === "text");
+    const messageText =
+      textPart && "text" in textPart ? textPart.text : undefined;
+
+    return {
+      messageId: lastMessage.id,
+      messageText,
+    };
+  }, [messages, status]);
+
   // Build live preview data by applying approved changes to initial profile
   const previewData = useMemo((): ResumeData => {
     const preview = { ...initialProfile };
@@ -310,6 +334,22 @@ export function ResumeTailorPage({
 
   const isLoading = status === "streaming" || status === "submitted";
 
+  // Handle retry for stuck messages - re-sends the last user message
+  const handleRetry = useCallback(() => {
+    if (!stuckState) return;
+
+    // Re-send the same message to trigger the agent again
+    sendMessage({
+      role: "user",
+      parts: [
+        {
+          type: "text",
+          text: stuckState.messageText || "Please continue",
+        },
+      ],
+    });
+  }, [stuckState, sendMessage]);
+
   // Helper to skip a step - updates DB and sends message to agent
   const handleSkipStep = useCallback(
     async (stepId: string, skipMessage: string) => {
@@ -347,7 +387,7 @@ export function ResumeTailorPage({
   );
 
   const handleSummaryApproval = useCallback(
-    (toolCallId: string, data: SummaryApproval) => {
+    async (toolCallId: string, data: SummaryApproval) => {
       setApprovedChanges((prev) => ({
         ...prev,
         summary: {
@@ -361,12 +401,18 @@ export function ResumeTailorPage({
         toolCallId,
         output: data,
       });
+
+      // Refresh plan steps to update UI immediately
+      const result = await refreshPlanSteps(chatId);
+      if (result.success && result.steps) {
+        setPlanSteps(result.steps);
+      }
     },
-    [addToolOutput, tailoredData.summary]
+    [addToolOutput, tailoredData.summary, chatId]
   );
 
   const handleExperienceApproval = useCallback(
-    (toolCallId: string, data: ExperienceApproval) => {
+    async (toolCallId: string, data: ExperienceApproval) => {
       const expId = data.experienceId;
       const suggestedBullets =
         tailoredData.experiences[expId]?.suggestedBullets;
@@ -387,12 +433,18 @@ export function ResumeTailorPage({
         toolCallId,
         output: data,
       });
+
+      // Refresh plan steps to update UI immediately
+      const result = await refreshPlanSteps(chatId);
+      if (result.success && result.steps) {
+        setPlanSteps(result.steps);
+      }
     },
-    [addToolOutput, tailoredData.experiences]
+    [addToolOutput, tailoredData.experiences, chatId]
   );
 
   const handleSkillsApproval = useCallback(
-    (toolCallId: string, data: SkillsApproval) => {
+    async (toolCallId: string, data: SkillsApproval) => {
       setApprovedChanges((prev) => ({
         ...prev,
         skills: {
@@ -406,8 +458,14 @@ export function ResumeTailorPage({
         toolCallId,
         output: data,
       });
+
+      // Refresh plan steps to update UI immediately
+      const result = await refreshPlanSteps(chatId);
+      if (result.success && result.steps) {
+        setPlanSteps(result.steps);
+      }
     },
-    [addToolOutput]
+    [addToolOutput, chatId]
   );
 
   return (
@@ -769,8 +827,8 @@ export function ResumeTailorPage({
                     </MessageContent>
                   </Message>
                 ))}
-                {/* Step Guide - Shows when agent stops and no pending approvals */}
-                {!isLoading && !hasPendingApproval && (
+                {/* Step Guide - Shows when agent stops, no pending approvals, and not stuck */}
+                {!isLoading && !hasPendingApproval && !stuckState && (
                   <StepGuide
                     planSteps={planSteps}
                     hasMessages={messages.length > 0}
@@ -794,6 +852,14 @@ export function ResumeTailorPage({
                         ],
                       })
                     }
+                  />
+                )}
+                {/* Retry Card - Shows when stream disconnected before response */}
+                {stuckState && !isLoading && (
+                  <RetryCard
+                    failedMessage={stuckState.messageText}
+                    onRetry={handleRetry}
+                    isRetrying={isLoading}
                   />
                 )}
                 {isLoading && (

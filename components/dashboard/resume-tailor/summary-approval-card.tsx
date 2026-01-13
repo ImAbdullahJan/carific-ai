@@ -233,6 +233,8 @@ export function SummaryApprovalCard({
                   size="icon"
                   className="absolute -right-2 -top-2 size-6 opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
                   onClick={startEditing}
+                  disabled={isSubmitting}
+                  aria-label="Edit summary"
                 >
                   <PencilIcon className="size-3" />
                 </Button>
