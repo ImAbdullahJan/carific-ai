@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useChat } from "@ai-sdk/react";
 import {
   DefaultChatTransport,
@@ -51,10 +51,6 @@ import type {
 } from "@/ai/tool/resume-tailor";
 import type { ResumeData } from "@/lib/types/resume";
 import type { DBPlanStep } from "@/lib/db/tailoring-chat";
-import {
-  refreshPlanSteps,
-  skipStep as skipStepAction,
-} from "@/lib/actions/tailoring-plan";
 import { PlanProgressCard } from "./plan-progress-card";
 import { ExperienceApprovalCard } from "./experience-approval-card";
 import { SkillsApprovalCard } from "./skills-approval-card";
@@ -148,13 +144,9 @@ export function ResumeTailorPage({
   initialProfile,
   chatId,
   initialMessages,
-  initialPlanSteps = [],
 }: ResumeTailorPageProps) {
   const [showPreview, setShowPreview] = useState(true);
   const [approvedChanges, setApprovedChanges] = useState<ApprovedChanges>({});
-  const [planSteps, setPlanSteps] = useState<DBPlanStep[]>(
-    initialPlanSteps ?? []
-  );
 
   const { messages, sendMessage, addToolOutput, status } =
     useChat<ResumeTailorAgentUIMessage>({
@@ -175,24 +167,6 @@ export function ResumeTailorPage({
       }),
       sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     });
-
-  // Refresh plan steps from DB when streaming completes
-  const prevStatusRef = useRef(status);
-  useEffect(() => {
-    const prevStatus = prevStatusRef.current;
-    // When status changes from streaming/submitted to ready, refresh plan steps
-    if (
-      (prevStatus === "streaming" || prevStatus === "submitted") &&
-      status === "ready"
-    ) {
-      refreshPlanSteps(chatId).then((result) => {
-        if (result.success && result.steps) {
-          setPlanSteps(result.steps);
-        }
-      });
-    }
-    prevStatusRef.current = status;
-  }, [status, chatId]);
 
   // Derive tailored data and plan from messages (for displaying tool outputs)
   const { tailoredData, plan } = useMemo(() => {
@@ -242,6 +216,84 @@ export function ResumeTailorPage({
       plan,
     };
   }, [messages]);
+
+  // Derive plan steps status optimistically from messages
+  const planSteps = useMemo(() => {
+    if (!plan) return [];
+
+    // Map tool execution to step status
+    const completedStepIds = new Set<string>();
+    const inProgressStepIds = new Set<string>();
+    const skippedStepIds = new Set<string>();
+
+    for (const msg of messages) {
+      for (const part of msg.parts) {
+        if (!part.type.startsWith("tool-")) continue;
+
+        let stepId: string | null = null;
+        if (part.type === "tool-collectJobDetails") stepId = "collect_jd";
+        else if (part.type === "tool-tailorSummary") stepId = "tailor_summary";
+        else if (part.type === "tool-approveSummary")
+          stepId = "approve_summary";
+        else if (part.type === "tool-tailorSkills") stepId = "tailor_skills";
+        else if (part.type === "tool-approveSkills") stepId = "approve_skills";
+        else if (part.type === "tool-tailorExperienceEntry") {
+          const expId =
+            part.state === "output-available"
+              ? part.output.experienceId
+              : part.input?.experienceId;
+          if (expId) stepId = `tailor_exp_${expId}`;
+        } else if (part.type === "tool-approveExperienceEntry") {
+          const expId =
+            part.state === "output-available"
+              ? part.output.experienceId
+              : part.input?.experienceId;
+          if (expId) stepId = `approve_exp_${expId}`;
+        } else if (
+          part.type === "tool-skipStep" &&
+          part.state === "output-available"
+        ) {
+          skippedStepIds.add(part.output.stepId);
+          if (part.output.relatedStepId) {
+            skippedStepIds.add(part.output.relatedStepId);
+          }
+          continue; // Skip processing main logic for this part
+        }
+
+        if (!stepId) continue;
+
+        if ("state" in part && part.state === "output-available") {
+          completedStepIds.add(stepId);
+        } else if (
+          "state" in part &&
+          (part.state === "streaming" ||
+            part.state === "input-streaming" ||
+            part.state === "input-available" ||
+            part.state === "approval-requested")
+        ) {
+          inProgressStepIds.add(stepId);
+        }
+      }
+    }
+
+    return plan.steps.map((step, index) => {
+      let status: DBPlanStep["status"] = "pending";
+      if (skippedStepIds.has(step.id)) status = "skipped";
+      else if (completedStepIds.has(step.id)) status = "completed";
+      else if (inProgressStepIds.has(step.id)) status = "in_progress";
+
+      return {
+        id: step.id, // Using step.id as DB id for consistency
+        stepId: step.id,
+        type: step.type,
+        label: step.label,
+        description: step.description ?? null,
+        order: index,
+        experienceId: step.context?.experienceId ?? null,
+        status,
+      } as DBPlanStep;
+    });
+  }, [plan, messages]);
 
   // Check if there are any pending approval requests
   const hasPendingApproval = useMemo(() => {
@@ -381,21 +433,15 @@ export function ResumeTailorPage({
     });
   }, [stuckState, sendMessage]);
 
-  // Helper to skip a step - updates DB and sends message to agent
+  // Helper to skip a step - sends message to agent who will call skipStep tool
   const handleSkipStep = useCallback(
     async (stepId: string, skipMessage: string) => {
-      // Update DB first
-      const result = await skipStepAction(chatId, stepId);
-      if (result.success && result.steps) {
-        setPlanSteps(result.steps);
-      }
-      // Then send message to agent
       sendMessage({
         role: "user",
         parts: [{ type: "text", text: skipMessage }],
       });
     },
-    [chatId, sendMessage]
+    [sendMessage]
   );
 
   const handleSubmit = useCallback(
@@ -432,14 +478,8 @@ export function ResumeTailorPage({
         toolCallId,
         output: data,
       });
-
-      // Refresh plan steps to update UI immediately
-      const result = await refreshPlanSteps(chatId);
-      if (result.success && result.steps) {
-        setPlanSteps(result.steps);
-      }
     },
-    [addToolOutput, tailoredData.summary, chatId]
+    [addToolOutput, tailoredData.summary]
   );
 
   const handleExperienceApproval = useCallback(
@@ -464,14 +504,8 @@ export function ResumeTailorPage({
         toolCallId,
         output: data,
       });
-
-      // Refresh plan steps to update UI immediately
-      const result = await refreshPlanSteps(chatId);
-      if (result.success && result.steps) {
-        setPlanSteps(result.steps);
-      }
     },
-    [addToolOutput, tailoredData.experiences, chatId]
+    [addToolOutput, tailoredData.experiences]
   );
 
   const handleSkillsApproval = useCallback(
@@ -489,14 +523,8 @@ export function ResumeTailorPage({
         toolCallId,
         output: data,
       });
-
-      // Refresh plan steps to update UI immediately
-      const result = await refreshPlanSteps(chatId);
-      if (result.success && result.steps) {
-        setPlanSteps(result.steps);
-      }
     },
-    [addToolOutput, chatId]
+    [addToolOutput]
   );
 
   return (
@@ -850,6 +878,26 @@ export function ResumeTailorPage({
                                 }
                               />
                             );
+
+                          case "tool-skipStep":
+                            if (part.state === "output-available") {
+                              return (
+                                <Card
+                                  key={part.toolCallId}
+                                  className="w-full max-w-2xl border-muted"
+                                >
+                                  <CardContent className="pt-4">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Badge variant="outline">Skipped</Badge>
+                                      <span>
+                                        Step skipped: {part.output.stepId}
+                                      </span>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              );
+                            }
+                            return null;
 
                           default:
                             return null;

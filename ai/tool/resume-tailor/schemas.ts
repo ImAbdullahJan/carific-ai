@@ -148,3 +148,15 @@ export const SkillsApprovalSchema = z.object({
   stepCompleted: z.literal("approve_skills").nullable(),
 });
 export type SkillsApproval = z.infer<typeof SkillsApprovalSchema>;
+
+export const SkipStepInputSchema = z.object({
+  stepId: z.string(),
+});
+export type SkipStepInput = z.infer<typeof SkipStepInputSchema>;
+
+export const SkipStepOutputSchema = z.object({
+  skipped: z.boolean(),
+  stepId: z.string(),
+  relatedStepId: z.string().nullable(),
+});
+export type SkipStepOutput = z.infer<typeof SkipStepOutputSchema>;

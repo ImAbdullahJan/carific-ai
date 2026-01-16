@@ -17,6 +17,7 @@ import {
   getChat,
   getChatWithOwner,
   completeStep,
+  skipStep,
 } from "@/lib/db/tailoring-chat";
 import { applyApprovedChanges } from "@/lib/db/resume";
 
@@ -129,6 +130,13 @@ export async function POST(request: Request) {
               await completeStep(chatId, "tailor_skills");
             } else if (part.type === "tool-approveSkills") {
               await completeStep(chatId, "approve_skills");
+            } else if (part.type === "tool-skipStep" && part.output) {
+              // Handle skipStep tool - mark step(s) as skipped in DB
+              const { stepId, relatedStepId } = part.output;
+              await skipStep(chatId, stepId);
+              if (relatedStepId) {
+                await skipStep(chatId, relatedStepId);
+              }
             }
           }
 

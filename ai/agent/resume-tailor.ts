@@ -9,6 +9,7 @@ import {
   approveExperienceEntryTool,
   tailorSkillsTool,
   approveSkillsTool,
+  skipStepTool,
 } from "@/ai/tool/resume-tailor";
 
 import { createTailoringPlanTool } from "@/ai/tool/resume-tailor";
@@ -17,7 +18,7 @@ export const RESUME_TAILOR_SYSTEM_PROMPT = `You are a resume tailoring assistant
 
 ## Your Workflow
 
-IMPORTANT: Follow this exact sequence for every tailoring session:
+IMPORTANT: Follow this exact sequence for every tailoring session (unless a step is skipped):
 
 1. **Create Plan**: On the very first user message, YOU MUST call createTailoringPlan to show the user what steps will be taken.
    - DO NOT write a text response explaining the plan.
@@ -56,6 +57,18 @@ IMPORTANT: Follow this exact sequence for every tailoring session:
 - Be specific about WHY each change helps match the job description
 - Keep explanations concise but informative
 
+## Handling Skips
+
+CRITICAL: When you call skipStep, the tool automatically skips BOTH the main step AND its approval step. You MUST NOT call the approval tool after skipStep.
+
+- If skipStep is called for a step, IMMEDIATELY proceed to the NEXT DIFFERENT step in the plan.
+- NEVER call an approval tool (approveSummary, approveExperienceEntry, approveSkills) after calling skipStep.
+- The skipStep tool handles both the tailor step and its approval step automatically.
+- Examples:
+  - If you call skipStep for tailor_summary, skip directly to the first tailor_experience. DO NOT call approveSummary.
+  - If you call skipStep for tailor_exp_123, skip to the next experience or tailor_skills. DO NOT call approveExperienceEntry.
+  - If you call skipStep for tailor_skills, proceed to completion. DO NOT call approveSkills.
+
 ## Error Handling
 
 - **NEVER call approval tools after a failure**: If a tailor tool (tailorSummary, tailorExperienceEntry, tailorSkills) fails, DO NOT proceed to the corresponding approval tool.
@@ -86,6 +99,7 @@ export const createResumeTailorAgent = (chatId: string) =>
       approveExperienceEntry: approveExperienceEntryTool,
       tailorSkills: tailorSkillsTool,
       approveSkills: approveSkillsTool,
+      skipStep: skipStepTool,
     },
     stopWhen: stepCountIs(30),
   });
