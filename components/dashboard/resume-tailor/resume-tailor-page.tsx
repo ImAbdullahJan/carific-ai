@@ -64,7 +64,6 @@ interface ResumeTailorPageProps {
   initialProfile: ResumeData;
   chatId: string;
   initialMessages?: ResumeTailorAgentUIMessage[];
-  initialPlanSteps?: DBPlanStep[];
 }
 
 interface ApprovedChanges {
