@@ -13,10 +13,10 @@ interface StepGuideProps {
   hasMessages: boolean;
   /** Whether the agent is currently streaming */
   isStreaming: boolean;
-  /** Callback to send a message to start the process */
-  onStart: () => void;
-  /** Callback to continue to the next step */
-  onContinue: () => void;
+  /** Callback to send a message to start the process (required when hasMessages is false) */
+  onStart?: () => void;
+  /** Callback to continue to the next step (required when hasMessages is true) */
+  onContinue?: () => void;
 }
 
 export function StepGuide({

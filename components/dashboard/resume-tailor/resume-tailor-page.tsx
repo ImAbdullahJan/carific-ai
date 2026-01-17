@@ -57,7 +57,6 @@ import { ToolErrorCard } from "./tool-error-card";
 import {
   getExperienceNameFromPlan,
   findExperienceForApproval,
-  getApprovalStepId,
 } from "@/lib/utils/resume-tailor";
 
 interface ResumeTailorPageProps {
@@ -179,17 +178,6 @@ export function ResumeTailorPage({
     regenerate();
   }, [stuckState, regenerate]);
 
-  // Helper to skip a step - sends message to agent who will call skipStep tool
-  const handleSkipStep = useCallback(
-    async (stepId: string, skipMessage: string) => {
-      sendMessage({
-        role: "user",
-        parts: [{ type: "text", text: skipMessage }],
-      });
-    },
-    [sendMessage]
-  );
-
   const handleSubmit = useCallback(
     async ({ text }: { text: string }) => {
       if (!text.trim()) return;
@@ -217,7 +205,7 @@ export function ResumeTailorPage({
         output: data,
       });
     },
-    [addToolOutput, tailoredData.summary]
+    [addToolOutput]
   );
 
   const handleExperienceApproval = useCallback(
@@ -228,7 +216,7 @@ export function ResumeTailorPage({
         output: data,
       });
     },
-    [addToolOutput, tailoredData.experiences]
+    [addToolOutput]
   );
 
   const handleSkillsApproval = useCallback(
@@ -324,14 +312,6 @@ export function ResumeTailorPage({
                             type: "text",
                             text: "Let's start tailoring my resume!",
                           },
-                        ],
-                      })
-                    }
-                    onContinue={() =>
-                      sendMessage({
-                        role: "user",
-                        parts: [
-                          { type: "text", text: "Continue to the next step" },
                         ],
                       })
                     }
@@ -633,17 +613,6 @@ export function ResumeTailorPage({
                     planSteps={planSteps}
                     hasMessages={messages.length > 0}
                     isStreaming={false}
-                    onStart={() =>
-                      sendMessage({
-                        role: "user",
-                        parts: [
-                          {
-                            type: "text",
-                            text: "Let's start tailoring my resume!",
-                          },
-                        ],
-                      })
-                    }
                     onContinue={() =>
                       sendMessage({
                         role: "user",
