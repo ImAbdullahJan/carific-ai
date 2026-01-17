@@ -5,6 +5,7 @@ import { useChat } from "@ai-sdk/react";
 import {
   DefaultChatTransport,
   lastAssistantMessageIsCompleteWithToolCalls,
+  lastAssistantMessageIsCompleteWithApprovalResponses,
 } from "ai";
 import {
   Conversation,
@@ -32,6 +33,7 @@ import {
   WandIcon,
   Loader2Icon,
   CheckCircle2Icon,
+  AlertCircleIcon,
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
 } from "lucide-react";
@@ -55,6 +57,7 @@ import { ToolErrorCard } from "./tool-error-card";
 import {
   getExperienceNameFromPlan,
   findExperienceForApproval,
+  getApprovalStepId,
 } from "@/lib/utils/resume-tailor";
 
 interface ResumeTailorPageProps {
@@ -72,25 +75,37 @@ export function ResumeTailorPage({
 }: ResumeTailorPageProps) {
   const [showPreview, setShowPreview] = useState(true);
 
-  const { messages, sendMessage, addToolOutput, status } =
-    useChat<ResumeTailorAgentUIMessage>({
-      id: chatId,
-      messages: initialMessages,
-      transport: new DefaultChatTransport({
-        api: "/api/resume-tailor",
-        prepareSendMessagesRequest: ({ messages: msgs }) => {
-          // Send only the last message + chatId (server loads full history)
-          const lastMessage = msgs[msgs.length - 1];
-          return {
-            body: {
-              message: lastMessage,
-              chatId,
-            },
-          };
-        },
-      }),
-      sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
-    });
+  const {
+    messages,
+    sendMessage,
+    addToolOutput,
+    addToolApprovalResponse,
+    status,
+    regenerate,
+  } = useChat<ResumeTailorAgentUIMessage>({
+    id: chatId,
+    messages: initialMessages,
+    transport: new DefaultChatTransport({
+      api: "/api/resume-tailor",
+      prepareSendMessagesRequest: ({ messages: msgs }) => {
+        // Send only the last message + chatId (server loads full history)
+        const lastMessage = msgs[msgs.length - 1];
+        return {
+          body: {
+            message: lastMessage,
+            chatId,
+          },
+        };
+      },
+    }),
+    sendAutomaticallyWhen: (options) => {
+      // Auto-submit when all tool calls are complete OR all approvals are responded to
+      return (
+        lastAssistantMessageIsCompleteWithToolCalls(options) ||
+        lastAssistantMessageIsCompleteWithApprovalResponses(options)
+      );
+    },
+  });
 
   // Derive entire application state from messages using pure reducer
   const {
@@ -158,21 +173,11 @@ export function ResumeTailorPage({
 
   const isLoading = status === "streaming" || status === "submitted";
 
-  // Handle retry for stuck messages - re-sends the last user message
+  // Handle retry for stuck messages - uses reload() to regenerate response
   const handleRetry = useCallback(() => {
     if (!stuckState) return;
-
-    // Re-send the same message to trigger the agent again
-    sendMessage({
-      role: "user",
-      parts: [
-        {
-          type: "text",
-          text: stuckState.messageText || "Please continue",
-        },
-      ],
-    });
-  }, [stuckState, sendMessage]);
+    regenerate();
+  }, [stuckState, regenerate]);
 
   // Helper to skip a step - sends message to agent who will call skipStep tool
   const handleSkipStep = useCallback(
@@ -217,10 +222,6 @@ export function ResumeTailorPage({
 
   const handleExperienceApproval = useCallback(
     async (toolCallId: string, data: ExperienceApproval) => {
-      const expId = data.experienceId;
-      const suggestedBullets =
-        tailoredData.experiences[expId]?.suggestedBullets;
-
       addToolOutput({
         tool: "approveExperienceEntry",
         toolCallId,
@@ -594,6 +595,63 @@ export function ResumeTailorPage({
                             );
 
                           case "tool-skipStep":
+                            if (part.state === "approval-requested") {
+                              const stepId = part.input?.stepId;
+                              const stepTitle =
+                                getExperienceNameFromPlan(stepId, plan) ||
+                                stepId;
+
+                              return (
+                                <Card
+                                  key={part.toolCallId}
+                                  className="w-full max-w-2xl"
+                                >
+                                  <CardHeader className="pb-2">
+                                    <div className="flex items-center gap-2">
+                                      <AlertCircleIcon className="size-4" />
+                                      <CardTitle className="text-sm">
+                                        Agent Suggests Skipping: {stepTitle}
+                                      </CardTitle>
+                                    </div>
+                                  </CardHeader>
+                                  <CardContent>
+                                    <p className="text-sm text-muted-foreground mb-4">
+                                      I encountered an issue with this step and
+                                      suggest we skip it to continue. Would you
+                                      like to skip it or should I try again?
+                                    </p>
+                                    <div className="flex gap-2">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-8"
+                                        onClick={() =>
+                                          addToolApprovalResponse({
+                                            id: part.approval.id,
+                                            approved: true,
+                                          })
+                                        }
+                                      >
+                                        Skip Step
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-8"
+                                        onClick={() =>
+                                          addToolApprovalResponse({
+                                            id: part.approval.id,
+                                            approved: false,
+                                          })
+                                        }
+                                      >
+                                        Try Again
+                                      </Button>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              );
+                            }
                             if (part.state === "output-available") {
                               return (
                                 <Card

@@ -77,3 +77,15 @@ export function findExperienceForApproval(
 
   return unapprovedExpId ? tailoredExperiences[unapprovedExpId] : undefined;
 }
+
+/**
+ * Helper to calculate the related approval step ID for a tailoring step.
+ */
+export function getApprovalStepId(stepId: string): string | null {
+  if (stepId === "tailor_summary") return "approve_summary";
+  if (stepId === "tailor_skills") return "approve_skills";
+  if (stepId.startsWith("tailor_exp_")) {
+    return stepId.replace("tailor_exp_", "approve_exp_");
+  }
+  return null;
+}

@@ -58,11 +58,14 @@ IMPORTANT: Follow this exact sequence for every tailoring session (unless a step
 - Keep explanations concise but informative
 
 ## Handling Skips
-
-CRITICAL: When you call skipStep, the tool automatically skips BOTH the main step AND its approval step. You MUST NOT call the approval tool after skipStep.
-
-- If skipStep is called for a step, IMMEDIATELY proceed to the NEXT DIFFERENT step in the plan.
-- NEVER call an approval tool (approveSummary, approveExperienceEntry, approveSkills) after calling skipStep.
+ 
+ CRITICAL: When you call skipStep, the tool automatically skips BOTH the main step AND its approval step.
+ 
+ - BEFORE calling any approval tool (approveSummary, approveExperienceEntry, approveSkills), YOU MUST CHECK THE LAST TOOL CALL.
+ - If the last tool call was skipStep, **DO NOT CALL THE APPROVAL TOOL**. Proceed immediately to the next tailoring step.
+ - If skipStep is called for a step, the user will be asked to approve the skip. Once approved, the tool automatically skips BOTH the main step AND its approval step.
+ - If skipStep is called for a step, IMMEDIATELY proceed to the NEXT DIFFERENT step in the plan.
+ - NEVER call an approval tool (approveSummary, approveExperienceEntry, approveSkills) after calling skipStep.
 - The skipStep tool handles both the tailor step and its approval step automatically.
 - Examples:
   - If you call skipStep for tailor_summary, skip directly to the first tailor_experience. DO NOT call approveSummary.
@@ -74,7 +77,7 @@ CRITICAL: When you call skipStep, the tool automatically skips BOTH the main ste
 - **MAX 3 RETRIES**: If a tool fails, you may retry it. HOWEVER, check the chat history.
   - If you see 3 consecutive failures for the same tool, **STOP RETRYING**.
   - DO NOT call the tool a 4th time.
-  - Instead, inform the user: "I'm having trouble with this step after multiple attempts. Would you like to skip it?"
+  - Instead, **CALL skipStep** for that step. The user will be asked to approve the skip.
 - **NEVER call approval tools after a failure**: If a tailor tool (tailorSummary, tailorExperienceEntry, tailorSkills) fails, DO NOT proceed to the corresponding approval tool.
 - **CHECK tool result**: Before calling an approval tool, verify that the previous tailor tool succeeded and returned valid output.
 
