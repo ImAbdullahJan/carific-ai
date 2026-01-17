@@ -43,14 +43,9 @@ import type { ResumeTailorAgentUIMessage } from "@/ai/agent";
 import type {
   ExperienceApproval,
   SummaryApproval,
-  TailoredExperienceOutput,
-  TailoredSummaryOutput,
-  TailoredSkillsOutput,
   SkillsApproval,
-  TailoringPlan,
 } from "@/ai/tool/resume-tailor";
 import type { ResumeData } from "@/lib/types/resume";
-import type { DBPlanStep } from "@/lib/db/tailoring-chat";
 import { PlanProgressCard } from "./plan-progress-card";
 import { ExperienceApprovalCard } from "./experience-approval-card";
 import { SkillsApprovalCard } from "./skills-approval-card";
@@ -68,14 +63,7 @@ interface ResumeTailorPageProps {
   initialMessages?: ResumeTailorAgentUIMessage[];
 }
 
-interface ApprovedChanges {
-  summary?: { approved: boolean; text?: string };
-  experiences?: Record<string, { approved: boolean; bullets?: string[] }>;
-  skills?: {
-    approved: boolean;
-    finalSkills?: { name: string; category: string }[];
-  };
-}
+import { deriveTailorState } from "@/lib/utils/resume-tailor-reducer";
 
 export function ResumeTailorPage({
   initialProfile,
@@ -83,7 +71,6 @@ export function ResumeTailorPage({
   initialMessages,
 }: ResumeTailorPageProps) {
   const [showPreview, setShowPreview] = useState(true);
-  const [approvedChanges, setApprovedChanges] = useState<ApprovedChanges>({});
 
   const { messages, sendMessage, addToolOutput, status } =
     useChat<ResumeTailorAgentUIMessage>({
@@ -105,152 +92,18 @@ export function ResumeTailorPage({
       sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     });
 
-  // Derive tailored data and plan from messages (for displaying tool outputs)
-  const { tailoredData, plan } = useMemo(() => {
-    let summary: TailoredSummaryOutput | undefined;
-    const experiences: Record<string, TailoredExperienceOutput> = {};
-    let skills: TailoredSkillsOutput | undefined;
-    let plan: TailoringPlan | null = null;
-
-    for (const msg of messages) {
-      for (const part of msg.parts) {
-        // Extract plan (for experience name lookup)
-        if (
-          part.type === "tool-createTailoringPlan" &&
-          part.state === "output-available"
-        ) {
-          plan = part.output;
-        }
-
-        // Extract summary output
-        if (
-          part.type === "tool-tailorSummary" &&
-          part.state === "output-available"
-        ) {
-          summary = part.output;
-        }
-
-        // Extract experience outputs
-        if (
-          part.type === "tool-tailorExperienceEntry" &&
-          part.state === "output-available"
-        ) {
-          experiences[part.output.experienceId] = part.output;
-        }
-
-        // Extract skills output
-        if (
-          part.type === "tool-tailorSkills" &&
-          part.state === "output-available"
-        ) {
-          skills = part.output;
-        }
-      }
-    }
-
-    return {
-      tailoredData: { summary, experiences, skills },
-      plan,
-    };
-  }, [messages]);
-
-  // Derive plan steps status optimistically from messages
-  const planSteps = useMemo(() => {
-    if (!plan) return [];
-
-    // Map tool execution to step status
-    const completedStepIds = new Set<string>();
-    const inProgressStepIds = new Set<string>();
-    const skippedStepIds = new Set<string>();
-
-    for (const msg of messages) {
-      for (const part of msg.parts) {
-        if (!part.type.startsWith("tool-")) continue;
-
-        let stepId: string | null = null;
-        if (part.type === "tool-collectJobDetails") stepId = "collect_jd";
-        else if (part.type === "tool-tailorSummary") stepId = "tailor_summary";
-        else if (part.type === "tool-approveSummary")
-          stepId = "approve_summary";
-        else if (part.type === "tool-tailorSkills") stepId = "tailor_skills";
-        else if (part.type === "tool-approveSkills") stepId = "approve_skills";
-        else if (part.type === "tool-tailorExperienceEntry") {
-          const expId =
-            part.state === "output-available"
-              ? part.output.experienceId
-              : part.input?.experienceId;
-          if (expId) stepId = `tailor_exp_${expId}`;
-        } else if (part.type === "tool-approveExperienceEntry") {
-          const expId =
-            part.state === "output-available"
-              ? part.output.experienceId
-              : part.input?.experienceId;
-          if (expId) stepId = `approve_exp_${expId}`;
-        } else if (
-          part.type === "tool-skipStep" &&
-          part.state === "output-available"
-        ) {
-          skippedStepIds.add(part.output.stepId);
-          if (part.output.relatedStepId) {
-            skippedStepIds.add(part.output.relatedStepId);
-          }
-          continue; // Skip processing main logic for this part
-        }
-
-        if (!stepId) continue;
-
-        if ("state" in part && part.state === "output-available") {
-          completedStepIds.add(stepId);
-        } else if (
-          "state" in part &&
-          (part.state === "streaming" ||
-            part.state === "input-streaming" ||
-            part.state === "input-available" ||
-            part.state === "approval-requested")
-        ) {
-          inProgressStepIds.add(stepId);
-        }
-      }
-    }
-
-    return plan.steps.map((step, index) => {
-      let status: DBPlanStep["status"] = "pending";
-      if (skippedStepIds.has(step.id)) status = "skipped";
-      else if (completedStepIds.has(step.id)) status = "completed";
-      else if (inProgressStepIds.has(step.id)) status = "in_progress";
-
-      return {
-        id: step.id, // Using step.id as DB id for consistency
-        stepId: step.id,
-        type: step.type,
-        label: step.label,
-        description: step.description ?? null,
-        order: index,
-        experienceId: step.context?.experienceId ?? null,
-        status,
-      } as DBPlanStep;
-    });
-  }, [plan, messages]);
-
-  // Check if there are any pending approval requests
-  const hasPendingApproval = useMemo(() => {
-    if (messages.length === 0) return false;
-
-    // Check the last message for approval-requested state
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage.role !== "assistant") return false;
-
-    return lastMessage.parts.some((part) => {
-      return (
-        (part.type === "tool-approveSummary" ||
-          part.type === "tool-approveExperienceEntry" ||
-          part.type === "tool-approveSkills" ||
-          part.type === "tool-collectJobDetails") &&
-        (part.state === "approval-requested" ||
-          part.state === "input-available")
-      );
-    });
-  }, [messages]);
+  // Derive entire application state from messages using pure reducer
+  const {
+    plan,
+    planSteps,
+    tailoredData,
+    approvedChanges,
+    previewData,
+    hasPendingApproval,
+  } = useMemo(
+    () => deriveTailorState(messages, initialProfile),
+    [messages, initialProfile]
+  );
 
   // Detect stuck state: stream disconnected before agent could respond
   // Case 1: Last message is from user (no assistant response at all)
@@ -303,55 +156,6 @@ export function ResumeTailorPage({
     return null;
   }, [messages, status]);
 
-  // Build live preview data by applying approved changes to initial profile
-  const previewData = useMemo((): ResumeData => {
-    const preview = { ...initialProfile };
-
-    // Apply approved summary
-    if (approvedChanges.summary?.approved && approvedChanges.summary.text) {
-      preview.bio = approvedChanges.summary.text;
-    }
-
-    // Apply approved skills changes
-    if (
-      approvedChanges.skills?.approved &&
-      approvedChanges.skills.finalSkills
-    ) {
-      preview.skills = approvedChanges.skills.finalSkills.map((s) => ({
-        name: s.name,
-        category: s.category,
-        level: null,
-      }));
-    }
-
-    // Apply approved experience changes
-    if (approvedChanges.experiences) {
-      preview.workExperiences = preview.workExperiences.map((exp) => {
-        // Find the matching experience by comparing company and position
-        const matchingExpId = Object.keys(
-          approvedChanges.experiences || {}
-        ).find((expId) => {
-          const tailoredExp = tailoredData.experiences[expId];
-          return (
-            tailoredExp &&
-            tailoredExp.originalCompany === exp.company &&
-            tailoredExp.originalRole === exp.position
-          );
-        });
-
-        if (matchingExpId) {
-          const change = approvedChanges.experiences?.[matchingExpId];
-          if (change?.approved && change.bullets) {
-            return { ...exp, bullets: change.bullets };
-          }
-        }
-        return exp;
-      });
-    }
-
-    return preview;
-  }, [initialProfile, approvedChanges, tailoredData.experiences]);
-
   const isLoading = status === "streaming" || status === "submitted";
 
   // Handle retry for stuck messages - re-sends the last user message
@@ -402,14 +206,6 @@ export function ResumeTailorPage({
 
   const handleSummaryApproval = useCallback(
     async (toolCallId: string, data: SummaryApproval) => {
-      setApprovedChanges((prev) => ({
-        ...prev,
-        summary: {
-          approved: data.approved,
-          text: data.customText || tailoredData.summary?.suggested,
-        },
-      }));
-
       addToolOutput({
         tool: "approveSummary",
         toolCallId,
@@ -425,17 +221,6 @@ export function ResumeTailorPage({
       const suggestedBullets =
         tailoredData.experiences[expId]?.suggestedBullets;
 
-      setApprovedChanges((prev) => ({
-        ...prev,
-        experiences: {
-          ...prev.experiences,
-          [expId]: {
-            approved: data.approved,
-            bullets: data.finalBullets || suggestedBullets,
-          },
-        },
-      }));
-
       addToolOutput({
         tool: "approveExperienceEntry",
         toolCallId,
@@ -447,14 +232,6 @@ export function ResumeTailorPage({
 
   const handleSkillsApproval = useCallback(
     async (toolCallId: string, data: SkillsApproval) => {
-      setApprovedChanges((prev) => ({
-        ...prev,
-        skills: {
-          approved: data.approved,
-          finalSkills: data.finalSkills,
-        },
-      }));
-
       addToolOutput({
         tool: "approveSkills",
         toolCallId,
