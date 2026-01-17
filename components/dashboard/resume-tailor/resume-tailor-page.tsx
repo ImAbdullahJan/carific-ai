@@ -390,23 +390,6 @@ export function ResumeTailorPage({
                                   title="Failed to generate summary"
                                   errorText={part.errorText}
                                   defaultMessage="An error occurred while tailoring the summary."
-                                  onRetry={() =>
-                                    sendMessage({
-                                      role: "user",
-                                      parts: [
-                                        {
-                                          type: "text",
-                                          text: "Please retry tailoring the summary.",
-                                        },
-                                      ],
-                                    })
-                                  }
-                                  onSkip={() =>
-                                    handleSkipStep(
-                                      "tailor_summary",
-                                      "Skip the summary and continue to the next step."
-                                    )
-                                  }
                                 />
                               );
                             }
@@ -481,23 +464,6 @@ export function ResumeTailorPage({
                                   title={`Failed to optimize ${expName}`}
                                   errorText={part.errorText}
                                   defaultMessage="An error occurred while tailoring the experience entry."
-                                  onRetry={() =>
-                                    sendMessage({
-                                      role: "user",
-                                      parts: [
-                                        {
-                                          type: "text",
-                                          text: `Please retry tailoring ${expName}.`,
-                                        },
-                                      ],
-                                    })
-                                  }
-                                  onSkip={() =>
-                                    handleSkipStep(
-                                      `tailor_exp_${expId}`,
-                                      `Skip ${expName} and continue to the next step.`
-                                    )
-                                  }
                                 />
                               );
                             }
@@ -548,23 +514,6 @@ export function ResumeTailorPage({
                                   title="Failed to analyze skills"
                                   errorText={part.errorText}
                                   defaultMessage="An error occurred while tailoring skills."
-                                  onRetry={() =>
-                                    sendMessage({
-                                      role: "user",
-                                      parts: [
-                                        {
-                                          type: "text",
-                                          text: "Please retry tailoring the skills.",
-                                        },
-                                      ],
-                                    })
-                                  }
-                                  onSkip={() =>
-                                    handleSkipStep(
-                                      "tailor_skills",
-                                      "Skip skills tailoring and finish."
-                                    )
-                                  }
                                 />
                               );
                             }

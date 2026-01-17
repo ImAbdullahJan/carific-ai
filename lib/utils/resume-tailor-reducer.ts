@@ -64,7 +64,8 @@ export function deriveTailorState(
           (part.type === "tool-approveSummary" ||
             part.type === "tool-approveExperienceEntry" ||
             part.type === "tool-approveSkills" ||
-            part.type === "tool-collectJobDetails") &&
+            part.type === "tool-collectJobDetails" ||
+            part.type === "tool-skipStep") &&
           (part.state === "approval-requested" ||
             part.state === "input-available")
       );
