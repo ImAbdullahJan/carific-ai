@@ -57,8 +57,10 @@ import { SkillsApprovalCard } from "./skills-approval-card";
 import { StepGuide } from "./step-guide";
 import { RetryCard } from "./retry-card";
 import { ToolErrorCard } from "./tool-error-card";
-import { approveExperienceEntryTool } from "@/ai/tool/resume-tailor";
-import { UIToolInvocation } from "ai";
+import {
+  getExperienceNameFromPlan,
+  findExperienceForApproval,
+} from "@/lib/utils/resume-tailor";
 
 interface ResumeTailorPageProps {
   initialProfile: ResumeData;
@@ -73,70 +75,6 @@ interface ApprovedChanges {
     approved: boolean;
     finalSkills?: { name: string; category: string }[];
   };
-}
-
-/**
- * Helper function to get experience name from plan by experience ID
- */
-function getExperienceNameFromPlan(
-  experienceId: string | undefined,
-  plan: TailoringPlan | null
-): string {
-  if (!experienceId || !plan) return "experience";
-  const step = plan.steps.find(
-    (s) =>
-      s.type === "tailor_experience" && s.context?.experienceId === experienceId
-  );
-  // Label format is "Tailor: Position @ Company" - extract the part after "Tailor: "
-  if (step?.label) {
-    return step.label.replace("Tailor: ", "").replace(" @ ", " at ");
-  }
-  return "experience";
-}
-
-/**
- * Helper function to find the experience data for an approval step
- * @param part - The approval tool part
- * @param tailoredExperiences - Map of tailored experiences by ID
- * @param messages - All messages up to current point
- * @param currentMsg - The current message being rendered
- * @returns The experience data to display, or undefined if not found
- */
-function findExperienceForApproval(
-  part: UIToolInvocation<typeof approveExperienceEntryTool>,
-  tailoredExperiences: Record<string, TailoredExperienceOutput>,
-  messages: ResumeTailorAgentUIMessage[],
-  currentMsg: ResumeTailorAgentUIMessage
-): TailoredExperienceOutput | undefined {
-  if (part.state === "output-available") {
-    // Approval completed - get experience data using the ID from output
-    const expId = part.output.experienceId;
-    return tailoredExperiences[expId];
-  }
-
-  // Approval in progress - find the most recently tailored experience
-  // that hasn't been approved yet by checking message history
-  const allMessages = messages.slice(0, messages.indexOf(currentMsg) + 1);
-  const approvedExpIds = new Set<string>();
-
-  // Collect all approved experience IDs from previous messages
-  for (const m of allMessages) {
-    for (const p of m.parts) {
-      if (
-        p.type === "tool-approveExperienceEntry" &&
-        p.state === "output-available"
-      ) {
-        approvedExpIds.add(p.output.experienceId);
-      }
-    }
-  }
-
-  // Find the first tailored experience that hasn't been approved
-  const unapprovedExpId = Object.keys(tailoredExperiences).find(
-    (expId) => !approvedExpIds.has(expId)
-  );
-
-  return unapprovedExpId ? tailoredExperiences[unapprovedExpId] : undefined;
 }
 
 export function ResumeTailorPage({
