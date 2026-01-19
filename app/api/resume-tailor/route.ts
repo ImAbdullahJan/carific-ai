@@ -98,44 +98,46 @@ export async function POST(request: Request) {
             message: responseMessage,
           });
 
-          // Update step status based on completed tool outputs
+          // Update step status based on tool outputs
           for (const part of responseMessage.parts) {
-            if (!("state" in part) || part.state !== "output-available")
-              continue;
+            if (!("state" in part)) continue;
 
-            // Map tool types to step IDs
-            if (part.type === "tool-collectJobDetails") {
-              await completeStep(chatId, "collect_jd");
-            } else if (part.type === "tool-tailorSummary") {
-              await completeStep(chatId, "tailor_summary");
-            } else if (part.type === "tool-approveSummary") {
-              await completeStep(chatId, "approve_summary");
-            } else if (
-              part.type === "tool-tailorExperienceEntry" &&
-              part.output?.experienceId
-            ) {
-              await completeStep(
-                chatId,
-                `tailor_exp_${part.output.experienceId}`
-              );
-            } else if (
-              part.type === "tool-approveExperienceEntry" &&
-              part.output?.experienceId
-            ) {
-              await completeStep(
-                chatId,
-                `approve_exp_${part.output.experienceId}`
-              );
-            } else if (part.type === "tool-tailorSkills") {
-              await completeStep(chatId, "tailor_skills");
-            } else if (part.type === "tool-approveSkills") {
-              await completeStep(chatId, "approve_skills");
-            } else if (part.type === "tool-skipStep" && part.output) {
-              // Handle skipStep tool - mark step(s) as skipped in DB
-              const { stepId, relatedStepId } = part.output;
-              await skipStep(chatId, stepId);
-              if (relatedStepId) {
-                await skipStep(chatId, relatedStepId);
+            // Handle successful tool outputs
+            if (part.state === "output-available") {
+              // Map tool types to step IDs and mark as complete
+              if (part.type === "tool-collectJobDetails") {
+                await completeStep(chatId, "collect_jd");
+              } else if (part.type === "tool-tailorSummary") {
+                await completeStep(chatId, "tailor_summary");
+              } else if (part.type === "tool-approveSummary") {
+                await completeStep(chatId, "approve_summary");
+              } else if (
+                part.type === "tool-tailorExperienceEntry" &&
+                part.output?.experienceId
+              ) {
+                await completeStep(
+                  chatId,
+                  `tailor_exp_${part.output.experienceId}`
+                );
+              } else if (
+                part.type === "tool-approveExperienceEntry" &&
+                part.output?.experienceId
+              ) {
+                await completeStep(
+                  chatId,
+                  `approve_exp_${part.output.experienceId}`
+                );
+              } else if (part.type === "tool-tailorSkills") {
+                await completeStep(chatId, "tailor_skills");
+              } else if (part.type === "tool-approveSkills") {
+                await completeStep(chatId, "approve_skills");
+              } else if (part.type === "tool-skipStep" && part.output) {
+                // Handle skipStep tool - mark step(s) as skipped in DB
+                const { stepId, relatedStepId } = part.output;
+                await skipStep(chatId, stepId);
+                if (relatedStepId) {
+                  await skipStep(chatId, relatedStepId);
+                }
               }
             }
           }

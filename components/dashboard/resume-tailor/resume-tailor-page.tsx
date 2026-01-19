@@ -581,6 +581,36 @@ export function ResumeTailorPage({
                                 </Card>
                               );
                             }
+
+                            if (part.state === "approval-responded") {
+                              const isSkipping = part.approval.approved;
+                              return (
+                                <div
+                                  key={part.toolCallId}
+                                  className="flex items-center gap-2 text-muted-foreground"
+                                >
+                                  <Loader2Icon className="size-4 animate-spin" />
+                                  <span>
+                                    {isSkipping
+                                      ? "Skipping step..."
+                                      : "Retrying step..."}
+                                  </span>
+                                </div>
+                              );
+                            }
+
+                            if (part.state === "output-denied") {
+                              const isSkipping =
+                                "approval" in part && part.approval.approved;
+                              return (
+                                <div
+                                  key={part.toolCallId}
+                                  className="flex items-center gap-2 text-muted-foreground"
+                                >
+                                  {isSkipping ? "Skipped step" : "Retried step"}
+                                </div>
+                              );
+                            }
                             if (part.state === "output-available") {
                               return (
                                 <Card
@@ -596,6 +626,32 @@ export function ResumeTailorPage({
                                     </div>
                                   </CardContent>
                                 </Card>
+                              );
+                            }
+                            return null;
+
+                          case "tool-getPendingSteps":
+                            if (part.state === "output-available") {
+                              const {
+                                pendingCount,
+                                completedCount,
+                                totalCount,
+                              } = part.output;
+                              return (
+                                <div
+                                  key={part.toolCallId}
+                                  className="flex items-center gap-2 text-xs text-muted-foreground"
+                                >
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    {completedCount}/{totalCount} done
+                                  </Badge>
+                                  {pendingCount > 0 && (
+                                    <span>{pendingCount} steps remaining</span>
+                                  )}
+                                </div>
                               );
                             }
                             return null;
