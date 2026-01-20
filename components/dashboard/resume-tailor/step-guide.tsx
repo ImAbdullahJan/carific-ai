@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import type { DBPlanStep } from "@/lib/db/tailoring-chat";
 
 interface WelcomeMessageProps {
-  onStart?: () => void;
+  onStart: () => void;
 }
 
 export function WelcomeMessage({ onStart }: WelcomeMessageProps) {
@@ -44,8 +44,8 @@ interface StepGuideProps {
   planSteps: DBPlanStep[];
   /** Whether the agent is currently streaming */
   isStreaming: boolean;
-  /** Callback to continue to the next step (required when hasMessages is true) */
-  onContinue?: () => void;
+  /** Callback to continue to the next step */
+  onContinue: () => void;
 }
 
 export function StepGuide({
