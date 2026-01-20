@@ -14,10 +14,13 @@ export const skipStepTool = (chatId: string) =>
       const approvalStepId = getApprovalStepId(stepId);
 
       // Find the next step in the plan after this one (and its approval step)
-      const steps = await getPlanSteps(chatId);
+      const steps = (await getPlanSteps(chatId)).sort(
+        (a, b) => a.order - b.order
+      );
       const currentIndex = steps.findIndex((s) => s.stepId === stepId);
       const skipCount = approvalStepId ? 2 : 1; // Skip both tailor and approval step
-      const nextStepData = steps[currentIndex + skipCount] || null;
+      const nextStepData =
+        currentIndex >= 0 ? steps[currentIndex + skipCount] || null : null;
 
       const nextStep = nextStepData
         ? {
