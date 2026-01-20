@@ -51,7 +51,10 @@ import type { ResumeData } from "@/lib/types/resume";
 import { PlanProgressCard } from "./plan-progress-card";
 import { ExperienceApprovalCard } from "./experience-approval-card";
 import { SkillsApprovalCard } from "./skills-approval-card";
-import { StepGuide } from "./step-guide";
+import {
+  StepGuide,
+  WelcomeMessage,
+} from "@/components/dashboard/resume-tailor/step-guide";
 import { RetryCard } from "./retry-card";
 import { ToolErrorCard } from "./tool-error-card";
 import {
@@ -298,12 +301,9 @@ export function ResumeTailorPage({
                   description="I'll help you tailor your professional summary for a specific job. Just tell me the job you're applying for and I'll suggest improvements."
                   icon={<WandIcon className="size-12" />}
                 />
-                {/* Step Guide - Shows welcome message when no messages */}
+                {/* Welcome message when no messages */}
                 {!isLoading && (
-                  <StepGuide
-                    planSteps={planSteps}
-                    hasMessages={false}
-                    isStreaming={false}
+                  <WelcomeMessage
                     onStart={() =>
                       sendMessage({
                         role: "user",
@@ -669,13 +669,15 @@ export function ResumeTailorPage({
                 {!isLoading && !hasPendingApproval && !stuckState && (
                   <StepGuide
                     planSteps={planSteps}
-                    hasMessages={messages.length > 0}
-                    isStreaming={false}
+                    isStreaming={isLoading}
                     onContinue={() =>
                       sendMessage({
                         role: "user",
                         parts: [
-                          { type: "text", text: "Continue to the next step" },
+                          {
+                            type: "text",
+                            text: "Continue to the next step",
+                          },
                         ],
                       })
                     }
