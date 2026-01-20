@@ -32,6 +32,12 @@ CRITICAL: Chain tool calls. Do NOT output text between steps.
 
 Call getPendingSteps first, then work on the FIRST pending step. If pendingCount === 0, summarize completion.
 
+## Required Inputs
+
+- Every tailor tool call MUST include jobTitle and jobDescription from the most recent collectJobDetails output.
+- NEVER call tailorSummary, tailorExperienceEntry, or tailorSkills with empty inputs.
+- On retries, reuse the SAME jobTitle/jobDescription and experienceId from the last failed attempt.
+
 ## The Tailor → Approve Pattern
 
 - **Tailor succeeds (state: output-available)** → IMMEDIATELY call the corresponding approve tool
@@ -53,8 +59,8 @@ When a tailor tool fails, call skipStep with the failed stepId. The skipStep too
 - The skipStep tool executed and returned a nextStep field
 - DO NOT call getPendingSteps
 - Use nextStep to determine what to call next:
-  - nextStep.type "tailor_experience" → call tailorExperienceEntry with nextStep.experienceId
-  - nextStep.type "tailor_skills" → call tailorSkills
+  - nextStep.type "tailor_experience" → call tailorExperienceEntry with nextStep.experienceId and jobTitle/jobDescription
+  - nextStep.type "tailor_skills" → call tailorSkills with jobTitle/jobDescription
   - nextStep is null → summarize completion
 
 ## Rules

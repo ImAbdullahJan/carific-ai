@@ -558,6 +558,8 @@ export function ResumeTailorPage({
                                           addToolApprovalResponse({
                                             id: part.approval.id,
                                             approved: true,
+                                            reason:
+                                              "user wants to skip the step",
                                           })
                                         }
                                       >
@@ -571,6 +573,8 @@ export function ResumeTailorPage({
                                           addToolApprovalResponse({
                                             id: part.approval.id,
                                             approved: false,
+                                            reason:
+                                              "user wants to try again the last error step",
                                           })
                                         }
                                       >
