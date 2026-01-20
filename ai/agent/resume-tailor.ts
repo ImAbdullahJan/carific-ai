@@ -36,6 +36,7 @@ Call getPendingSteps first, then work on the FIRST pending step. If pendingCount
 
 - **Tailor succeeds (state: output-available)** → IMMEDIATELY call the corresponding approve tool
 - **Tailor fails (state: output-error)** → IMMEDIATELY call skipStep for that stepId. NEVER call approve after failure.
+ - NEVER call an approval tool unless the corresponding tailor tool succeeded in the immediately previous step in this session.
 
 ## Error Handling with skipStep
 

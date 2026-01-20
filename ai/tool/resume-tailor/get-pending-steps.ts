@@ -1,22 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { getPlanSteps, loadChat } from "@/lib/db/tailoring-chat";
-
-const GetPendingStepsOutputSchema = z.object({
-  pendingSteps: z.array(
-    z.object({
-      stepId: z.string(),
-      type: z.string(),
-      label: z.string(),
-      description: z.string().nullable(),
-      experienceId: z.string().nullable(),
-    })
-  ),
-  completedCount: z.number(),
-  skippedCount: z.number(),
-  pendingCount: z.number(),
-  totalCount: z.number(),
-});
+import { GetPendingStepsOutputSchema } from "./schemas";
 
 export const getPendingStepsTool = (chatId: string) =>
   tool({
@@ -87,8 +72,11 @@ export const getPendingStepsTool = (chatId: string) =>
       const pendingSteps = steps
         .filter(
           (s) =>
-            !completedStepIds.has(s.stepId) && !skippedStepIds.has(s.stepId)
+            !completedStepIds.has(s.stepId) &&
+            !skippedStepIds.has(s.stepId) &&
+            !s.type.startsWith("approve_")
         )
+        .sort((a, b) => a.order - b.order)
         .map((s) => ({
           stepId: s.stepId,
           type: s.type,
@@ -101,12 +89,14 @@ export const getPendingStepsTool = (chatId: string) =>
         (id) => !skippedStepIds.has(id)
       ).length;
       const skippedCount = skippedStepIds.size;
+      const completedTotal = completedCount + skippedCount;
+      const pendingCount = Math.max(0, steps.length - completedTotal);
 
       return {
         pendingSteps,
-        completedCount: completedCount + skippedCount, // Both completed and skipped are "done"
+        completedCount: completedTotal, // Both completed and skipped are "done"
         skippedCount,
-        pendingCount: pendingSteps.length,
+        pendingCount,
         totalCount: steps.length,
       };
     },

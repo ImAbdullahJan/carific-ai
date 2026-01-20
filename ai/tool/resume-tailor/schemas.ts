@@ -167,3 +167,20 @@ export const SkipStepOutputSchema = z.object({
     .nullable(),
 });
 export type SkipStepOutput = z.infer<typeof SkipStepOutputSchema>;
+
+export const PendingStepSchema = z.object({
+  stepId: z.string(),
+  type: z.string(),
+  label: z.string(),
+  description: z.string().nullable(),
+  experienceId: z.string().nullable(),
+});
+
+export const GetPendingStepsOutputSchema = z.object({
+  pendingSteps: z.array(PendingStepSchema),
+  completedCount: z.number(),
+  skippedCount: z.number(),
+  pendingCount: z.number(),
+  totalCount: z.number(),
+});
+export type GetPendingStepsOutput = z.infer<typeof GetPendingStepsOutputSchema>;
