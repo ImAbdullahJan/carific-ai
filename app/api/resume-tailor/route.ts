@@ -77,6 +77,7 @@ export async function POST(request: Request) {
         const agent = createResumeTailorAgent(chatId);
         const result = await agent.stream({
           messages: await convertToModelMessages(messages),
+          abortSignal: request.signal,
         });
 
         // Consume stream to ensure it runs to completion

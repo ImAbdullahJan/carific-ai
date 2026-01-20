@@ -158,5 +158,12 @@ export const SkipStepOutputSchema = z.object({
   skipped: z.boolean(),
   stepId: z.string(),
   relatedStepId: z.string().nullable(),
+  nextStep: z
+    .object({
+      stepId: z.string(),
+      type: z.string(),
+      experienceId: z.string().nullable(),
+    })
+    .nullable(),
 });
 export type SkipStepOutput = z.infer<typeof SkipStepOutputSchema>;
