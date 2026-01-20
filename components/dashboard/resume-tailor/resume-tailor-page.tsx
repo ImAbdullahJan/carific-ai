@@ -604,14 +604,12 @@ export function ResumeTailorPage({
                             }
 
                             if (part.state === "output-denied") {
-                              const isSkipping =
-                                "approval" in part && part.approval.approved;
                               return (
                                 <div
                                   key={part.toolCallId}
                                   className="flex items-center gap-2 text-muted-foreground"
                                 >
-                                  {isSkipping ? "Skipped step" : "Retried step"}
+                                  Retried step
                                 </div>
                               );
                             }
