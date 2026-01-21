@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useChat } from "@ai-sdk/react";
 import {
   DefaultChatTransport,
   lastAssistantMessageIsCompleteWithToolCalls,
+  lastAssistantMessageIsCompleteWithApprovalResponses,
 } from "ai";
 import {
   Conversation,
@@ -32,6 +33,7 @@ import {
   WandIcon,
   Loader2Icon,
   CheckCircle2Icon,
+  AlertCircleIcon,
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
 } from "lucide-react";
@@ -43,225 +45,82 @@ import type { ResumeTailorAgentUIMessage } from "@/ai/agent";
 import type {
   ExperienceApproval,
   SummaryApproval,
-  TailoredExperienceOutput,
-  TailoredSummaryOutput,
-  TailoredSkillsOutput,
   SkillsApproval,
-  TailoringPlan,
 } from "@/ai/tool/resume-tailor";
 import type { ResumeData } from "@/lib/types/resume";
-import type { DBPlanStep } from "@/lib/db/tailoring-chat";
-import {
-  refreshPlanSteps,
-  skipStep as skipStepAction,
-} from "@/lib/actions/tailoring-plan";
 import { PlanProgressCard } from "./plan-progress-card";
 import { ExperienceApprovalCard } from "./experience-approval-card";
 import { SkillsApprovalCard } from "./skills-approval-card";
-import { StepGuide } from "./step-guide";
+import {
+  StepGuide,
+  WelcomeMessage,
+} from "@/components/dashboard/resume-tailor/step-guide";
 import { RetryCard } from "./retry-card";
 import { ToolErrorCard } from "./tool-error-card";
-import { approveExperienceEntryTool } from "@/ai/tool/resume-tailor";
-import { UIToolInvocation } from "ai";
+import {
+  getExperienceNameFromPlan,
+  findExperienceForApproval,
+} from "@/lib/utils/resume-tailor";
 
 interface ResumeTailorPageProps {
   initialProfile: ResumeData;
   chatId: string;
   initialMessages?: ResumeTailorAgentUIMessage[];
-  initialPlanSteps?: DBPlanStep[];
 }
 
-interface ApprovedChanges {
-  summary?: { approved: boolean; text?: string };
-  experiences?: Record<string, { approved: boolean; bullets?: string[] }>;
-  skills?: {
-    approved: boolean;
-    finalSkills?: { name: string; category: string }[];
-  };
-}
-
-/**
- * Helper function to get experience name from plan by experience ID
- */
-function getExperienceNameFromPlan(
-  experienceId: string | undefined,
-  plan: TailoringPlan | null
-): string {
-  if (!experienceId || !plan) return "experience";
-  const step = plan.steps.find(
-    (s) =>
-      s.type === "tailor_experience" && s.context?.experienceId === experienceId
-  );
-  // Label format is "Tailor: Position @ Company" - extract the part after "Tailor: "
-  if (step?.label) {
-    return step.label.replace("Tailor: ", "").replace(" @ ", " at ");
-  }
-  return "experience";
-}
-
-/**
- * Helper function to find the experience data for an approval step
- * @param part - The approval tool part
- * @param tailoredExperiences - Map of tailored experiences by ID
- * @param messages - All messages up to current point
- * @param currentMsg - The current message being rendered
- * @returns The experience data to display, or undefined if not found
- */
-function findExperienceForApproval(
-  part: UIToolInvocation<typeof approveExperienceEntryTool>,
-  tailoredExperiences: Record<string, TailoredExperienceOutput>,
-  messages: ResumeTailorAgentUIMessage[],
-  currentMsg: ResumeTailorAgentUIMessage
-): TailoredExperienceOutput | undefined {
-  if (part.state === "output-available") {
-    // Approval completed - get experience data using the ID from output
-    const expId = part.output.experienceId;
-    return tailoredExperiences[expId];
-  }
-
-  // Approval in progress - find the most recently tailored experience
-  // that hasn't been approved yet by checking message history
-  const allMessages = messages.slice(0, messages.indexOf(currentMsg) + 1);
-  const approvedExpIds = new Set<string>();
-
-  // Collect all approved experience IDs from previous messages
-  for (const m of allMessages) {
-    for (const p of m.parts) {
-      if (
-        p.type === "tool-approveExperienceEntry" &&
-        p.state === "output-available"
-      ) {
-        approvedExpIds.add(p.output.experienceId);
-      }
-    }
-  }
-
-  // Find the first tailored experience that hasn't been approved
-  const unapprovedExpId = Object.keys(tailoredExperiences).find(
-    (expId) => !approvedExpIds.has(expId)
-  );
-
-  return unapprovedExpId ? tailoredExperiences[unapprovedExpId] : undefined;
-}
+import { deriveTailorState } from "@/lib/utils/resume-tailor-reducer";
 
 export function ResumeTailorPage({
   initialProfile,
   chatId,
   initialMessages,
-  initialPlanSteps = [],
 }: ResumeTailorPageProps) {
   const [showPreview, setShowPreview] = useState(true);
-  const [approvedChanges, setApprovedChanges] = useState<ApprovedChanges>({});
-  const [planSteps, setPlanSteps] = useState<DBPlanStep[]>(
-    initialPlanSteps ?? []
-  );
 
-  const { messages, sendMessage, addToolOutput, status } =
-    useChat<ResumeTailorAgentUIMessage>({
-      id: chatId,
-      messages: initialMessages,
-      transport: new DefaultChatTransport({
-        api: "/api/resume-tailor",
-        prepareSendMessagesRequest: ({ messages: msgs }) => {
-          // Send only the last message + chatId (server loads full history)
-          const lastMessage = msgs[msgs.length - 1];
-          return {
-            body: {
-              message: lastMessage,
-              chatId,
-            },
-          };
-        },
-      }),
-      sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
-    });
-
-  // Refresh plan steps from DB when streaming completes
-  const prevStatusRef = useRef(status);
-  useEffect(() => {
-    const prevStatus = prevStatusRef.current;
-    // When status changes from streaming/submitted to ready, refresh plan steps
-    if (
-      (prevStatus === "streaming" || prevStatus === "submitted") &&
-      status === "ready"
-    ) {
-      refreshPlanSteps(chatId).then((result) => {
-        if (result.success && result.steps) {
-          setPlanSteps(result.steps);
-        }
-      });
-    }
-    prevStatusRef.current = status;
-  }, [status, chatId]);
-
-  // Derive tailored data and plan from messages (for displaying tool outputs)
-  const { tailoredData, plan } = useMemo(() => {
-    let summary: TailoredSummaryOutput | undefined;
-    const experiences: Record<string, TailoredExperienceOutput> = {};
-    let skills: TailoredSkillsOutput | undefined;
-    let plan: TailoringPlan | null = null;
-
-    for (const msg of messages) {
-      for (const part of msg.parts) {
-        // Extract plan (for experience name lookup)
-        if (
-          part.type === "tool-createTailoringPlan" &&
-          part.state === "output-available"
-        ) {
-          plan = part.output;
-        }
-
-        // Extract summary output
-        if (
-          part.type === "tool-tailorSummary" &&
-          part.state === "output-available"
-        ) {
-          summary = part.output;
-        }
-
-        // Extract experience outputs
-        if (
-          part.type === "tool-tailorExperienceEntry" &&
-          part.state === "output-available"
-        ) {
-          experiences[part.output.experienceId] = part.output;
-        }
-
-        // Extract skills output
-        if (
-          part.type === "tool-tailorSkills" &&
-          part.state === "output-available"
-        ) {
-          skills = part.output;
-        }
-      }
-    }
-
-    return {
-      tailoredData: { summary, experiences, skills },
-      plan,
-    };
-  }, [messages]);
-
-  // Check if there are any pending approval requests
-  const hasPendingApproval = useMemo(() => {
-    if (messages.length === 0) return false;
-
-    // Check the last message for approval-requested state
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage.role !== "assistant") return false;
-
-    return lastMessage.parts.some((part) => {
+  const {
+    messages,
+    sendMessage,
+    addToolOutput,
+    addToolApprovalResponse,
+    status,
+    regenerate,
+  } = useChat<ResumeTailorAgentUIMessage>({
+    id: chatId,
+    messages: initialMessages,
+    transport: new DefaultChatTransport({
+      api: "/api/resume-tailor",
+      prepareSendMessagesRequest: ({ messages: msgs }) => {
+        // Send only the last message + chatId (server loads full history)
+        const lastMessage = msgs[msgs.length - 1];
+        return {
+          body: {
+            message: lastMessage,
+            chatId,
+          },
+        };
+      },
+    }),
+    sendAutomaticallyWhen: (options) => {
+      // Auto-submit when all tool calls are complete OR all approvals are responded to
       return (
-        (part.type === "tool-approveSummary" ||
-          part.type === "tool-approveExperienceEntry" ||
-          part.type === "tool-approveSkills" ||
-          part.type === "tool-collectJobDetails") &&
-        (part.state === "approval-requested" ||
-          part.state === "input-available")
+        lastAssistantMessageIsCompleteWithToolCalls(options) ||
+        lastAssistantMessageIsCompleteWithApprovalResponses(options)
       );
-    });
-  }, [messages]);
+    },
+  });
+
+  // Derive entire application state from messages using pure reducer
+  const {
+    plan,
+    planSteps,
+    tailoredData,
+    approvedChanges,
+    previewData,
+    hasPendingApproval,
+  } = useMemo(
+    () => deriveTailorState(messages, initialProfile),
+    [messages, initialProfile]
+  );
 
   // Detect stuck state: stream disconnected before agent could respond
   // Case 1: Last message is from user (no assistant response at all)
@@ -314,89 +173,13 @@ export function ResumeTailorPage({
     return null;
   }, [messages, status]);
 
-  // Build live preview data by applying approved changes to initial profile
-  const previewData = useMemo((): ResumeData => {
-    const preview = { ...initialProfile };
-
-    // Apply approved summary
-    if (approvedChanges.summary?.approved && approvedChanges.summary.text) {
-      preview.bio = approvedChanges.summary.text;
-    }
-
-    // Apply approved skills changes
-    if (
-      approvedChanges.skills?.approved &&
-      approvedChanges.skills.finalSkills
-    ) {
-      preview.skills = approvedChanges.skills.finalSkills.map((s) => ({
-        name: s.name,
-        category: s.category,
-        level: null,
-      }));
-    }
-
-    // Apply approved experience changes
-    if (approvedChanges.experiences) {
-      preview.workExperiences = preview.workExperiences.map((exp) => {
-        // Find the matching experience by comparing company and position
-        const matchingExpId = Object.keys(
-          approvedChanges.experiences || {}
-        ).find((expId) => {
-          const tailoredExp = tailoredData.experiences[expId];
-          return (
-            tailoredExp &&
-            tailoredExp.originalCompany === exp.company &&
-            tailoredExp.originalRole === exp.position
-          );
-        });
-
-        if (matchingExpId) {
-          const change = approvedChanges.experiences?.[matchingExpId];
-          if (change?.approved && change.bullets) {
-            return { ...exp, bullets: change.bullets };
-          }
-        }
-        return exp;
-      });
-    }
-
-    return preview;
-  }, [initialProfile, approvedChanges, tailoredData.experiences]);
-
   const isLoading = status === "streaming" || status === "submitted";
 
-  // Handle retry for stuck messages - re-sends the last user message
+  // Handle retry for stuck messages - uses reload() to regenerate response
   const handleRetry = useCallback(() => {
     if (!stuckState) return;
-
-    // Re-send the same message to trigger the agent again
-    sendMessage({
-      role: "user",
-      parts: [
-        {
-          type: "text",
-          text: stuckState.messageText || "Please continue",
-        },
-      ],
-    });
-  }, [stuckState, sendMessage]);
-
-  // Helper to skip a step - updates DB and sends message to agent
-  const handleSkipStep = useCallback(
-    async (stepId: string, skipMessage: string) => {
-      // Update DB first
-      const result = await skipStepAction(chatId, stepId);
-      if (result.success && result.steps) {
-        setPlanSteps(result.steps);
-      }
-      // Then send message to agent
-      sendMessage({
-        role: "user",
-        parts: [{ type: "text", text: skipMessage }],
-      });
-    },
-    [chatId, sendMessage]
-  );
+    regenerate();
+  }, [stuckState, regenerate]);
 
   const handleSubmit = useCallback(
     async ({ text }: { text: string }) => {
@@ -419,84 +202,35 @@ export function ResumeTailorPage({
 
   const handleSummaryApproval = useCallback(
     async (toolCallId: string, data: SummaryApproval) => {
-      setApprovedChanges((prev) => ({
-        ...prev,
-        summary: {
-          approved: data.approved,
-          text: data.customText || tailoredData.summary?.suggested,
-        },
-      }));
-
       addToolOutput({
         tool: "approveSummary",
         toolCallId,
         output: data,
       });
-
-      // Refresh plan steps to update UI immediately
-      const result = await refreshPlanSteps(chatId);
-      if (result.success && result.steps) {
-        setPlanSteps(result.steps);
-      }
     },
-    [addToolOutput, tailoredData.summary, chatId]
+    [addToolOutput]
   );
 
   const handleExperienceApproval = useCallback(
     async (toolCallId: string, data: ExperienceApproval) => {
-      const expId = data.experienceId;
-      const suggestedBullets =
-        tailoredData.experiences[expId]?.suggestedBullets;
-
-      setApprovedChanges((prev) => ({
-        ...prev,
-        experiences: {
-          ...prev.experiences,
-          [expId]: {
-            approved: data.approved,
-            bullets: data.finalBullets || suggestedBullets,
-          },
-        },
-      }));
-
       addToolOutput({
         tool: "approveExperienceEntry",
         toolCallId,
         output: data,
       });
-
-      // Refresh plan steps to update UI immediately
-      const result = await refreshPlanSteps(chatId);
-      if (result.success && result.steps) {
-        setPlanSteps(result.steps);
-      }
     },
-    [addToolOutput, tailoredData.experiences, chatId]
+    [addToolOutput]
   );
 
   const handleSkillsApproval = useCallback(
     async (toolCallId: string, data: SkillsApproval) => {
-      setApprovedChanges((prev) => ({
-        ...prev,
-        skills: {
-          approved: data.approved,
-          finalSkills: data.finalSkills,
-        },
-      }));
-
       addToolOutput({
         tool: "approveSkills",
         toolCallId,
         output: data,
       });
-
-      // Refresh plan steps to update UI immediately
-      const result = await refreshPlanSteps(chatId);
-      if (result.success && result.steps) {
-        setPlanSteps(result.steps);
-      }
     },
-    [addToolOutput, chatId]
+    [addToolOutput]
   );
 
   return (
@@ -567,12 +301,9 @@ export function ResumeTailorPage({
                   description="I'll help you tailor your professional summary for a specific job. Just tell me the job you're applying for and I'll suggest improvements."
                   icon={<WandIcon className="size-12" />}
                 />
-                {/* Step Guide - Shows welcome message when no messages */}
+                {/* Welcome message when no messages */}
                 {!isLoading && (
-                  <StepGuide
-                    planSteps={planSteps}
-                    hasMessages={false}
-                    isStreaming={false}
+                  <WelcomeMessage
                     onStart={() =>
                       sendMessage({
                         role: "user",
@@ -581,14 +312,6 @@ export function ResumeTailorPage({
                             type: "text",
                             text: "Let's start tailoring my resume!",
                           },
-                        ],
-                      })
-                    }
-                    onContinue={() =>
-                      sendMessage({
-                        role: "user",
-                        parts: [
-                          { type: "text", text: "Continue to the next step" },
                         ],
                       })
                     }
@@ -647,23 +370,6 @@ export function ResumeTailorPage({
                                   title="Failed to generate summary"
                                   errorText={part.errorText}
                                   defaultMessage="An error occurred while tailoring the summary."
-                                  onRetry={() =>
-                                    sendMessage({
-                                      role: "user",
-                                      parts: [
-                                        {
-                                          type: "text",
-                                          text: "Please retry tailoring the summary.",
-                                        },
-                                      ],
-                                    })
-                                  }
-                                  onSkip={() =>
-                                    handleSkipStep(
-                                      "tailor_summary",
-                                      "Skip the summary and continue to the next step."
-                                    )
-                                  }
                                 />
                               );
                             }
@@ -738,23 +444,6 @@ export function ResumeTailorPage({
                                   title={`Failed to optimize ${expName}`}
                                   errorText={part.errorText}
                                   defaultMessage="An error occurred while tailoring the experience entry."
-                                  onRetry={() =>
-                                    sendMessage({
-                                      role: "user",
-                                      parts: [
-                                        {
-                                          type: "text",
-                                          text: `Please retry tailoring ${expName}.`,
-                                        },
-                                      ],
-                                    })
-                                  }
-                                  onSkip={() =>
-                                    handleSkipStep(
-                                      `tailor_exp_${expId}`,
-                                      `Skip ${expName} and continue to the next step.`
-                                    )
-                                  }
                                 />
                               );
                             }
@@ -805,23 +494,6 @@ export function ResumeTailorPage({
                                   title="Failed to analyze skills"
                                   errorText={part.errorText}
                                   defaultMessage="An error occurred while tailoring skills."
-                                  onRetry={() =>
-                                    sendMessage({
-                                      role: "user",
-                                      parts: [
-                                        {
-                                          type: "text",
-                                          text: "Please retry tailoring the skills.",
-                                        },
-                                      ],
-                                    })
-                                  }
-                                  onSkip={() =>
-                                    handleSkipStep(
-                                      "tailor_skills",
-                                      "Skip skills tailoring and finish."
-                                    )
-                                  }
                                 />
                               );
                             }
@@ -851,6 +523,141 @@ export function ResumeTailorPage({
                               />
                             );
 
+                          case "tool-skipStep":
+                            if (part.state === "approval-requested") {
+                              const stepId = part.input?.stepId;
+                              const stepTitle =
+                                getExperienceNameFromPlan(stepId, plan) ||
+                                stepId;
+
+                              return (
+                                <Card
+                                  key={part.toolCallId}
+                                  className="w-full max-w-2xl"
+                                >
+                                  <CardHeader className="pb-2">
+                                    <div className="flex items-center gap-2">
+                                      <AlertCircleIcon className="size-4" />
+                                      <CardTitle className="text-sm">
+                                        Agent Suggests Skipping: {stepTitle}
+                                      </CardTitle>
+                                    </div>
+                                  </CardHeader>
+                                  <CardContent>
+                                    <p className="text-sm text-muted-foreground mb-4">
+                                      I encountered an issue with this step and
+                                      suggest we skip it to continue. Would you
+                                      like to skip it or should I try again?
+                                    </p>
+                                    <div className="flex gap-2">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-8"
+                                        onClick={() =>
+                                          addToolApprovalResponse({
+                                            id: part.approval.id,
+                                            approved: true,
+                                            reason:
+                                              "user wants to skip the step",
+                                          })
+                                        }
+                                      >
+                                        Skip Step
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-8"
+                                        onClick={() =>
+                                          addToolApprovalResponse({
+                                            id: part.approval.id,
+                                            approved: false,
+                                            reason:
+                                              "user wants to try again the last error step",
+                                          })
+                                        }
+                                      >
+                                        Try Again
+                                      </Button>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              );
+                            }
+
+                            if (part.state === "approval-responded") {
+                              const isSkipping = part.approval.approved;
+                              return (
+                                <div
+                                  key={part.toolCallId}
+                                  className="flex items-center gap-2 text-muted-foreground"
+                                >
+                                  <Loader2Icon className="size-4 animate-spin" />
+                                  <span>
+                                    {isSkipping
+                                      ? "Skipping step..."
+                                      : "Retrying step..."}
+                                  </span>
+                                </div>
+                              );
+                            }
+
+                            if (part.state === "output-denied") {
+                              return (
+                                <div
+                                  key={part.toolCallId}
+                                  className="flex items-center gap-2 text-muted-foreground"
+                                >
+                                  Retried step
+                                </div>
+                              );
+                            }
+                            if (part.state === "output-available") {
+                              return (
+                                <Card
+                                  key={part.toolCallId}
+                                  className="w-full max-w-2xl border-muted"
+                                >
+                                  <CardContent className="pt-4">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Badge variant="outline">Skipped</Badge>
+                                      <span>
+                                        Step skipped: {part.output.stepId}
+                                      </span>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              );
+                            }
+                            return null;
+
+                          case "tool-getPendingSteps":
+                            if (part.state === "output-available") {
+                              const {
+                                pendingCount,
+                                completedCount,
+                                totalCount,
+                              } = part.output;
+                              return (
+                                <div
+                                  key={part.toolCallId}
+                                  className="flex items-center gap-2 text-xs text-muted-foreground"
+                                >
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    {completedCount}/{totalCount} done
+                                  </Badge>
+                                  {pendingCount > 0 && (
+                                    <span>{pendingCount} steps remaining</span>
+                                  )}
+                                </div>
+                              );
+                            }
+                            return null;
+
                           default:
                             return null;
                         }
@@ -862,24 +669,15 @@ export function ResumeTailorPage({
                 {!isLoading && !hasPendingApproval && !stuckState && (
                   <StepGuide
                     planSteps={planSteps}
-                    hasMessages={messages.length > 0}
-                    isStreaming={false}
-                    onStart={() =>
+                    isStreaming={isLoading}
+                    onContinue={() =>
                       sendMessage({
                         role: "user",
                         parts: [
                           {
                             type: "text",
-                            text: "Let's start tailoring my resume!",
+                            text: "Continue to the next step",
                           },
-                        ],
-                      })
-                    }
-                    onContinue={() =>
-                      sendMessage({
-                        role: "user",
-                        parts: [
-                          { type: "text", text: "Continue to the next step" },
                         ],
                       })
                     }

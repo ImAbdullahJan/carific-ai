@@ -423,12 +423,13 @@ model TailoringMessagePart {
   reasoning String?
 
   // ========== Generic Tool Columns ==========
-  toolCallId String?
-  toolName   String?
-  toolState  String? // "input-streaming" | "input-available" | "output-available" | "output-error" | "approval-requested" | etc.
-  toolInput  Json?
-  toolOutput Json?
-  toolError  String?
+  toolCallId   String?
+  toolName     String?
+  toolState    String? // "input-streaming" | "input-available" | "output-available" | "output-error" | "approval-requested" | etc.
+  toolInput    Json?
+  toolOutput   Json?
+  toolError    String?
+  toolApproval Json? // Approval object for tools with needsApproval (contains id, approved, etc.)
 
   // ========== Provider Metadata ==========
   providerMetadata Json?

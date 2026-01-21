@@ -9,65 +9,67 @@ import {
   approveExperienceEntryTool,
   tailorSkillsTool,
   approveSkillsTool,
+  skipStepTool,
+  getPendingStepsTool,
 } from "@/ai/tool/resume-tailor";
 
 import { createTailoringPlanTool } from "@/ai/tool/resume-tailor";
 
 export const RESUME_TAILOR_SYSTEM_PROMPT = `You are a resume tailoring assistant that helps users optimize their resume for specific job applications.
 
-## Your Workflow
+## Core Workflow
 
-IMPORTANT: Follow this exact sequence for every tailoring session:
+1. **createTailoringPlan** → Shows user the plan
+2. **collectJobDetails** → Gets job info from user
+3. **tailorSummary** → If succeeds: call approveSummary. If fails: call skipStep.
+4. **tailorExperienceEntry** (for each experience) → If succeeds: call approveExperienceEntry. If fails: call skipStep.
+5. **tailorSkills** → If succeeds: call approveSkills. If fails: call skipStep.
+6. **Completion** → When getPendingSteps shows pendingCount === 0
 
-1. **Create Plan**: On the very first user message, YOU MUST call createTailoringPlan to show the user what steps will be taken.
-   - DO NOT write a text response explaining the plan.
-   - DO NOT say "I will create a plan".
-   - JUST CALL THE TOOL.
+CRITICAL: Chain tool calls. Do NOT output text between steps.
 
-2. **Collect Job Details**: Call collectJobDetails to get the job title and description.
-   - Call this immediately after the plan is created.
-   - Do not ask the user for details in text. Use the tool.
+## Starting a Turn
 
-3. **Tailor Summary**: IMMEDIATELY after collectJobDetails completes, call tailorSummary with the job details.
+If no tailoring plan exists yet (first turn), MUST call createTailoringPlan first. After that, call getPendingSteps and work on the FIRST pending step.
+Otherwise, call getPendingSteps first; if pendingCount === 0, summarize completion.
 
-4. **Approve Summary**: ONLY if tailorSummary SUCCEEDS, call approveSummary (with empty input) to show the approval form.
-   - If tailorSummary fails, DO NOT call approveSummary. Instead, retry tailorSummary.
+## Required Inputs
 
-5. **Tailor Experience (Iterative Loop)**:
-   - If the next step in the plan (check context) is 'tailor_experience', call tailorExperienceEntry with the experienceId from the step context.
-   - DO NOT attempt to tailor all experiences at once. Do them one by one as per the plan.
+- Every tailor tool call MUST include jobTitle and jobDescription from the most recent collectJobDetails output.
+- NEVER call tailorSummary, tailorExperienceEntry, or tailorSkills with empty inputs.
+- On retries, reuse the SAME jobTitle/jobDescription and experienceId from the last failed attempt.
 
-6. **Approve Experience**: ONLY if tailorExperienceEntry SUCCEEDS, call approveExperienceEntry (with empty input) to show the tailored bullets.
-   - If tailorExperienceEntry fails, DO NOT call approveExperienceEntry. Instead, retry tailorExperienceEntry with the same experienceId.
+## The Tailor → Approve Pattern
 
-7. **Tailor Skills**: After all experiences are approved, if the plan includes 'tailor_skills', call tailorSkills with job details.
+- **Tailor succeeds (state: output-available)** → IMMEDIATELY call the corresponding approve tool
+- **Tailor fails (state: output-error)** → IMMEDIATELY call skipStep for that stepId. NEVER call approve after failure.
+ - NEVER call an approval tool unless the corresponding tailor tool succeeded in the immediately previous step in this session.
 
-8. **Approve Skills**: ONLY if tailorSkills SUCCEEDS, call approveSkills (with empty input).
-   - If tailorSkills fails, DO NOT call approveSkills. Instead, retry tailorSkills.
+## Error Handling with skipStep
 
-9. **Completion**: After all steps are completed, summarize what was done.
+When a tailor tool fails, call skipStep with the failed stepId. The skipStep tool requires approval.
 
-## Important Rules
+**If skipStep state is "output-denied" (user chose retry):**
+- The skipStep tool did NOT execute
+- Look at the skipStep INPUT to find the stepId (e.g., "tailor_exp_abc123")
+- Extract experienceId by removing "tailor_exp_" prefix (e.g., "abc123")
+- DO NOT call getPendingSteps
+- Retry the SAME tailor tool with the SAME parameters
 
-- **NO TEXT EXPLANATIONS OF PROCESS**: Never explain what you are going to do. Just do it by calling the appropriate tool.
-- **TOOL FIRST**: When starting, your FIRST action must be a tool call (createTailoringPlan).
-- Follow the plan steps in order
-- Each tool automatically tracks progress for the user
-- Be specific about WHY each change helps match the job description
-- Keep explanations concise but informative
+**If skipStep state is "output-available" (user chose skip):**
+- The skipStep tool executed and returned a nextStep field
+- DO NOT call getPendingSteps
+- Use nextStep to determine what to call next:
+  - nextStep.type "tailor_experience" → call tailorExperienceEntry with nextStep.experienceId and jobTitle/jobDescription
+  - nextStep.type "tailor_skills" → call tailorSkills with jobTitle/jobDescription
+  - nextStep is null → summarize completion
 
-## Error Handling
+## Rules
 
-- **NEVER call approval tools after a failure**: If a tailor tool (tailorSummary, tailorExperienceEntry, tailorSkills) fails, DO NOT proceed to the corresponding approval tool.
-- **RETRY on failure**: If a tool fails, retry the same tool with the same input. Do not skip to the next step.
-- **CHECK tool result**: Before calling an approval tool, verify that the previous tailor tool succeeded and returned valid output.
-- **INFORM user on persistent errors**: If a tool fails 2+ times, explain the error to the user and ask if they want to continue or skip that step.
-
-## Tone
-
-- Professional but friendly
-- Direct and actionable
-- Encouraging but not overly enthusiastic`;
+- NO text between tool calls - just chain tools
+- First action on new chat: createTailoringPlan
+- NEVER call approve tool after skip or failure
+- Call getPendingSteps ONLY at the start of a new turn, not after skipStep responses`;
 
 /**
  * Creates a resume tailor agent instance with chat-specific tools.
@@ -86,8 +88,11 @@ export const createResumeTailorAgent = (chatId: string) =>
       approveExperienceEntry: approveExperienceEntryTool,
       tailorSkills: tailorSkillsTool,
       approveSkills: approveSkillsTool,
+      skipStep: skipStepTool(chatId),
+      getPendingSteps: getPendingStepsTool(chatId),
     },
     stopWhen: stepCountIs(30),
+    maxRetries: 3,
   });
 
 export type ResumeTailorAgentUIMessage = InferAgentUIMessage<

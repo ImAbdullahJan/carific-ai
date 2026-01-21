@@ -1,7 +1,7 @@
 import { generateText, Output, tool } from "ai";
 import { z } from "zod";
 
-import { RESUME_ANALYZER_MODEL } from "@/ai/constants";
+import { EXPERIENCE_TAILOR_AGENT_MODEL } from "@/ai/constants";
 import { checkAuth } from "@/lib/auth-check";
 import { getFullProfile } from "@/lib/db/profile";
 
@@ -89,7 +89,7 @@ ${experience.bullets.map((b) => `- ${b}`).join("\n")}
 `;
 
     const { output } = await generateText({
-      model: RESUME_ANALYZER_MODEL,
+      model: EXPERIENCE_TAILOR_AGENT_MODEL,
       output: Output.object({
         schema: TailoredExperienceOutputSchema,
       }),

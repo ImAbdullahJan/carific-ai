@@ -37,6 +37,10 @@ function mapToolPartToDB(
       part.state === "output-error" || part.state === "output-denied"
         ? part.errorText
         : undefined,
+    toolApproval:
+      "approval" in part
+        ? (part.approval as Prisma.InputJsonValue | undefined)
+        : undefined,
   };
 }
 
@@ -165,6 +169,7 @@ function mapGenericToolPart(
     toolCallId,
     state,
     input: part.toolInput,
+    ...(part.toolApproval ? { approval: part.toolApproval } : {}),
   };
 
   switch (state) {

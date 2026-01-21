@@ -19,3 +19,8 @@ export {
   type ApproveSkillsTool,
 } from "./tailor-skills";
 export { createTailoringPlanTool } from "./create-plan";
+export { skipStepTool, type SkipStepTool } from "./skip-step";
+export {
+  getPendingStepsTool,
+  type GetPendingStepsTool,
+} from "./get-pending-steps";

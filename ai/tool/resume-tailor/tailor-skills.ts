@@ -1,7 +1,7 @@
 import { generateText, Output, tool } from "ai";
 import { z } from "zod";
 
-import { RESUME_ANALYZER_MODEL } from "@/ai/constants";
+import { SKILLS_TAILOR_AGENT_MODEL } from "@/ai/constants";
 import { checkAuth } from "@/lib/auth-check";
 import { getFullProfile } from "@/lib/db/profile";
 
@@ -78,7 +78,7 @@ ${JSON.stringify(currentSkills, null, 2)}
 `;
 
     const { output } = await generateText({
-      model: RESUME_ANALYZER_MODEL,
+      model: SKILLS_TAILOR_AGENT_MODEL,
       output: Output.object({
         schema: TailoredSkillsOutputSchema,
       }),

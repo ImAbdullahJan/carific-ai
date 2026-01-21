@@ -1,7 +1,7 @@
 import { generateText, Output, tool } from "ai";
 import { z } from "zod";
 
-import { RESUME_ANALYZER_MODEL } from "@/ai/constants";
+import { SUMMARY_TAILOR_AGENT_MODEL } from "@/ai/constants";
 import { checkAuth } from "@/lib/auth-check";
 import { getFullProfile } from "@/lib/db/profile";
 
@@ -62,7 +62,7 @@ JOB DESCRIPTION:
 ${jobDescription}`;
 
     const { output } = await generateText({
-      model: RESUME_ANALYZER_MODEL,
+      model: SUMMARY_TAILOR_AGENT_MODEL,
       output: Output.object({
         schema: TailoredSummaryOutputSchema,
       }),
