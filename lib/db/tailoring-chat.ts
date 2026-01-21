@@ -24,7 +24,7 @@ export async function createTailoringChat(resumeId: string): Promise<string> {
  * Gets or creates a tailoring chat for a resume (1:1 relationship).
  */
 export async function getOrCreateChatForResume(
-  resumeId: string
+  resumeId: string,
 ): Promise<string> {
   const existingChat = await getChatForResume(resumeId);
   if (existingChat) {
@@ -88,7 +88,7 @@ export async function upsertMessage({
  * Filters out messages with no parts (invalid state).
  */
 export async function loadChat(
-  chatId: string
+  chatId: string,
 ): Promise<ResumeTailorAgentUIMessage[]> {
   const messages = await prisma.tailoringMessage.findMany({
     where: { chatId },
@@ -162,7 +162,7 @@ export async function deleteChat(chatId: string): Promise<void> {
  * Useful for "edit and regenerate" functionality.
  */
 export async function deleteMessageAndSubsequent(
-  messageId: string
+  messageId: string,
 ): Promise<void> {
   await prisma.$transaction(async (tx) => {
     // Find the target message
@@ -203,7 +203,7 @@ export interface DBPlanStep {
  */
 export async function savePlanSteps(
   chatId: string,
-  steps: PlanStep[]
+  steps: PlanStep[],
 ): Promise<void> {
   await prisma.$transaction(async (tx) => {
     // Delete existing plan steps for this chat
@@ -243,12 +243,12 @@ export async function getPlanSteps(chatId: string): Promise<DBPlanStep[]> {
 export async function updateStepStatus(
   chatId: string,
   stepId: string,
-  status: TailoringStepStatus
+  status: TailoringStepStatus,
 ): Promise<void> {
-  await prisma.tailoringPlanStep.update({
-    where: {
-      chatId_stepId: { chatId, stepId },
-    },
+  // Use updateMany instead of update to avoid throwing when a stepId is missing.
+  // This is a "best-effort" update that is resilient to AI agent hallucinations.
+  await prisma.tailoringPlanStep.updateMany({
+    where: { chatId, stepId },
     data: { status },
   });
 }
@@ -258,7 +258,7 @@ export async function updateStepStatus(
  */
 export async function completeStep(
   chatId: string,
-  stepId: string
+  stepId: string,
 ): Promise<void> {
   await updateStepStatus(chatId, stepId, "completed");
 }
@@ -281,7 +281,7 @@ export async function startStep(chatId: string, stepId: string): Promise<void> {
  * Gets the next pending step in the plan.
  */
 export async function getNextPendingStep(
-  chatId: string
+  chatId: string,
 ): Promise<DBPlanStep | null> {
   return prisma.tailoringPlanStep.findFirst({
     where: {
@@ -318,7 +318,7 @@ export async function getPlanProgress(chatId: string): Promise<{
 export async function updateTargetJob(
   chatId: string,
   jobTitle: string,
-  jobDescription: string
+  jobDescription: string,
 ): Promise<void> {
   await prisma.tailoringChat.update({
     where: { id: chatId },
@@ -333,7 +333,7 @@ export async function updateTargetJob(
  * Gets the target job details for a chat.
  */
 export async function getTargetJob(
-  chatId: string
+  chatId: string,
 ): Promise<{ title: string | null; description: string | null }> {
   const chat = await prisma.tailoringChat.findUnique({
     where: { id: chatId },

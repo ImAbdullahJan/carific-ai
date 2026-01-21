@@ -30,7 +30,8 @@ CRITICAL: Chain tool calls. Do NOT output text between steps.
 
 ## Starting a Turn
 
-Call getPendingSteps first, then work on the FIRST pending step. If pendingCount === 0, summarize completion.
+If no tailoring plan exists yet (first turn), MUST call createTailoringPlan first. After that, call getPendingSteps and work on the FIRST pending step.
+Otherwise, call getPendingSteps first; if pendingCount === 0, summarize completion.
 
 ## Required Inputs
 
